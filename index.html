@@ -602,6 +602,68 @@ a { color: var(--accent); text-decoration: none; }
 .sub-tab.active { color:var(--accent); border-bottom:2px solid var(--accent); }
 .sub-tab:hover { color:var(--text); }
 .revenue-stat { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:14px 18px; }
+/* ============================================================
+   CONTACT TAB
+   ============================================================ */
+.contact-method-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 999px;
+  font-size: .82rem; font-weight: 600;
+  border: 2px solid var(--border);
+  background: var(--surface3);
+  cursor: pointer; transition: all .15s;
+}
+.contact-method-chip:hover { border-color: var(--accent2); }
+.contact-method-chip.selected { border-color: var(--accent); background: rgba(74,222,128,.1); color: var(--accent); }
+[data-theme="light"] .contact-method-chip.selected { background: rgba(22,163,74,.08); }
+.contact-info-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 14px; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px;
+}
+.contact-info-icon { font-size: 1rem; flex-shrink: 0; margin-top: 2px; }
+.contact-info-label { font-size: .72rem; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.contact-info-value { font-size: .88rem; font-weight: 500; margin-top: 1px; }
+
+/* ============================================================
+   APPOINTMENTS / SCHEDULING
+   ============================================================ */
+.apt-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--apt-color, var(--accent));
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  transition: background .15s;
+}
+.apt-card:hover { background: var(--surface3); }
+.apt-type-virtual { --apt-color: var(--accent2); }
+.apt-type-inperson { --apt-color: var(--accent3); }
+.apt-date-block {
+  min-width: 48px; text-align: center;
+  background: var(--surface3); border-radius: 8px; padding: 6px 8px;
+  flex-shrink: 0;
+}
+.apt-date-day { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem; line-height: 1; }
+.apt-date-month { font-size: .65rem; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; margin-top: 1px; }
+.apt-status-confirmed { background: rgba(74,222,128,.15); color: var(--accent); border: 1px solid rgba(74,222,128,.3); }
+.apt-status-pending { background: rgba(251,191,36,.15); color: var(--warn); border: 1px solid rgba(251,191,36,.3); }
+.apt-status-cancelled { background: rgba(244,63,94,.15); color: var(--danger); border: 1px solid rgba(244,63,94,.3); }
+.download-ics-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 12px; border-radius: 6px;
+  font-size: .78rem; font-weight: 600;
+  background: var(--surface3); color: var(--accent2);
+  border: 1px solid var(--border);
+  cursor: pointer; transition: all .15s; text-decoration: none;
+}
+.download-ics-btn:hover { border-color: var(--accent2); background: rgba(34,211,238,.1); }
+.schedule-empty {
+  text-align: center; padding: 40px 20px;
+  color: var(--text2); background: var(--surface2);
+  border-radius: 12px; border: 1px dashed var(--border);
+}
 </style>
 </head>
 <body>
@@ -680,6 +742,7 @@ a { color: var(--accent); text-decoration: none; }
     <button class="bottom-nav-item" onclick="clientNav('week',this)"><span class="bn-icon">📅</span>Week</button>
     <button class="bottom-nav-item" onclick="clientNav('meals',this)"><span class="bn-icon">🥗</span>Meals</button>
     <button class="bottom-nav-item" onclick="clientNav('workout',this)"><span class="bn-icon">🏋️</span>Workout</button>
+    <button class="bottom-nav-item" onclick="clientNav('sessions',this)"><span class="bn-icon">🗓️</span>Sessions</button>
     <button class="bottom-nav-item" onclick="clientNav('wellness',this)"><span class="bn-icon">🌿</span>Wellness</button>
     <button class="bottom-nav-item" onclick="clientNav('perks',this)"><span class="bn-icon">🎁</span>Perks</button>
     <button class="bottom-nav-item" onclick="clientNav('msg',this)"><span class="bn-icon">💬</span>Chat</button>
@@ -736,6 +799,10 @@ let pts = [
 
 const clients = [
   { id:'c1', name:'Sarah Chen', email:'sarah@email.com', subscriptionType:'Virtual PT', assignedPtId:'pt1',
+    phone:'0411 222 333', mobile:'0411 222 333', emergencyName:'David Chen', emergencyPhone:'0411 444 555', emergencyRel:'Husband',
+    address:'22 Sunrise Ave, Coogee NSW 2034', dateOfBirth:'Mar 15, 1988',
+    preferredContact:'WhatsApp', preferredContactDetail:'0411 222 333',
+    contactNotes:'Prefers morning messages. No calls after 8pm. WhatsApp is fastest.',
     calorieGoalPerDay:1800, fatGoalPerDay:60, carbGoalPerDay:200, proteinGoalPerDay:140,
     weeklyWorkoutGoal:4, lastLoginDaysAgo:1, lastWorkoutDaysAgo:2, lastMealLogDaysAgo:1,
     loginStreakDays:12, workoutStreakWeeks:3,
@@ -745,6 +812,10 @@ const clients = [
     motivation:'Progress photos + milestone rewards. Responds well to positive reinforcement.',
     assignedWorkoutIds:['w1','w3','w5'], todayMeals:['m1','m2','m3','m4'], mealEaten:{}, ptNotes:'', mealEdits:{} },
   { id:'c2', name:'James Okafor', email:'james@email.com', subscriptionType:'PT in person', assignedPtId:'pt1',
+    phone:'0422 111 999', mobile:'0422 111 999', emergencyName:'Ngozi Okafor', emergencyPhone:'0422 888 777', emergencyRel:'Sister',
+    address:'5/88 Park Rd, Newtown NSW 2042', dateOfBirth:'Jul 4, 1990',
+    preferredContact:'Email', preferredContactDetail:'james@email.com',
+    contactNotes:'Works nights — sleep until noon. Email preferred over calls.',
     calorieGoalPerDay:2400, fatGoalPerDay:80, carbGoalPerDay:300, proteinGoalPerDay:200,
     weeklyWorkoutGoal:5, lastLoginDaysAgo:5, lastWorkoutDaysAgo:8, lastMealLogDaysAgo:6,
     loginStreakDays:0, workoutStreakWeeks:0,
@@ -754,6 +825,10 @@ const clients = [
     motivation:'Competitive. Likes seeing strength numbers go up.',
     assignedWorkoutIds:['w2','w4','w6'], todayMeals:['m5','m6','m7'], mealEaten:{}, ptNotes:'', mealEdits:{} },
   { id:'c3', name:'Priya Sharma', email:'priya@email.com', subscriptionType:'Nutrition only', assignedPtId:'pt1',
+    phone:'0433 555 888', mobile:'0433 555 888', emergencyName:'Raj Sharma', emergencyPhone:'0433 777 222', emergencyRel:'Husband',
+    address:'14 Lotus Ct, Parramatta NSW 2150', dateOfBirth:'Oct 22, 1992',
+    preferredContact:'SMS', preferredContactDetail:'0433 555 888',
+    contactNotes:'SMS only during business hours. Speaks Hindi and English.',
     calorieGoalPerDay:1600, fatGoalPerDay:50, carbGoalPerDay:220, proteinGoalPerDay:120,
     weeklyWorkoutGoal:3, lastLoginDaysAgo:2, lastWorkoutDaysAgo:3, lastMealLogDaysAgo:2,
     loginStreakDays:7, workoutStreakWeeks:2,
@@ -763,6 +838,10 @@ const clients = [
     motivation:'Feels motivated by how clothes fit and energy levels.',
     assignedWorkoutIds:['w7','w8'], todayMeals:['m8','m9','m10'], mealEaten:{}, ptNotes:'', mealEdits:{} },
   { id:'c4', name:'Tom Whitfield', email:'tom@email.com', subscriptionType:'Virtual PT', assignedPtId:'pt1',
+    phone:'0444 123 456', mobile:'0444 123 456', emergencyName:'Claire Whitfield', emergencyPhone:'0444 654 321', emergencyRel:'Wife',
+    address:'3 Harbour View Rd, Manly NSW 2095', dateOfBirth:'Feb 8, 1985',
+    preferredContact:'Phone call', preferredContactDetail:'0444 123 456',
+    contactNotes:'Travels frequently. Call before 8am AEST or after 6pm. Will often be interstate.',
     calorieGoalPerDay:2000, fatGoalPerDay:65, carbGoalPerDay:250, proteinGoalPerDay:160,
     weeklyWorkoutGoal:3, lastLoginDaysAgo:0, lastWorkoutDaysAgo:1, lastMealLogDaysAgo:0,
     loginStreakDays:21, workoutStreakWeeks:5,
@@ -772,6 +851,10 @@ const clients = [
     motivation:'Data-driven. Loves tracking streaks and numbers.',
     assignedWorkoutIds:['w1','w9','w10'], todayMeals:['m11','m12','m13'], mealEaten:{}, ptNotes:'', mealEdits:{} },
   { id:'c5', name:'Amy Zhang', email:'amy@email.com', subscriptionType:'PT in person', assignedPtId:'pt1',
+    phone:'0455 987 654', mobile:'0455 987 654', emergencyName:'Wei Zhang', emergencyPhone:'0455 111 222', emergencyRel:'Father',
+    address:'9 Rose Garden Dr, Chatswood NSW 2067', dateOfBirth:'Dec 30, 1993',
+    preferredContact:'WhatsApp', preferredContactDetail:'0455 987 654',
+    contactNotes:'New mum — baby naps 10am–12pm and 2–4pm. Best time to message. No early morning calls.',
     calorieGoalPerDay:1900, fatGoalPerDay:65, carbGoalPerDay:230, proteinGoalPerDay:130,
     weeklyWorkoutGoal:4, lastLoginDaysAgo:4, lastWorkoutDaysAgo:5, lastMealLogDaysAgo:4,
     loginStreakDays:1, workoutStreakWeeks:0,
@@ -928,6 +1011,15 @@ let perks = [
 let signupsData = [
   { id:'ns1', name:'David Li', email:'david.li@email.com', preferredSub:'Virtual PT', signupDate:'Mar 22, 2025', assignedPtId:null },
   { id:'ns2', name:'Rosa Martinez', email:'rosa.m@email.com', preferredSub:'Nutrition only', signupDate:'Mar 24, 2025', assignedPtId:null }
+];
+
+// Appointments: scheduled PT sessions
+let appointments = [
+  { id:'apt1', clientId:'c1', ptId:'pt1', title:'Virtual Check-in', type:'virtual', date:'2025-03-26', startTime:'07:00', endTime:'07:30', location:'Zoom — link sent by PT', notes:'Review week 6 progress and adjust workout plan.', status:'confirmed' },
+  { id:'apt2', clientId:'c2', ptId:'pt1', title:'In-Person Session', type:'inperson', date:'2025-03-29', startTime:'06:00', endTime:'07:00', location:'Apex Gym, 14 Fitness Lane Bondi NSW', notes:'Leg day — focus on squat form.', status:'confirmed' },
+  { id:'apt3', clientId:'c5', ptId:'pt1', title:'In-Person Session', type:'inperson', date:'2025-03-27', startTime:'10:00', endTime:'10:45', location:'Apex Gym, 14 Fitness Lane Bondi NSW', notes:'Post-partum core & pelvic floor session.', status:'confirmed' },
+  { id:'apt4', clientId:'c1', ptId:'pt1', title:'Progress Review Call', type:'virtual', date:'2025-04-02', startTime:'07:00', endTime:'07:20', location:'Video call — APEX app', notes:'Monthly body composition review.', status:'pending' },
+  { id:'apt5', clientId:'c4', ptId:'pt1', title:'Virtual Check-in', type:'virtual', date:'2025-03-31', startTime:'17:30', endTime:'18:00', location:'Video call — APEX app', notes:'Tom travelling — hotel gym session review.', status:'confirmed' },
 ];
 
 // Broadcast messages history
@@ -1373,7 +1465,7 @@ function closeDrawer(){ document.getElementById('drawer-root').innerHTML=''; }
 function renderDrawer(){
   const c=getClient(selectedClientId); if(!c) return;
   const ar=getAtRisk(c);
-  const tabs=['Overview','Goals','Nutrition','Workouts','Activity','Messages'];
+  const tabs=['Overview','Contact','Goals','Nutrition','Workouts','Activity','Messages'];
   document.getElementById('drawer-root').innerHTML=`<div class="drawer-overlay" onclick="closeDrawer()"></div>
   <div class="drawer"><div class="drawer-header"><div class="at-risk-avatar" style="width:42px;height:42px;font-size:1rem;background:rgba(74,222,128,.1);color:var(--accent)">${c.name[0]}</div><div style="flex:1"><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem">${c.name}</div><div class="flex items-center gap-2 mt-1"><span class="badge ${subColor(c.subscriptionType)}">${c.subscriptionType}</span>${ar.atRisk?`<span class="badge badge-red">⚠ At Risk</span>`:`<span class="badge badge-green">Active</span>`}</div></div><button class="close-btn" onclick="closeDrawer()">✕</button></div>
   <div class="drawer-tabs">${tabs.map(t=>`<button class="drawer-tab ${activeDrawerTab===t.toLowerCase().replace(/[& ]/g,'')&&activeDrawerTab===t.toLowerCase()?'active':''}" onclick="setDrawerTab('${t.toLowerCase()}')">${t}</button>`).join('')}</div>
@@ -1384,6 +1476,7 @@ function setDrawerTab(tab){ activeDrawerTab=tab; const c=getClient(selectedClien
 function renderDrawerTab(c){
   const adh=getCalorieAdherence(c); const woPct=getWorkoutProgress(c);
   if(activeDrawerTab==='overview') return`<div class="card-sm mb-3"><div class="text-xs-muted mb-1">Subscription</div><div style="font-weight:600">${c.subscriptionType}</div><div class="text-sm text-muted mt-1">Next billing: Apr 1, 2025</div></div><div class="card-sm mb-3"><div class="text-xs-muted mb-1">Assigned PT</div><div style="font-weight:600">Marcus Reid</div><div class="text-sm" style="color:var(--warn)">★ 4.6 · Gold Tier</div></div><div class="grid-2 mt-3"><div class="card-sm" style="text-align:center"><div class="text-xs-muted">Cal Adherence</div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;color:${adh>=80?'var(--accent)':adh>=60?'var(--warn)':'var(--danger)'}">${adh}%</div></div><div class="card-sm" style="text-align:center"><div class="text-xs-muted">Workouts</div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;color:var(--accent2)">${c.weeklyWorkoutsCompleted}/${c.weeklyWorkoutGoal}</div></div></div><div class="flex gap-3 mt-3"><div class="streak-badge" style="flex:1"><span class="streak-num">${c.loginStreakDays}</span><div class="streak-label">Day Login Streak</div></div><div class="streak-badge" style="flex:1"><span class="streak-num">${c.workoutStreakWeeks}</span><div class="streak-label">Week Workout Streak</div></div></div>`;
+  if(activeDrawerTab==='contact') return renderContactTab(c,'drawer');
   if(activeDrawerTab==='goals') return`<div class="mb-3"><div class="text-xs-muted mb-1">Goals</div><div class="card-sm">${c.goals}</div></div><div class="mb-3"><div class="text-xs-muted mb-1">Context</div><div class="card-sm">${c.context}</div></div><div class="mb-3"><div class="text-xs-muted mb-1">Motivation</div><div class="card-sm">${c.motivation}</div></div><div class="form-row"><label>PT Notes</label><textarea id="ptn-${c.id}" rows="3">${c.ptNotes||''}</textarea><button class="btn btn-primary btn-sm mt-2" onclick="savePtNotes('${c.id}','ptn-')">Save</button></div>`;
   if(activeDrawerTab==='nutrition'){const days=['M','T','W','T','F','S','S'];return`<div class="card-sm mb-3">
     <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem;margin-bottom:10px">Daily Nutrition Targets</div>
@@ -1425,7 +1518,7 @@ function openPtClient(id){ activeClientForPt=id; activePtTab='overview'; renderP
 function renderPtClientPanel(){
   const c=getClient(activeClientForPt); if(!c) return'';
   const adh=getCalorieAdherence(c); const woPct=getWorkoutProgress(c);
-  const tabs=['Overview','Nutrition','Meal Planner','Workouts','Goals','Messages'];
+  const tabs=['Overview','Contact','Schedule','Nutrition','Meal Planner','Workouts','Goals','Messages'];
   return`<div class="flex items-center gap-3 mb-4 animate-in"><button class="btn btn-ghost btn-sm" onclick="activeClientForPt=null;renderPt('clients')">← Back</button><div class="at-risk-avatar" style="width:36px;height:36px;background:rgba(74,222,128,.1);color:var(--accent)">${c.name[0]}</div><div><div style="font-family:'Syne',sans-serif;font-weight:700">${c.name}</div><span class="badge ${subColor(c.subscriptionType)}">${c.subscriptionType}</span></div></div>
   <div style="display:flex;gap:3px;margin-bottom:20px;border-bottom:1px solid var(--border)">${tabs.map(t=>`<button class="drawer-tab ${activePtTab===t.toLowerCase().replace(' ','')&&activePtTab===(t.toLowerCase().replace(' ',''))?'active':''}" onclick="setPtTab('${t.toLowerCase().replace(' ','')}')">${t}</button>`).join('')}</div>
   <div id="pt-panel-body">${renderPtPanelTab(c)}</div>`;
@@ -1464,6 +1557,8 @@ function renderPtPanelTab(c){
       <div class="mini-bars">${c.weeklyCalories.map((cal,i)=>{const p=Math.min(100,Math.round(cal/(c.weeklyCalorieGoal||c.calorieGoalPerDay)*100));return`<div class="mini-bar-wrap"><div class="mini-bar-track"><div class="mini-bar-fill" style="height:${p}%;background:${p>=90?'var(--accent)':p>=70?'var(--warn)':'var(--danger)'}"></div></div><div class="mini-bar-label">${['M','T','W','T','F','S','S'][i]}</div></div>`;}).join('')}</div>
       <div class="text-xs-muted mt-2">Adherence: <strong style="color:var(--accent)">${adh}%</strong></div>
     </div>`;
+  if(activePtTab==='contact') return renderContactTab(c,'pt');
+  if(activePtTab==='schedule') return renderPtScheduleTab(c);
   if(activePtTab==='mealplanner') return renderPtMealPlanner(c);
   if(activePtTab==='workouts') return`<div class="card-sm mb-3"><div class="flex items-center justify-between mb-1"><span class="text-xs-muted">Weekly Progress</span><span style="font-weight:700">${c.weeklyWorkoutsCompleted}/${c.weeklyWorkoutGoal}</span></div><div class="progress-bar"><div class="progress-fill" style="width:${woPct}%;background:${woPct>=80?'var(--accent)':woPct>=50?'var(--warn)':'var(--danger)'}"></div></div></div><div class="flex flex-col gap-2 mb-3">${c.assignedWorkoutIds.map(wid=>{const w=getWorkout(wid);return w?`<div class="workout-card"><div><div style="font-weight:600;font-size:.9rem">${w.name}</div><div class="text-xs-muted">${w.focus}</div></div><div class="flex items-center gap-2"><span class="diff-pill ${diffClass(w.difficulty)}">${w.difficulty}</span><button class="btn btn-secondary btn-xs" onclick="openReplaceModal('${c.id}','${wid}')">Replace</button></div></div>`:''}).join('')}</div><button class="btn btn-primary btn-sm" onclick="openAddWorkoutModal('${c.id}')">+ Assign from Library</button>`;
   if(activePtTab==='goals') return`<div class="mb-3"><div class="text-xs-muted mb-1">Client Goals</div><div class="card-sm">${c.goals}</div></div><div class="mb-3"><div class="text-xs-muted mb-1">Context</div><div class="card-sm">${c.context}</div></div><div class="form-row"><label>PT Notes</label><textarea id="ptnp-${c.id}" rows="4">${c.ptNotes||''}</textarea><button class="btn btn-primary btn-sm mt-2" onclick="savePtNotes('${c.id}','ptnp-')">Save</button></div>`;
@@ -1561,6 +1656,7 @@ function renderClient(s){
   else if(s==='week') mc.innerHTML=renderClientWeek(c);
   else if(s==='meals') mc.innerHTML=renderClientMeals(c);
   else if(s==='workout') mc.innerHTML=renderClientWorkout(c);
+  else if(s==='sessions') mc.innerHTML=renderClientAppointments(c);
   else if(s==='wellness') mc.innerHTML=renderClientWellness(c);
   else if(s==='perks') mc.innerHTML=renderClientPerks(c);
   else if(s==='msg') mc.innerHTML=renderClientMessages(c);
@@ -1599,6 +1695,7 @@ function renderClientToday(c){
     </div>`;
   }
   const todayW=getWorkout(c.assignedWorkoutIds[0]);
+  const nextApt=appointments.filter(a=>a.clientId===c.id&&a.date>='2025-03-25'&&a.status!=='cancelled').sort((a,b)=>a.date.localeCompare(b.date))[0];
   const ptName=(pts.find(p=>p.id===c.assignedPtId)||{name:'your PT'}).name;
   return`<div class="animate-in" style="padding-bottom:8px">
   <div style="margin-bottom:18px"><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.5rem">Hi, ${c.name.split(' ')[0]} 👋</div><div class="text-sm text-muted mt-1">Wednesday · Let's make today count.</div></div>
@@ -1623,6 +1720,20 @@ function renderClientToday(c){
   </div>
 
   ${todayW?`<div class="card mb-3" style="border-top:3px solid var(--warn)"><div class="text-xs-muted mb-1">Today's Workout</div><div style="font-family:'Syne',sans-serif;font-weight:700">${todayW.name}</div><div class="text-sm text-muted mt-1">${todayW.focus} · ${todayW.difficulty}</div><div class="flex gap-2 mt-3"><button class="btn btn-secondary btn-sm" onclick="clientNav('workout',document.querySelectorAll('.bottom-nav-item')[3])">View Details</button><button class="btn btn-primary btn-sm" onclick="showToast('🎉 Workout logged!')">Mark Done</button></div></div>`:''}
+  ${nextApt?`<div class="card mb-3" style="border-top:3px solid var(--accent2);cursor:pointer" onclick="clientNav('sessions',document.querySelectorAll('.bottom-nav-item')[4])">
+    <div class="text-xs-muted mb-1">Next Session with ${ptName}</div>
+    <div class="flex items-center gap-3">
+      <div class="apt-date-block" style="min-width:40px">
+        <div class="apt-date-day" style="font-size:1rem">${parseInt(nextApt.date.split('-')[2])}</div>
+        <div class="apt-date-month">${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(nextApt.date.split('-')[1])-1]}</div>
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:.9rem">${nextApt.title}</div>
+        <div class="text-sm text-muted">⏰ ${nextApt.startTime} · ${nextApt.type==='virtual'?'📹 Virtual':'🏋️ In Person'}</div>
+      </div>
+      <button class="btn btn-secondary btn-xs" style="margin-left:auto" onclick="event.stopPropagation();downloadICS('${nextApt.id}')">📅</button>
+    </div>
+  </div>`:''}
   <div class="streak-strip mb-3"><div class="streak-badge"><span style="font-size:1.2rem">🔥</span><div><div class="streak-num">${c.loginStreakDays}</div><div class="streak-label">Day streak<br/><span style="font-size:.65rem;color:var(--text3)">Keep showing up!</span></div></div></div><div class="streak-badge"><span style="font-size:1.2rem">💪</span><div><div class="streak-num" style="color:var(--accent2)">${c.workoutStreakWeeks}</div><div class="streak-label">Week streak<br/><span style="font-size:.65rem;color:var(--text3)">Consistency = results</span></div></div></div></div>
   </div>`;
 }
@@ -2258,10 +2369,325 @@ function toggleOffer(id){
   renderOwner('subscriptions');
 }
 
+/* ============================================================
+   SHARED CONTACT TAB RENDERER
+   ============================================================ */
+function renderContactTab(c, context){
+  const contactMethods=['Phone call','WhatsApp','SMS','Email','Video call'];
+  const methodIcons={'Phone call':'📞','WhatsApp':'💬','SMS':'📱','Email':'✉️','Video call':'🎥'};
+  return`
+  <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;margin-bottom:14px">📋 Contact Details</div>
+  <div class="contact-info-row">
+    <span class="contact-info-icon">✉️</span>
+    <div><div class="contact-info-label">Email</div><div class="contact-info-value">${c.email||'Not set'}</div></div>
+  </div>
+  <div class="contact-info-row">
+    <span class="contact-info-icon">📱</span>
+    <div><div class="contact-info-label">Mobile</div><div class="contact-info-value">${c.mobile||c.phone||'Not set'}</div></div>
+  </div>
+  <div class="contact-info-row">
+    <span class="contact-info-icon">🏠</span>
+    <div><div class="contact-info-label">Address</div><div class="contact-info-value">${c.address||'Not set'}</div></div>
+  </div>
+  <div class="contact-info-row">
+    <span class="contact-info-icon">🎂</span>
+    <div><div class="contact-info-label">Date of Birth</div><div class="contact-info-value">${c.dateOfBirth||'Not set'}</div></div>
+  </div>
+  <div class="divider"></div>
+  <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem;margin-bottom:10px">⭐ Preferred Contact Method</div>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+    ${contactMethods.map(m=>`<div class="contact-method-chip ${(c.preferredContact||'')=== m?'selected':''}" onclick="setPreferredContact('${c.id}','${m}',this)">${methodIcons[m]||''} ${m}</div>`).join('')}
+  </div>
+  <div class="contact-info-row mb-3">
+    <span class="contact-info-icon">${methodIcons[c.preferredContact||'']||'📲'}</span>
+    <div style="flex:1">
+      <div class="contact-info-label">Best number / address for ${c.preferredContact||'preferred contact'}</div>
+      <input id="pref-detail-input-${c.id}" value="${c.preferredContactDetail||''}" placeholder="e.g. 0411 222 333" style="margin-top:4px;font-size:.85rem" />
+    </div>
+  </div>
+  <div class="form-row mb-3">
+    <label>Contact Notes</label>
+    <textarea id="contact-notes-${c.id}" rows="2" placeholder="Best times, language prefs, restrictions…">${c.contactNotes||''}</textarea>
+  </div>
+  <button class="btn btn-primary btn-sm" onclick="saveContactDetails('${c.id}')">Save Contact Details</button>
+  <div class="divider"></div>
+  <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem;margin-bottom:10px">🚨 Emergency Contact</div>
+  <div class="grid-2" style="gap:8px;margin-bottom:8px">
+    <div class="form-row" style="margin-bottom:0"><label>Name</label><input id="emg-name-${c.id}" value="${c.emergencyName||''}" placeholder="Full name" /></div>
+    <div class="form-row" style="margin-bottom:0"><label>Relationship</label><input id="emg-rel-${c.id}" value="${c.emergencyRel||''}" placeholder="e.g. Spouse" /></div>
+  </div>
+  <div class="form-row mb-3"><label>Phone</label><input id="emg-phone-${c.id}" value="${c.emergencyPhone||''}" placeholder="04XX XXX XXX" /></div>
+  <button class="btn btn-secondary btn-sm" onclick="saveEmergencyContact('${c.id}')">Save Emergency Contact</button>`;
+}
+function setPreferredContact(cid, method, el){
+  const container=el.closest('[style]')||el.parentElement;
+  container.querySelectorAll('.contact-method-chip').forEach(x=>x.classList.remove('selected'));
+  el.classList.add('selected');
+  const c=getClient(cid); if(c) c.preferredContact=method;
+}
+function saveContactDetails(cid){
+  const c=getClient(cid); if(!c) return;
+  c.preferredContactDetail=document.getElementById(`pref-detail-input-${cid}`)?.value.trim()||'';
+  c.contactNotes=document.getElementById(`contact-notes-${cid}`)?.value.trim()||'';
+  showToast('Contact details saved ✓');
+}
+function saveEmergencyContact(cid){
+  const c=getClient(cid); if(!c) return;
+  c.emergencyName=document.getElementById(`emg-name-${cid}`)?.value.trim()||'';
+  c.emergencyRel=document.getElementById(`emg-rel-${cid}`)?.value.trim()||'';
+  c.emergencyPhone=document.getElementById(`emg-phone-${cid}`)?.value.trim()||'';
+  showToast('Emergency contact saved ✓');
+}
+
+/* ============================================================
+   PT SCHEDULE TAB
+   ============================================================ */
+function renderAptCard(a, showActions){
+  const [yr,mo,dy]=a.date.split('-');
+  const monthNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const mon=monthNames[parseInt(mo)-1];
+  const statusClass={confirmed:'apt-status-confirmed',pending:'apt-status-pending',cancelled:'apt-status-cancelled'}[a.status]||'apt-status-pending';
+  const typeClass=a.type==='virtual'?'apt-type-virtual':'apt-type-inperson';
+  const typeIcon=a.type==='virtual'?'📹':'🏋️';
+  return`<div class="apt-card ${typeClass}">
+    <div class="flex" style="gap:12px">
+      <div class="apt-date-block">
+        <div class="apt-date-day">${parseInt(dy)}</div>
+        <div class="apt-date-month">${mon}</div>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div class="flex items-center gap-2 mb-1 flex-wrap">
+          <span style="font-weight:700;font-size:.9rem">${a.title}</span>
+          <span class="badge ${statusClass}">${a.status}</span>
+          <span class="badge badge-gray">${typeIcon} ${a.type==='virtual'?'Virtual':'In Person'}</span>
+        </div>
+        <div class="text-sm text-muted">⏰ ${a.startTime} – ${a.endTime}</div>
+        <div class="text-sm text-muted">📍 ${a.location}</div>
+        ${a.notes?`<div class="text-xs-muted mt-1">${a.notes}</div>`:''}
+      </div>
+    </div>
+    ${showActions?`<div class="flex gap-2 mt-3 flex-wrap">
+      <button class="btn btn-secondary btn-xs" onclick="openScheduleModal(null,'${a.id}')">✏️ Edit</button>
+      <button class="btn btn-danger btn-xs" onclick="cancelAppointment('${a.id}')">${a.status==='cancelled'?'Restore':'Cancel'}</button>
+    </div>`:''}
+  </div>`;
+}
+
+function renderPtScheduleTab(c){
+  const clientApts=appointments.filter(a=>a.clientId===c.id).sort((a,b)=>a.date.localeCompare(b.date));
+  const upcoming=clientApts.filter(a=>a.date>='2025-03-25');
+  const past=clientApts.filter(a=>a.date<'2025-03-25');
+  return`
+  <div class="flex items-center justify-between mb-4">
+    <div>
+      <div style="font-family:'Syne',sans-serif;font-weight:700">Sessions with ${c.name}</div>
+      <div class="text-xs-muted mt-1">${upcoming.length} upcoming · ${past.length} past</div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="openScheduleModal('${c.id}',null)">+ Schedule Session</button>
+  </div>
+  ${upcoming.length===0&&past.length===0?`<div class="schedule-empty"><div style="font-size:2rem;margin-bottom:8px">📅</div><div style="font-weight:600;margin-bottom:4px">No sessions yet</div><div class="text-sm">Schedule your first session with ${c.name.split(' ')[0]}.</div></div>`:''}
+  ${upcoming.length>0?`<div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:10px">Upcoming</div>`:'' }
+  ${upcoming.map(a=>renderAptCard(a,true)).join('')}
+  ${past.length>0?`<div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin:16px 0 10px">Past</div>`:''}
+  ${past.map(a=>renderAptCard(a,false)).join('')}`;
+}
+
+function cancelAppointment(id){
+  const a=appointments.find(x=>x.id===id); if(!a) return;
+  a.status=a.status==='cancelled'?'confirmed':'cancelled';
+  showToast(a.status==='cancelled'?'Session cancelled':'Session restored ✓');
+  setPtTab('schedule');
+}
+
+/* ============================================================
+   SCHEDULE MODAL
+   ============================================================ */
+function openScheduleModal(clientId, aptId){
+  const a=aptId?appointments.find(x=>x.id===aptId):null;
+  const cid=clientId||(a?a.clientId:'');
+  const c=getClient(cid);
+  document.getElementById('modal-root').innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" style="width:min(540px,100%)" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700">${a?'Edit Session':'Schedule New Session'}</div>
+        ${c?`<div class="text-xs-muted mt-1">Client: ${c.name}</div>`:''}
+      </div>
+      <button class="close-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row"><label>Session Title *</label>
+        <input id="apt-title" value="${a?a.title:'PT Session'}" placeholder="e.g. In-Person Training Session" />
+      </div>
+      <div class="form-row"><label>Session Type</label>
+        <div class="flex gap-2 mt-1">
+          <div class="contact-method-chip ${!a||a.type==='inperson'?'selected':''}" onclick="document.querySelectorAll('[data-apttype]').forEach(x=>x.classList.remove('selected'));this.classList.add('selected')" data-apttype="inperson">🏋️ In Person</div>
+          <div class="contact-method-chip ${a&&a.type==='virtual'?'selected':''}" onclick="document.querySelectorAll('[data-apttype]').forEach(x=>x.classList.remove('selected'));this.classList.add('selected')" data-apttype="virtual">📹 Virtual</div>
+        </div>
+      </div>
+      <div class="grid-3" style="gap:10px">
+        <div class="form-row" style="margin-bottom:0"><label>Date *</label><input type="date" id="apt-date" value="${a?a.date:'2025-04-01'}" /></div>
+        <div class="form-row" style="margin-bottom:0"><label>Start Time</label><input type="time" id="apt-start" value="${a?a.startTime:'07:00'}" /></div>
+        <div class="form-row" style="margin-bottom:0"><label>End Time</label><input type="time" id="apt-end" value="${a?a.endTime:'08:00'}" /></div>
+      </div>
+      <div class="form-row mt-3"><label>Location / Link</label>
+        <input id="apt-location" value="${a?a.location:'Apex Gym, 14 Fitness Lane Bondi NSW'}" placeholder="Gym address or video link" />
+      </div>
+      <div class="form-row"><label>Session Notes</label>
+        <textarea id="apt-notes" rows="2" placeholder="Focus areas, prep instructions…">${a?a.notes:''}</textarea>
+      </div>
+      <div class="form-row"><label>Status</label>
+        <select id="apt-status">
+          <option value="confirmed" ${!a||a.status==='confirmed'?'selected':''}>Confirmed</option>
+          <option value="pending" ${a&&a.status==='pending'?'selected':''}>Pending</option>
+          <option value="cancelled" ${a&&a.status==='cancelled'?'selected':''}>Cancelled</option>
+        </select>
+      </div>
+      <div class="flex gap-3 mt-4">
+        <button class="btn btn-primary flex-1" onclick="saveAppointment('${aptId||''}','${cid}')">💾 Save Session</button>
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+  </div></div>`;
+}
+
+function saveAppointment(aptId, cid){
+  const title=document.getElementById('apt-title').value.trim();
+  if(!title){ showToast('⚠ Title required'); return; }
+  const typeEl=document.querySelector('[data-apttype].selected');
+  const type=typeEl?typeEl.dataset.apttype:'inperson';
+  const date=document.getElementById('apt-date').value;
+  if(!date){ showToast('⚠ Date required'); return; }
+  const startTime=document.getElementById('apt-start').value;
+  const endTime=document.getElementById('apt-end').value;
+  const location=document.getElementById('apt-location').value.trim();
+  const notes=document.getElementById('apt-notes').value.trim();
+  const status=document.getElementById('apt-status').value;
+  if(aptId){
+    const a=appointments.find(x=>x.id===aptId);
+    if(a) Object.assign(a,{title,type,date,startTime,endTime,location,notes,status});
+  } else {
+    appointments.push({id:uid(),clientId:cid,ptId:'pt1',title,type,date,startTime,endTime,location,notes,status});
+  }
+  closeModal();
+  showToast(aptId?'Session updated ✓':'Session scheduled ✓');
+  setPtTab('schedule');
+}
+
+/* ============================================================
+   ICS CALENDAR DOWNLOAD
+   ============================================================ */
+function fmtICSDate(dateStr, timeStr){
+  const [yr,mo,dy]=dateStr.split('-');
+  const [hr,mn]=(timeStr||'00:00').split(':');
+  return `${yr}${mo}${dy}T${hr}${mn}00`;
+}
+function downloadICS(aptId){
+  const a=appointments.find(x=>x.id===aptId); if(!a) return;
+  const pt=pts.find(p=>p.id===a.ptId)||{name:'Your PT'};
+  const dtStart=fmtICSDate(a.date,a.startTime);
+  const dtEnd=fmtICSDate(a.date,a.endTime);
+  const now=new Date();
+  const pad=n=>String(n).padStart(2,'0');
+  const stamp=`${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}T${pad(now.getHours())}${pad(now.getMinutes())}00Z`;
+  const safeNotes=(a.notes||'').replace(/[\r\n]+/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');
+  const safeTitle=(a.title||'').replace(/,/g,'\\,').replace(/;/g,'\\;');
+  const safeLoc=(a.location||'').replace(/,/g,'\\,').replace(/;/g,'\\;');
+  const ics=[
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//APEX PT Platform//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:${a.id}@apexfit.com`,
+    `DTSTAMP:${stamp}`,
+    `DTSTART:${dtStart}`,
+    `DTEND:${dtEnd}`,
+    `SUMMARY:${safeTitle} with ${pt.name}`,
+    `DESCRIPTION:${safeNotes}${safeNotes?' — ':''}Booked via APEX Coaching Platform.`,
+    `LOCATION:${safeLoc}`,
+    `STATUS:${(a.status||'confirmed').toUpperCase()}`,
+    'BEGIN:VALARM',
+    'TRIGGER:-PT1H',
+    'ACTION:DISPLAY',
+    `DESCRIPTION:Reminder: ${safeTitle} in 1 hour`,
+    'END:VALARM',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].join('\r\n');
+  const blob=new Blob([ics],{type:'text/calendar;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const link=document.createElement('a');
+  link.href=url;
+  link.download=`apex-${a.date}-${(a.title||'session').toLowerCase().replace(/\s+/g,'-')}.ics`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  showToast('📅 Calendar event downloaded!');
+}
+
+/* ============================================================
+   CLIENT APPOINTMENTS VIEW
+   ============================================================ */
+function renderClientAppointments(c){
+  const ptName=(pts.find(p=>p.id===c.assignedPtId)||{name:'Your PT'}).name;
+  const clientApts=appointments.filter(a=>a.clientId===c.id).sort((a,b)=>a.date.localeCompare(b.date));
+  const upcoming=clientApts.filter(a=>a.date>='2025-03-25'&&a.status!=='cancelled');
+  const cancelled=clientApts.filter(a=>a.status==='cancelled');
+  const past=clientApts.filter(a=>a.date<'2025-03-25'&&a.status!=='cancelled');
+  function clientAptCard(a){
+    const [yr,mo,dy]=a.date.split('-');
+    const monthNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const mon=monthNames[parseInt(mo)-1];
+    const statusClass={confirmed:'apt-status-confirmed',pending:'apt-status-pending',cancelled:'apt-status-cancelled'}[a.status]||'apt-status-pending';
+    const typeIcon=a.type==='virtual'?'📹':'🏋️';
+    const typeClass=a.type==='virtual'?'apt-type-virtual':'apt-type-inperson';
+    return`<div class="apt-card ${typeClass}">
+      <div class="flex" style="gap:12px">
+        <div class="apt-date-block">
+          <div class="apt-date-day">${parseInt(dy)}</div>
+          <div class="apt-date-month">${mon}</div>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div class="flex items-center gap-2 mb-1 flex-wrap">
+            <span style="font-weight:700;font-size:.88rem">${a.title}</span>
+            <span class="badge ${statusClass}">${a.status}</span>
+          </div>
+          <div class="text-sm text-muted">⏰ ${a.startTime} – ${a.endTime}  ${typeIcon} ${a.type==='virtual'?'Virtual':'In person'}</div>
+          <div class="text-sm text-muted">📍 ${a.location}</div>
+          ${a.notes?`<div class="text-xs-muted mt-1 mb-2" style="font-style:italic">"${a.notes}"</div>`:`<div style="margin-bottom:8px"></div>`}
+          ${a.status!=='cancelled'?`<button class="download-ics-btn" onclick="downloadICS('${a.id}')">📅 Add to Calendar (.ics)</button>`:`<span class="text-xs-muted">Session cancelled — contact your PT to reschedule.</span>`}
+        </div>
+      </div>
+    </div>`;
+  }
+  return`<div class="animate-in">
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;margin-bottom:4px">📅 My Sessions</div>
+    <div class="text-sm text-muted mb-4">Scheduled with <strong>${ptName}</strong>. Tap "Add to Calendar" to download an .ics file for Google Calendar, Apple Calendar, or Outlook.</div>
+    ${upcoming.length===0&&past.length===0&&cancelled.length===0?`
+    <div class="schedule-empty">
+      <div style="font-size:2.5rem;margin-bottom:10px">📅</div>
+      <div style="font-weight:700;font-size:1rem;margin-bottom:6px">No sessions scheduled yet</div>
+      <div class="text-sm text-muted">Your PT will schedule sessions here. You'll be notified and can add them to your calendar.</div>
+    </div>`:''}
+    ${upcoming.length>0?`
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:10px">Upcoming</div>
+    ${upcoming.map(clientAptCard).join('')}`:''}
+    ${past.length>0?`
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin:16px 0 10px">Past Sessions</div>
+    ${past.map(clientAptCard).join('')}`:''}
+    ${cancelled.length>0?`
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--danger);margin:16px 0 10px">Cancelled</div>
+    ${cancelled.map(clientAptCard).join('')}`:''}
+  </div>`;
+}
+
 function saveClientMacroTargets(cid, prefix='tgt-'){
   const c=getClient(cid); if(!c) return;
-  const cal=parseInt(document.getElementById(`${prefix}cal-${cid}`).value)||c.calorieGoalPerDay;
-  const prot=parseInt(document.getElementById(`${prefix}prot-${cid}`).value)||c.proteinGoalPerDay;
+  const cal=parseInt(document.getElementById(`${prefix}cal-${cid}`)?.value)||c.calorieGoalPerDay;
+  const prot=parseInt(document.getElementById(`${prefix}prot-${cid}`)?.value)||c.proteinGoalPerDay;
   const carb=parseInt(document.getElementById(`${prefix}carb-${cid}`).value)||c.carbGoalPerDay;
   const fat=parseInt(document.getElementById(`${prefix}fat-${cid}`).value)||c.fatGoalPerDay;
   c.calorieGoalPerDay=cal; c.weeklyCalorieGoal=cal;
