@@ -664,6 +664,125 @@ a { color: var(--accent); text-decoration: none; }
   color: var(--text2); background: var(--surface2);
   border-radius: 12px; border: 1px dashed var(--border);
 }
+/* ============================================================
+   ROADMAP VIEW
+   ============================================================ */
+#roadmap-view {
+  min-height: 100vh;
+  background: var(--bg);
+  transition: background .25s;
+}
+.roadmap-hero {
+  background: radial-gradient(ellipse 100% 80% at 50% -10%, rgba(74,222,128,.1) 0%, transparent 65%),
+              radial-gradient(ellipse 60% 50% at 85% 30%, rgba(34,211,238,.07) 0%, transparent 55%),
+              var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 56px 40px 48px;
+  text-align: center;
+}
+[data-theme="light"] .roadmap-hero {
+  background: radial-gradient(ellipse 100% 80% at 50% -10%, rgba(22,163,74,.07) 0%, transparent 65%), var(--surface);
+}
+.roadmap-hero-logo { font-family:'Syne',sans-serif; font-weight:800; font-size:1.5rem; color:var(--accent); letter-spacing:-.02em; margin-bottom:20px; }
+.roadmap-hero-title { font-family:'Syne',sans-serif; font-weight:800; font-size:2.4rem; letter-spacing:-.03em; line-height:1.15; margin-bottom:12px; }
+.roadmap-hero-title span { color: var(--accent); }
+.roadmap-hero-sub { font-size:1rem; color:var(--text2); max-width:540px; margin:0 auto 28px; line-height:1.6; }
+.roadmap-hero-badges { display:flex; justify-content:center; flex-wrap:wrap; gap:10px; }
+.roadmap-hero-badge { display:inline-flex; align-items:center; gap:6px; padding:7px 16px; border-radius:999px; font-size:.82rem; font-weight:600; border:1px solid var(--border); background:var(--surface2); color:var(--text2); }
+.roadmap-body { max-width: 900px; margin: 0 auto; padding: 48px 32px 80px; }
+@media(max-width:600px){ .roadmap-body { padding: 28px 16px 60px; } .roadmap-hero { padding: 40px 20px 36px; } .roadmap-hero-title { font-size:1.7rem; } }
+
+/* Phase cards */
+.phase-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  transition: box-shadow .2s, background .25s, border-color .2s;
+}
+.phase-card:hover { box-shadow: var(--shadow); }
+.phase-header {
+  display: flex; align-items: center; gap: 16px;
+  padding: 22px 28px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+  cursor: pointer;
+  user-select: none;
+  transition: background .15s;
+}
+.phase-header:hover { background: var(--surface3); }
+.phase-number {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: .95rem;
+  flex-shrink: 0;
+}
+.phase-title-block { flex: 1; }
+.phase-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.05rem; }
+.phase-tagline { font-size: .82rem; color: var(--text2); margin-top: 2px; }
+.phase-status-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 12px; border-radius: 999px; font-size: .72rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .04em; flex-shrink: 0;
+}
+.ps-planned { background: rgba(90,99,128,.2); color: var(--text2); border: 1px solid var(--border); }
+.ps-next { background: rgba(251,191,36,.12); color: var(--warn); border: 1px solid rgba(251,191,36,.3); }
+.ps-active { background: rgba(74,222,128,.12); color: var(--accent); border: 1px solid rgba(74,222,128,.3); }
+.ps-shipped { background: rgba(34,211,238,.12); color: var(--accent2); border: 1px solid rgba(34,211,238,.3); }
+.phase-chevron { font-size: .85rem; color: var(--text3); flex-shrink: 0; transition: transform .25s; }
+.phase-chevron.open { transform: rotate(90deg); }
+.phase-body { padding: 0; overflow: hidden; transition: max-height .35s ease; max-height: 0; }
+.phase-body.open { max-height: 2000px; }
+.phase-body-inner { padding: 24px 28px 26px; }
+
+/* Feature items inside phase */
+.feature-group { margin-bottom: 22px; }
+.feature-group:last-child { margin-bottom: 0; }
+.feature-group-title {
+  font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--text3); margin-bottom: 10px;
+  padding-bottom: 6px; border-bottom: 1px solid var(--border);
+}
+.feature-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(42,48,72,.2);
+}
+[data-theme="light"] .feature-item { border-bottom-color: rgba(212,217,236,.4); }
+.feature-item:last-child { border-bottom: none; }
+.feature-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  flex-shrink: 0; margin-top: 6px;
+}
+.feature-text { font-size: .88rem; color: var(--text); line-height: 1.55; }
+.feature-sub { font-size: .78rem; color: var(--text3); margin-top: 3px; line-height: 1.5; }
+.feature-tag {
+  display: inline-flex; align-items: center;
+  margin-left: 6px; padding: 1px 7px; border-radius: 999px;
+  font-size: .68rem; font-weight: 600;
+  background: rgba(34,211,238,.1); color: var(--accent2);
+  border: 1px solid rgba(34,211,238,.25);
+  vertical-align: middle;
+}
+/* Tech stack chips */
+.tech-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: 6px;
+  font-size: .75rem; font-weight: 600; font-family: monospace;
+  background: var(--surface3); color: var(--text2);
+  border: 1px solid var(--border);
+  margin: 3px 3px 3px 0;
+}
+/* Timeline connector */
+.phase-connector {
+  display: flex; justify-content: center;
+  height: 20px; margin: -2px 0;
+}
+.phase-connector-line {
+  width: 2px; background: var(--border);
+  border-radius: 1px;
+}
 </style>
 </head>
 <body>
@@ -676,17 +795,19 @@ a { color: var(--accent); text-decoration: none; }
     </div>
     <div class="splash-logo">APEX</div>
     <p class="splash-tagline">The all-in-one platform for personal training businesses.<br/>Built for owners, PTs, and the clients they transform.</p>
-    <div class="role-btns">
+    <div class="role-btns" style="grid-template-columns:1fr 1fr 1fr 1fr">
       <button class="role-btn" onclick="switchView('owner')"><span class="role-icon">🏢</span>Owner<span class="role-sub">Business dashboard</span></button>
       <button class="role-btn" onclick="switchView('pt')"><span class="role-icon">💪</span>PT<span class="role-sub">Coach portal</span></button>
       <button class="role-btn" onclick="switchView('client')"><span class="role-icon">🎯</span>Client<span class="role-sub">My progress</span></button>
+      <button class="role-btn" onclick="switchView('roadmap')" style="border-color:rgba(34,211,238,.4)"><span class="role-icon">🗺️</span>Roadmap<span class="role-sub">What's coming</span></button>
     </div>
     <div class="what-shows">
       <h4>What this demo shows</h4>
       <ul>
-        <li>Owner: KPIs, client management, editable perks marketplace, PT payout tiers</li>
-        <li>PT: Client dashboard, workout assignment, weekly meal planner, two-way messaging</li>
-        <li>Client: Today/Week views, meal logging, weekly plan with edits, shopping list, perks</li>
+        <li>Owner: KPIs, PT management, subscriptions, discount codes, broadcast &amp; perks</li>
+        <li>PT: Client dashboard, meal planner, workout assignment, scheduling &amp; messaging</li>
+        <li>Client: Today macros, meal plan, sessions, wellness hub, shopping list &amp; perks</li>
+        <li>Roadmap: 6-phase product plan from backend to ecosystem</li>
         <li>Dark / Light mode on every view</li>
       </ul>
     </div>
@@ -728,7 +849,17 @@ a { color: var(--accent); text-decoration: none; }
   <div style="max-width:1060px;margin:0 auto;padding:92px 24px 32px" id="pt-main-content"></div>
 </div>
 
-<!-- ============================================================  CLIENT VIEW  ============================================================ -->
+<!-- ============================================================  ROADMAP VIEW  ============================================================ -->
+<div id="roadmap-view" class="hidden">
+  <div class="top-nav">
+    <div class="logo">APEX <span>Product Roadmap</span></div>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" id="roadmap-theme-btn">☀️</button>
+    <button class="switch-role-btn" onclick="switchView('splash')">⇄ Switch Role</button>
+  </div>
+  <div style="padding-top:60px" id="roadmap-main"></div>
+</div>
+
+
 <div id="client-view" class="hidden">
   <div class="client-top-bar">
     <button class="btn btn-ghost btn-sm" onclick="switchView('splash')" style="padding:6px 10px">← Exit</button>
@@ -762,7 +893,7 @@ function toggleTheme() {
   currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', currentTheme);
   const icon = currentTheme === 'dark' ? '☀️' : '🌙';
-  ['splash-theme-btn','owner-theme-btn','pt-theme-btn','client-theme-btn'].forEach(id => {
+  ['splash-theme-btn','owner-theme-btn','pt-theme-btn','client-theme-btn','roadmap-theme-btn'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.textContent = icon;
   });
@@ -1077,10 +1208,11 @@ let selectedClientId=null, activeDrawerTab='overview';
 let shoppingChecked={};
 
 function switchView(v){
-  ['splash','owner-view','pt-view','client-view'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+  ['splash','owner-view','pt-view','roadmap-view','client-view'].forEach(id=>document.getElementById(id).classList.add('hidden'));
   if(v==='splash') document.getElementById('splash').classList.remove('hidden');
   else if(v==='owner'){ document.getElementById('owner-view').classList.remove('hidden'); renderOwner('dashboard'); }
   else if(v==='pt'){ document.getElementById('pt-view').classList.remove('hidden'); renderPt('clients'); }
+  else if(v==='roadmap'){ document.getElementById('roadmap-view').classList.remove('hidden'); renderRoadmap(); }
   else if(v==='client'){ document.getElementById('client-view').classList.remove('hidden'); document.getElementById('client-name-top').textContent=clients[0].name; renderClient('today'); }
   currentView=v;
 }
@@ -2872,6 +3004,333 @@ function showWellnessArticle(id){
     </div>
   </div></div>`;
 }
+/* ============================================================
+   ROADMAP
+   ============================================================ */
+const roadmapPhases = [
+  {
+    num: 1,
+    name: 'Real Data & Accounts',
+    tagline: 'Production backend, authentication, and live payments',
+    status: 'next',
+    statusLabel: 'Up Next',
+    color: '#4ade80',
+    icon: '🏗️',
+    open: true,
+    groups: [
+      {
+        title: 'Backend & Database',
+        items: [
+          { text: 'Supabase / Postgres database for all core entities', sub: 'Clients, PTs, plans, workouts, meal plans, messages, appointments, perks — all persisted and relational.', tags:['Supabase','Postgres'] },
+          { text: 'Row-level security for Owner, PT and Client roles', sub: 'Each user can only read and write their permitted data. No cross-tenant data leakage.' },
+          { text: 'Real-time subscriptions for messages and notifications', sub: 'Live chat updates without polling using Supabase Realtime channels.', tags:['Realtime'] },
+        ]
+      },
+      {
+        title: 'Authentication',
+        items: [
+          { text: 'Secure auth — email/password plus optional magic link', sub: 'JWT-based sessions with refresh tokens. Magic link flow for frictionless client onboarding.', tags:['Auth','JWT'] },
+          { text: 'Role-based access control: Owner / PT / Client', sub: 'Each account type sees only its permitted views and data. Enforced at the API layer.' },
+          { text: 'Password reset, email verification, and session management' },
+        ]
+      },
+      {
+        title: 'Payments via Stripe',
+        items: [
+          { text: 'Live subscription billing for all three plan types', sub: 'Virtual PT ($149/mo), PT in Person ($299/mo), Nutrition Only ($79/mo) — plus quarterly and annual variants.', tags:['Stripe'] },
+          { text: 'Webhook handling for payment failures, cancellations, and upgrades', sub: 'Automated client status updates when subscriptions lapse or change.' },
+          { text: 'Discount codes and promotional offers applied at Stripe checkout', sub: 'Synced with the Owner discount code manager already built in the demo.' },
+          { text: 'PT payout calculation and Stripe Connect transfers', sub: 'Automated tier-based payout to PT bank accounts based on rating and client load.' },
+        ]
+      },
+    ]
+  },
+  {
+    num: 2,
+    name: 'Automation & Intelligence',
+    tagline: 'At-risk monitoring, smart prompts, and AI coaching',
+    status: 'planned',
+    statusLabel: 'Planned',
+    color: '#f97316',
+    icon: '🤖',
+    open: false,
+    groups: [
+      {
+        title: 'At-Risk Client Monitoring',
+        items: [
+          { text: 'Automated at-risk detection and daily digest for PTs', sub: 'Configurable thresholds: no login X days, no workout logged, no meal log. PT receives a daily summary email.', tags:['Automation'] },
+          { text: 'Escalation alerts to Owner for clients unresponsive for 7+ days', sub: 'Owner dashboard flags clients at serious risk of churn with suggested actions.' },
+          { text: 'At-risk score weighted by subscription tier and streak history', sub: 'A Platinum client who misses 2 days ranks lower risk than a new Bronze client who misses the same.' },
+        ]
+      },
+      {
+        title: 'Smart PT Prompts',
+        items: [
+          { text: 'AI-suggested follow-up message templates for at-risk clients', sub: 'One-tap send options like "Haven\'t seen you log this week — want to check in?" tailored to the client\'s tone profile.', tags:['AI','GPT-4o'] },
+          { text: 'Contextual PT reminders before scheduled sessions', sub: 'Auto-reminder: "James has his leg day session tomorrow — he missed last week\'s nutrition targets."' },
+        ]
+      },
+      {
+        title: 'AI Client Coach',
+        items: [
+          { text: 'Between-session AI chat for clients, with PT oversight', sub: 'Clients can ask nutrition questions, request workout modifications, and get motivational nudges — all reviewed and overrideable by the PT.', tags:['AI','RAG'] },
+          { text: 'Escalation logic: AI hands off to PT for medical, injury, or mental health signals', sub: 'Keyword and sentiment monitoring flags sensitive conversations for immediate PT notification.' },
+          { text: 'Personalised to each client\'s goals, preferences, and recent data', sub: 'AI context includes macro targets, logged meals, workout history, and PT notes.' },
+        ]
+      },
+    ]
+  },
+  {
+    num: 3,
+    name: 'Tracking & External Data',
+    tagline: 'Wearables, health platforms, and automated data ingestion',
+    status: 'planned',
+    statusLabel: 'Planned',
+    color: '#22d3ee',
+    icon: '⌚',
+    open: false,
+    groups: [
+      {
+        title: 'Myzone Integration',
+        items: [
+          { text: 'OAuth connection to Myzone for heart-rate session data', sub: 'Ingest session MEPs, average HR, and peak HR directly into the client workout log.', tags:['Myzone API','OAuth'] },
+          { text: 'Automatic streak and at-risk flag updates from Myzone activity', sub: 'If a client hits their Myzone weekly MEP target, their workout streak advances automatically — no manual logging needed.' },
+          { text: 'PT dashboard: weekly Myzone effort scores per client', sub: 'Replace manual workout completion estimates with actual effort data.' },
+          { text: 'MEP-based weekly targets configurable per client by PT', sub: 'Set "250 MEPs/week" as a goal alongside calorie and workout goals.' },
+        ]
+      },
+      {
+        title: 'Apple Health & Google Fit',
+        items: [
+          { text: 'Optional Health platform sync for steps, sleep, and resting HR', sub: 'Client opts in via the mobile app. Data enriches the wellness and at-risk view.', tags:['HealthKit','Health Connect'] },
+          { text: 'Sleep score influences recovery recommendations and scheduling', sub: 'If a client averaged <6h sleep this week, PT is nudged to assign lighter sessions.' },
+          { text: 'Steps data visualised on the Week tab alongside nutrition adherence' },
+        ]
+      },
+    ]
+  },
+  {
+    num: 4,
+    name: 'Client Experience Upgrades',
+    tagline: 'Native mobile apps, push notifications, and habit scaffolding',
+    status: 'planned',
+    statusLabel: 'Planned',
+    color: '#a78bfa',
+    icon: '📱',
+    open: false,
+    groups: [
+      {
+        title: 'Native Mobile Apps',
+        items: [
+          { text: 'iOS and Android apps for PT and Client, built on this UX', sub: 'React Native codebase shared with the web app. Same design system, same data model.', tags:['React Native','iOS','Android'] },
+          { text: 'Offline-first meal logging and workout completion', sub: 'Clients can log meals and mark workouts done without connectivity. Syncs when reconnected.' },
+          { text: 'Biometric login (Face ID / fingerprint) for fast client access' },
+        ]
+      },
+      {
+        title: 'Push Notifications',
+        items: [
+          { text: 'Workout reminders — configurable time and frequency per client', sub: 'Client sets their preferred reminder window. PT can override for accountability clients.', tags:['FCM','APNs'] },
+          { text: 'Calorie slippage nudge — "You\'re 400 kcal behind your target today"', sub: 'Sent at configurable time if client is significantly behind by mid-afternoon.' },
+          { text: 'Streak milestone celebrations at 7, 14, 30, 60, 100 days', sub: 'Animated in-app celebration + push notification. Shareable streak card for social.' },
+          { text: 'New session confirmation and 1-hour pre-session reminder', sub: 'Integrates with the scheduling system already built in the demo.' },
+        ]
+      },
+      {
+        title: 'Habit & Progress Features',
+        items: [
+          { text: 'Weekly reflection prompt every Sunday — how did the week feel?', sub: 'Short emoji + text check-in. Responses visible to PT for relationship context.' },
+          { text: 'Small wins recap card — auto-generated weekly summary', sub: '"This week you logged 4 workouts, hit your protein goal 5/7 days, and maintained a 14-day streak."' },
+          { text: 'Progress stories: before/after photo comparisons with milestone overlay', sub: 'Client-controlled privacy. PTs can request a progress photo on milestone weeks.' },
+        ]
+      },
+    ]
+  },
+  {
+    num: 5,
+    name: 'Business Tools for the Owner',
+    tagline: 'Revenue analytics, payout automation, and offer builder',
+    status: 'planned',
+    statusLabel: 'Planned',
+    color: '#fbbf24',
+    icon: '📊',
+    open: false,
+    groups: [
+      {
+        title: 'Revenue Analytics',
+        items: [
+          { text: 'Full MRR, ARR, churn rate, and plan-mix dashboard', sub: 'Live from Stripe webhooks. Segmented by plan type, PT, and cohort start date.', tags:['Stripe','Analytics'] },
+          { text: 'Client lifetime value and churn prediction model', sub: 'ML-based churn score per client based on engagement, login frequency, and streak trend.' },
+          { text: 'Monthly revenue waterfall: new, expansion, contraction, churned' },
+        ]
+      },
+      {
+        title: 'Payout Automation',
+        items: [
+          { text: 'Automated PT payout reports — monthly, exportable as CSV / PDF', sub: 'Calculated from tier, client count, sessions completed, and custom split agreements.', tags:['Stripe Connect'] },
+          { text: 'PT performance review dashboard for Owner', sub: 'Rating trend, client retention rate, average session frequency, and message response time.' },
+        ]
+      },
+      {
+        title: 'Offer Builder',
+        items: [
+          { text: 'Fixed-duration "programme" bundles with start and end dates', sub: 'e.g. "8-Week Shred" — fixed intake window, defined workout schedule, daily check-ins. Sold as a one-time purchase via Stripe.' },
+          { text: 'Bundle pricing with optional add-ons (in-person sessions, nutrition add-on)', sub: 'Configurable in the Owner Subscriptions panel already built.' },
+          { text: 'Group challenges: multiple clients on the same programme with a shared leaderboard', sub: 'MEP scores, calorie adherence, or workout completions as ranking metrics.' },
+        ]
+      },
+    ]
+  },
+  {
+    num: 6,
+    name: 'Ecosystem & Perks',
+    tagline: 'Partner dashboard, dynamic perks, and loyalty tiers',
+    status: 'planned',
+    statusLabel: 'Planned',
+    color: '#f43f5e',
+    icon: '🌐',
+    open: false,
+    groups: [
+      {
+        title: 'Partner Dashboard',
+        items: [
+          { text: 'Self-serve partner portal for supplement, gear, and recovery brands', sub: 'Partners upload their own perk offers, discount codes, and copy. Owner approves before publishing.', tags:['B2B'] },
+          { text: 'Partner analytics: impressions, code redemptions, and attributed signups', sub: 'Full attribution for each partner to justify the partnership value.' },
+          { text: 'Revenue share model — optional affiliate commission per redemption' },
+        ]
+      },
+      {
+        title: 'Dynamic Perks Engine',
+        items: [
+          { text: 'Perks targeted by subscription type, loyalty tier, or campaign', sub: 'e.g. "Platinum-tier clients get the Whoop free month; new Virtual PT clients get the $10 Huel voucher."', tags:['Segmentation'] },
+          { text: 'Time-limited "flash perks" with countdown timer in client feed', sub: '48-hour exclusive offer dropped via the Broadcast tool, claimed in the Perks tab.' },
+          { text: 'Client-side usage tracking — "You\'ve redeemed 3 of 8 perks this month"' },
+        ]
+      },
+      {
+        title: 'Loyalty Programme',
+        items: [
+          { text: 'Points-based loyalty tiers: Bronze → Silver → Gold → Platinum client', sub: 'Earned through logins, workout completions, meal logging, streak milestones, and session attendance.' },
+          { text: 'Tier unlocks: better perks, early-access to new features, priority PT booking', sub: 'Tangible incentives tied to the habit-forming behaviours already tracked in the platform.' },
+          { text: 'Loyalty tier badge visible on client profile and in their Today view', sub: 'Social proof layer — clients see their tier progress and feel invested in reaching the next level.' },
+        ]
+      },
+    ]
+  },
+];
+
+let openPhases = new Set([0]); // Phase 1 open by default
+
+function togglePhase(idx){
+  if(openPhases.has(idx)) openPhases.delete(idx);
+  else openPhases.add(idx);
+  renderRoadmap();
+}
+
+function renderRoadmap(){
+  const el=document.getElementById('roadmap-main'); if(!el) return;
+  const statusConfig={
+    next:   { cls:'ps-next',    label:'Up Next' },
+    active: { cls:'ps-active',  label:'In Progress' },
+    shipped:{ cls:'ps-shipped', label:'Shipped' },
+    planned:{ cls:'ps-planned', label:'Planned' },
+  };
+
+  const hero=`
+  <div class="roadmap-hero">
+    <div class="roadmap-hero-logo">APEX</div>
+    <div class="roadmap-hero-title">Building the <span>future</span> of<br/>PT coaching</div>
+    <div class="roadmap-hero-sub">This is the product roadmap for APEX — a six-phase journey from this working front-end demo to a full-scale coaching ecosystem.</div>
+    <div class="roadmap-hero-badges">
+      <span class="roadmap-hero-badge">🏗️ 6 phases</span>
+      <span class="roadmap-hero-badge">✅ Front-end demo complete</span>
+      <span class="roadmap-hero-badge">⚡ Phase 1 up next</span>
+      <span class="roadmap-hero-badge">🤝 Built for PTs &amp; owners</span>
+    </div>
+  </div>`;
+
+  const phases=roadmapPhases.map((phase, idx)=>{
+    const sc=statusConfig[phase.status]||statusConfig.planned;
+    const isOpen=openPhases.has(idx);
+    return `
+    ${idx>0?'<div class="phase-connector"><div class="phase-connector-line"></div></div>':''}
+    <div class="phase-card" id="phase-card-${idx}">
+      <div class="phase-header" onclick="togglePhase(${idx})" role="button" aria-expanded="${isOpen}">
+        <div class="phase-number" style="background:${phase.color}22;color:${phase.color};border:2px solid ${phase.color}44">${phase.num}</div>
+        <div class="phase-title-block">
+          <div class="phase-name">${phase.icon} Phase ${phase.num} — ${phase.name}</div>
+          <div class="phase-tagline">${phase.tagline}</div>
+        </div>
+        <div class="phase-status-pill ${sc.cls}">${sc.label}</div>
+        <div class="phase-chevron ${isOpen?'open':''}">▶</div>
+      </div>
+      <div class="phase-body ${isOpen?'open':''}">
+        <div class="phase-body-inner">
+          ${phase.groups.map(group=>`
+          <div class="feature-group">
+            <div class="feature-group-title">${group.title}</div>
+            ${group.items.map(item=>`
+            <div class="feature-item">
+              <div class="feature-dot" style="background:${phase.color}"></div>
+              <div>
+                <div class="feature-text">${item.text}${(item.tags||[]).map(t=>`<span class="feature-tag">${t}</span>`).join('')}</div>
+                ${item.sub?`<div class="feature-sub">${item.sub}</div>`:''}
+              </div>
+            </div>`).join('')}
+          </div>`).join('')}
+
+          ${phase.num===1?`
+          <div style="background:rgba(74,222,128,.05);border:1px solid rgba(74,222,128,.2);border-radius:10px;padding:14px 16px;margin-top:8px">
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;margin-bottom:8px">🧰 Proposed Tech Stack</div>
+            <div>
+              <span class="tech-chip">Supabase</span>
+              <span class="tech-chip">Postgres</span>
+              <span class="tech-chip">Stripe</span>
+              <span class="tech-chip">Next.js</span>
+              <span class="tech-chip">React</span>
+              <span class="tech-chip">TailwindCSS</span>
+              <span class="tech-chip">Vercel</span>
+              <span class="tech-chip">Resend (email)</span>
+              <span class="tech-chip">TypeScript</span>
+            </div>
+          </div>`:''}
+          ${phase.num===2?`
+          <div style="background:rgba(249,115,22,.05);border:1px solid rgba(249,115,22,.2);border-radius:10px;padding:14px 16px;margin-top:8px">
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;margin-bottom:8px">🧰 Key Integrations</div>
+            <div>
+              <span class="tech-chip">OpenAI GPT-4o</span>
+              <span class="tech-chip">Anthropic Claude</span>
+              <span class="tech-chip">Langchain / RAG</span>
+              <span class="tech-chip">Supabase Edge Functions</span>
+              <span class="tech-chip">Resend</span>
+            </div>
+          </div>`:''}
+          ${phase.num===3?`
+          <div style="background:rgba(34,211,238,.05);border:1px solid rgba(34,211,238,.2);border-radius:10px;padding:14px 16px;margin-top:8px">
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;margin-bottom:8px">🧰 Key Integrations</div>
+            <div>
+              <span class="tech-chip">Myzone REST API</span>
+              <span class="tech-chip">Apple HealthKit</span>
+              <span class="tech-chip">Google Health Connect</span>
+              <span class="tech-chip">OAuth 2.0</span>
+              <span class="tech-chip">Webhooks</span>
+            </div>
+          </div>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const footer=`
+  <div style="text-align:center;padding:40px 20px 0;color:var(--text3)">
+    <div style="font-size:1.3rem;margin-bottom:8px">🚀</div>
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;color:var(--text2);margin-bottom:6px">This demo is the foundation.</div>
+    <div style="font-size:.82rem;max-width:400px;margin:0 auto;line-height:1.6">Every screen, interaction and data model you see is designed to be production-ready. Phase 1 turns this into real software.</div>
+  </div>`;
+
+  el.innerHTML=hero+`<div class="roadmap-body">`+phases+footer+`</div>`;
+}
+
 function generateWellnessExpanded(a){
   const extras={
     wa1:`<p><strong>How much protein do you need?</strong> Most research points to 1.6–2.2g per kg of bodyweight per day for those training regularly. Distributing this evenly across meals (20–40g per sitting) maximises muscle protein synthesis throughout the day.</p><br><p><strong>Practical tip:</strong> Start your day with a protein-rich breakfast — eggs, Greek yoghurt, or a protein shake — to front-load your intake when it matters most.</p>`,
