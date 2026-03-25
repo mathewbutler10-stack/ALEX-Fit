@@ -840,6 +840,7 @@ a { color: var(--accent); text-decoration: none; }
     <div class="logo">APEX <span>PT Portal</span></div>
     <div class="nav-tabs">
       <button class="nav-tab active" onclick="ptNav('clients',this)">My Clients</button>
+      <button class="nav-tab" onclick="ptNav('schedule',this)">📅 My Schedule</button>
       <button class="nav-tab" onclick="ptNav('library',this)">Workout Library</button>
       <button class="nav-tab" onclick="ptNav('messages',this)">Messages</button>
     </div>
@@ -1635,6 +1636,7 @@ function sendDrawerMsg(cid){ const i=document.getElementById('dwr-msg'); if(!i||
 function renderPt(s){
   const mc=document.getElementById('pt-main-content');
   if(s==='clients') mc.innerHTML=activeClientForPt?renderPtClientPanel():renderPtClientList();
+  else if(s==='schedule') mc.innerHTML=renderPtFullSchedule();
   else if(s==='library') mc.innerHTML=renderPtLibrary();
   else if(s==='messages') mc.innerHTML=renderPtInbox();
 }
@@ -1764,6 +1766,248 @@ function renderPtLibrary(){
 }
 function renderPtInbox(){
   return`<div class="page-header animate-in"><div class="page-title">Messages</div></div><div class="card">${clients.map(c=>{const msgs=messages[c.id]||[];const last=msgs[msgs.length-1];const unread=last&&last.sender==='client';return`<div class="inbox-row" onclick="openPtClient('${c.id}');setTimeout(()=>setPtTab('messages'),50)"><div class="at-risk-avatar" style="width:36px;height:36px;background:rgba(74,222,128,.1);color:var(--accent)">${c.name[0]}</div><div style="flex:1;min-width:0"><div style="font-weight:600">${c.name}</div><div class="text-sm text-muted" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px">${last?last.text:'No messages yet'}</div></div><div class="flex flex-col items-end gap-1"><span class="text-xs-muted">${last?last.timestamp:''}</span>${unread?`<div class="unread-dot"></div>`:''}</div></div>`;}).join('')}</div>`;
+}
+
+function renderPtFullSchedule(){
+  const today = '2025-03-25';
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  // All appointments for this PT, sorted by date then start time
+  const all = appointments
+    .filter(a => a.ptId === 'pt1')
+    .sort((a,b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime));
+
+  const upcoming = all.filter(a => a.date >= today && a.status !== 'cancelled');
+  const today_apts = upcoming.filter(a => a.date === today);
+  const future_apts = upcoming.filter(a => a.date > today);
+  const cancelled_apts = all.filter(a => a.status === 'cancelled');
+  const past_apts = all.filter(a => a.date < today && a.status !== 'cancelled');
+
+  // KPI counts
+  const confirmedCount = upcoming.filter(a=>a.status==='confirmed').length;
+  const pendingCount   = upcoming.filter(a=>a.status==='pending').length;
+  const virtualCount   = upcoming.filter(a=>a.type==='virtual').length;
+  const inPersonCount  = upcoming.filter(a=>a.type==='inperson').length;
+
+  // Helper: date display
+  function fmtDate(dateStr){
+    const [yr,mo,dy] = dateStr.split('-');
+    const d = new Date(parseInt(yr), parseInt(mo)-1, parseInt(dy));
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    return `${dayNames[d.getDay()]} ${parseInt(dy)} ${monthNames[parseInt(mo)-1]} ${yr}`;
+  }
+
+  // Helper: full session row card
+  function schedRow(a, opts={}){
+    const c = getClient(a.clientId);
+    const clientName = c ? c.name : 'Unknown';
+    const [yr,mo,dy] = a.date.split('-');
+    const mon = monthNames[parseInt(mo)-1];
+    const statusClass = {confirmed:'apt-status-confirmed',pending:'apt-status-pending',cancelled:'apt-status-cancelled'}[a.status]||'apt-status-pending';
+    const typeIcon = a.type==='virtual' ? '📹' : '🏋️';
+    const typeLabel = a.type==='virtual' ? 'Virtual' : 'In Person';
+    const isToday = a.date === today;
+    return `
+    <div class="apt-card ${a.type==='virtual'?'apt-type-virtual':'apt-type-inperson'}"
+         style="${isToday?'box-shadow:0 0 0 2px var(--accent);':''}">
+      <div class="flex" style="gap:14px">
+        <div class="apt-date-block" style="${isToday?'background:rgba(74,222,128,.15);':''};min-width:48px">
+          <div class="apt-date-day">${parseInt(dy)}</div>
+          <div class="apt-date-month">${mon}</div>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div class="flex items-center gap-2 mb-1 flex-wrap">
+            <span style="font-weight:700;font-size:.92rem">${a.title}</span>
+            <span class="badge ${statusClass}">${a.status}</span>
+            <span class="badge badge-gray">${typeIcon} ${typeLabel}</span>
+            ${isToday?`<span class="badge badge-green">Today</span>`:''}
+          </div>
+          <!-- Client chip -->
+          <div class="flex items-center gap-2 mb-1">
+            <div style="width:22px;height:22px;border-radius:50%;background:rgba(74,222,128,.1);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0">${clientName[0]}</div>
+            <span style="font-size:.85rem;font-weight:600">${clientName}</span>
+            ${c?`<span class="badge ${subColor(c.subscriptionType)}" style="font-size:.62rem">${c.subscriptionType}</span>`:''}
+          </div>
+          <div class="text-sm text-muted">⏰ ${a.startTime} – ${a.endTime} &nbsp;·&nbsp; 📍 ${a.location}</div>
+          ${a.notes?`<div class="text-xs-muted mt-1" style="font-style:italic">${a.notes}</div>`:''}
+        </div>
+        <div class="flex flex-col gap-2 items-end flex-shrink-0">
+          <button class="btn btn-secondary btn-xs" onclick="openScheduleModal(null,'${a.id}');event.stopPropagation()">✏️ Edit</button>
+          <button class="btn btn-${a.status==='cancelled'?'secondary':'danger'} btn-xs" onclick="cancelAptFromSchedule('${a.id}')">
+            ${a.status==='cancelled'?'Restore':'Cancel'}
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // Group future by week
+  function groupByWeek(apts){
+    const weeks = {};
+    apts.forEach(a=>{
+      const d = new Date(a.date);
+      // ISO week Monday
+      const day = d.getDay()||7;
+      const mon = new Date(d); mon.setDate(d.getDate()-day+1);
+      const key = mon.toISOString().split('T')[0];
+      if(!weeks[key]) weeks[key]=[];
+      weeks[key].push(a);
+    });
+    return weeks;
+  }
+
+  const futureByWeek = groupByWeek(future_apts);
+
+  return `
+  <div class="page-header animate-in">
+    <div class="page-title">My Schedule</div>
+    <div class="page-subtitle">All committed and pending sessions across your clients.</div>
+  </div>
+
+  <!-- KPI strip -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px">
+    <div class="revenue-stat" style="text-align:center">
+      <div class="kpi-label">Upcoming</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;color:var(--accent);margin-top:4px">${upcoming.length}</div>
+      <div class="text-xs-muted mt-1">sessions booked</div>
+    </div>
+    <div class="revenue-stat" style="text-align:center">
+      <div class="kpi-label">Confirmed</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;color:var(--accent);margin-top:4px">${confirmedCount}</div>
+      <div class="text-xs-muted mt-1">${pendingCount} pending</div>
+    </div>
+    <div class="revenue-stat" style="text-align:center">
+      <div class="kpi-label">Virtual</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;color:var(--accent2);margin-top:4px">${virtualCount}</div>
+      <div class="text-xs-muted mt-1">📹 remote sessions</div>
+    </div>
+    <div class="revenue-stat" style="text-align:center">
+      <div class="kpi-label">In Person</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;color:var(--accent3);margin-top:4px">${inPersonCount}</div>
+      <div class="text-xs-muted mt-1">🏋️ gym sessions</div>
+    </div>
+  </div>
+
+  <!-- Quick-add button -->
+  <div class="flex items-center justify-between mb-4">
+    <div></div>
+    <button class="btn btn-primary btn-sm" onclick="openNewSessionFromSchedule()">+ Schedule New Session</button>
+  </div>
+
+  <!-- TODAY -->
+  ${today_apts.length>0?`
+  <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin-bottom:10px;display:flex;align-items:center;gap:8px">
+    <span style="width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block"></span> Today — ${fmtDate(today)}
+  </div>
+  ${today_apts.map(a=>schedRow(a)).join('')}
+  <div class="divider"></div>`:''}
+
+  <!-- UPCOMING — grouped by week -->
+  ${Object.keys(futureByWeek).length===0&&today_apts.length===0?`
+  <div class="schedule-empty">
+    <div style="font-size:2rem;margin-bottom:10px">📅</div>
+    <div style="font-weight:600;margin-bottom:4px">No upcoming sessions</div>
+    <div class="text-sm text-muted">Schedule sessions from any client's Schedule tab, or use the button above.</div>
+  </div>`:''}
+
+  ${Object.entries(futureByWeek).map(([weekStart, apts])=>{
+    const [wy,wm,wd] = weekStart.split('-');
+    const endD = new Date(parseInt(wy),parseInt(wm)-1,parseInt(wd)+6);
+    const weekLabel = `w/c ${parseInt(wd)} ${monthNames[parseInt(wm)-1]} – ${endD.getDate()} ${monthNames[endD.getMonth()]}`;
+    return `
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin:20px 0 10px;display:flex;align-items:center;gap:8px">
+      <span style="width:6px;height:6px;border-radius:50%;background:var(--border);display:inline-block"></span>${weekLabel}
+    </div>
+    ${apts.map(a=>schedRow(a)).join('')}`;
+  }).join('')}
+
+  <!-- PAST (collapsed) -->
+  ${past_apts.length>0?`
+  <details style="margin-top:24px">
+    <summary style="font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);cursor:pointer;padding:8px 0;list-style:none;display:flex;align-items:center;gap:8px;user-select:none">
+      <span id="past-chevron" style="font-size:.75rem;color:var(--text3)">▶</span> Past Sessions (${past_apts.length})
+    </summary>
+    <div style="margin-top:10px;opacity:.7">
+      ${past_apts.slice().reverse().map(a=>schedRow(a,{past:true})).join('')}
+    </div>
+  </details>`:''}
+
+  <!-- CANCELLED (collapsed) -->
+  ${cancelled_apts.length>0?`
+  <details style="margin-top:16px">
+    <summary style="font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;text-transform:uppercase;letter-spacing:.06em;color:var(--danger);cursor:pointer;padding:8px 0;list-style:none;display:flex;align-items:center;gap:8px;user-select:none">
+      <span style="font-size:.75rem">▶</span> Cancelled (${cancelled_apts.length})
+    </summary>
+    <div style="margin-top:10px;opacity:.6">
+      ${cancelled_apts.map(a=>schedRow(a)).join('')}
+    </div>
+  </details>`:''}
+  `;
+}
+
+function cancelAptFromSchedule(id){
+  const a = appointments.find(x=>x.id===id); if(!a) return;
+  a.status = a.status==='cancelled' ? 'confirmed' : 'cancelled';
+  showToast(a.status==='cancelled' ? 'Session cancelled' : 'Session restored ✓');
+  renderPt('schedule');
+}
+
+function openNewSessionFromSchedule(){
+  // Open the schedule modal with a client picker
+  const clientOpts = clients.map(c=>`<option value="${c.id}">${c.name} (${c.subscriptionType})</option>`).join('');
+  document.getElementById('modal-root').innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" style="width:min(540px,100%)" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div style="font-family:'Syne',sans-serif;font-weight:700">Schedule New Session</div>
+      <button class="close-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row"><label>Client *</label><select id="new-apt-client">${clientOpts}</select></div>
+      <div class="form-row"><label>Session Title *</label><input id="apt-title" value="PT Session" placeholder="e.g. In-Person Training" /></div>
+      <div class="form-row"><label>Session Type</label>
+        <div class="flex gap-2 mt-1">
+          <div class="contact-method-chip selected" onclick="document.querySelectorAll('[data-apttype]').forEach(x=>x.classList.remove('selected'));this.classList.add('selected')" data-apttype="inperson">🏋️ In Person</div>
+          <div class="contact-method-chip" onclick="document.querySelectorAll('[data-apttype]').forEach(x=>x.classList.remove('selected'));this.classList.add('selected')" data-apttype="virtual">📹 Virtual</div>
+        </div>
+      </div>
+      <div class="grid-3" style="gap:10px">
+        <div class="form-row" style="margin-bottom:0"><label>Date *</label><input type="date" id="apt-date" value="2025-04-01" /></div>
+        <div class="form-row" style="margin-bottom:0"><label>Start</label><input type="time" id="apt-start" value="07:00" /></div>
+        <div class="form-row" style="margin-bottom:0"><label>End</label><input type="time" id="apt-end" value="08:00" /></div>
+      </div>
+      <div class="form-row mt-3"><label>Location / Link</label><input id="apt-location" value="Apex Gym, 14 Fitness Lane Bondi NSW" /></div>
+      <div class="form-row"><label>Notes</label><textarea id="apt-notes" rows="2" placeholder="Focus areas, prep…"></textarea></div>
+      <div class="form-row"><label>Status</label>
+        <select id="apt-status">
+          <option value="confirmed" selected>Confirmed</option>
+          <option value="pending">Pending</option>
+        </select>
+      </div>
+      <div class="flex gap-3 mt-4">
+        <button class="btn btn-primary flex-1" onclick="saveAptFromSchedule()">💾 Save Session</button>
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+  </div></div>`;
+}
+
+function saveAptFromSchedule(){
+  const cid = document.getElementById('new-apt-client')?.value;
+  const title = document.getElementById('apt-title')?.value.trim();
+  if(!title||!cid){ showToast('⚠ Client and title required'); return; }
+  const typeEl = document.querySelector('[data-apttype].selected');
+  const type = typeEl ? typeEl.dataset.apttype : 'inperson';
+  const date = document.getElementById('apt-date')?.value;
+  if(!date){ showToast('⚠ Date required'); return; }
+  const startTime = document.getElementById('apt-start')?.value;
+  const endTime   = document.getElementById('apt-end')?.value;
+  const location  = document.getElementById('apt-location')?.value.trim();
+  const notes     = document.getElementById('apt-notes')?.value.trim();
+  const status    = document.getElementById('apt-status')?.value;
+  appointments.push({id:uid(),clientId:cid,ptId:'pt1',title,type,date,startTime,endTime,location,notes,status});
+  closeModal();
+  showToast('Session scheduled ✓');
+  renderPt('schedule');
 }
 
 /* ============================================================
