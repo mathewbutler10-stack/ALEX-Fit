@@ -528,6 +528,80 @@ a { color: var(--accent); text-decoration: none; }
 .resource-card:hover { border-color:var(--accent); background:var(--surface3); }
 .resource-emoji { font-size:1.4rem; flex-shrink:0; }
 .resource-type { display:inline-block; font-size:.65rem; padding:2px 7px; border-radius:999px; background:var(--surface3); color:var(--text3); font-weight:600; border:1px solid var(--border); margin-bottom:2px; }
+/* ============================================================
+   SUBSCRIPTIONS & BILLING
+   ============================================================ */
+.plan-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px;
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow .2s, border-color .2s, background .25s;
+}
+.plan-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: var(--plan-accent, var(--accent));
+}
+.plan-card:hover { box-shadow: var(--shadow); }
+.plan-price-display {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 2.2rem;
+  line-height: 1;
+  margin: 10px 0 2px;
+}
+.plan-freq-pill {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 999px;
+  font-size: .72rem; font-weight: 600;
+  background: var(--surface3); color: var(--text2);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all .15s;
+}
+.plan-freq-pill.active { background: rgba(74,222,128,.12); color: var(--accent); border-color: rgba(74,222,128,.4); }
+[data-theme="light"] .plan-freq-pill.active { background: rgba(22,163,74,.1); }
+.plan-feature { display:flex; align-items:flex-start; gap:8px; padding:5px 0; font-size:.84rem; }
+.plan-feature-check { color: var(--accent); font-weight:700; flex-shrink:0; margin-top:1px; }
+.discount-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; border-radius: 8px;
+  background: var(--surface2); border: 1px solid var(--border);
+  margin-bottom: 8px; transition: background .15s;
+}
+.discount-row:hover { background: var(--surface3); }
+.discount-code-badge {
+  font-family: monospace;
+  font-size: .88rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  padding: 4px 12px;
+  border-radius: 6px;
+  background: var(--surface3);
+  border: 1px dashed var(--border);
+  color: var(--accent2);
+  flex-shrink: 0;
+}
+.offer-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  transition: background .15s;
+}
+.offer-card:hover { background: var(--surface3); }
+.offer-status-active { color: var(--accent); font-size: .75rem; font-weight: 700; }
+.offer-status-inactive { color: var(--text3); font-size: .75rem; font-weight: 700; }
+.sub-tab { padding:8px 16px; font-size:.85rem; font-weight:600; color:var(--text3); background:transparent; border-bottom:2px solid transparent; margin-bottom:-1px; transition:all .15s; cursor:pointer; border:none; }
+.sub-tab.active { color:var(--accent); border-bottom:2px solid var(--accent); }
+.sub-tab:hover { color:var(--text); }
+.revenue-stat { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:14px 18px; }
 </style>
 </head>
 <body>
@@ -569,6 +643,7 @@ a { color: var(--accent); text-decoration: none; }
     <button class="sidebar-item" onclick="ownerNav('signups',this)"><span class="si-icon">✨</span>New Sign-ups <span class="badge badge-yellow" style="margin-left:auto;font-size:.65rem;padding:2px 6px" id="signup-count-badge">2</span></button>
     <button class="sidebar-item" onclick="ownerNav('clients',this)"><span class="si-icon">👥</span>Clients</button>
     <button class="sidebar-item" onclick="ownerNav('ptmgmt',this)"><span class="si-icon">🧑‍💼</span>PT Management <span class="badge badge-blue" style="margin-left:auto;font-size:.65rem;padding:2px 6px" id="pt-count-badge">1</span></button>
+    <button class="sidebar-item" onclick="ownerNav('subscriptions',this)"><span class="si-icon">💳</span>Subscriptions</button>
     <button class="sidebar-item" onclick="ownerNav('payouts',this)"><span class="si-icon">💰</span>Payouts</button>
     <button class="sidebar-item" onclick="ownerNav('perks',this)"><span class="si-icon">🎁</span>Perks</button>
     <button class="sidebar-item" onclick="ownerNav('broadcast',this)"><span class="si-icon">📣</span>Broadcast</button>
@@ -935,6 +1010,7 @@ function renderOwner(s){
   else if(s==='signups') mc.innerHTML=renderOwnerSignups();
   else if(s==='clients') mc.innerHTML=renderOwnerClients();
   else if(s==='ptmgmt') mc.innerHTML=renderOwnerPtMgmt();
+  else if(s==='subscriptions') mc.innerHTML=renderOwnerSubscriptions();
   else if(s==='payouts') mc.innerHTML=renderOwnerPayouts();
   else if(s==='perks') mc.innerHTML=renderOwnerPerks();
   else if(s==='broadcast') mc.innerHTML=renderOwnerBroadcast();
@@ -1700,8 +1776,488 @@ function renderClientMessages(c){
 function sendClientMsg(cid){ const i=document.getElementById('cli-msg'); if(!i||!i.value.trim())return; messages[cid]=[...(messages[cid]||[]),{sender:'client',text:i.value.trim(),timestamp:'Now'}]; i.value=''; renderClient('msg'); }
 
 /* ============================================================
-   MACRO TARGET SAVE FUNCTIONS
+   SUBSCRIPTION PLANS DATA
    ============================================================ */
+let subscriptionPlans = [
+  {
+    id: 'sp1',
+    name: 'Virtual PT',
+    description: 'Full remote coaching with your dedicated PT. Weekly check-ins, workout plans, meal planning and messaging.',
+    monthlyPrice: 149,
+    quarterlyPrice: 399,
+    annualPrice: 1399,
+    setupFee: 0,
+    currency: 'USD',
+    features: [
+      'Dedicated Personal Trainer',
+      'Weekly workout program',
+      'Customised meal plan',
+      'Unlimited PT messaging',
+      'Progress tracking & analytics',
+      'Access to Wellness Hub',
+      'Member perks & discounts',
+    ],
+    color: '#22d3ee',
+    active: true,
+    clientCount: clients.filter(c=>c.subscriptionType==='Virtual PT').length,
+  },
+  {
+    id: 'sp2',
+    name: 'PT in Person',
+    description: 'Face-to-face training sessions plus full digital support between sessions.',
+    monthlyPrice: 299,
+    quarterlyPrice: 799,
+    annualPrice: 2799,
+    setupFee: 50,
+    currency: 'USD',
+    features: [
+      '4 x in-person sessions/month',
+      'Dedicated Personal Trainer',
+      'Customised workout program',
+      'Customised meal plan',
+      'Unlimited PT messaging',
+      'Body composition tracking',
+      'Priority booking',
+      'Member perks & discounts',
+    ],
+    color: '#f97316',
+    active: true,
+    clientCount: clients.filter(c=>c.subscriptionType==='PT in person').length,
+  },
+  {
+    id: 'sp3',
+    name: 'Nutrition Only',
+    description: 'Expert nutrition coaching and meal planning without a PT component.',
+    monthlyPrice: 79,
+    quarterlyPrice: 209,
+    annualPrice: 749,
+    setupFee: 0,
+    currency: 'USD',
+    features: [
+      'Personalised meal plans',
+      'Macro & calorie targets',
+      'Weekly nutrition check-in',
+      'Recipe library access',
+      'Shopping list generator',
+      'Access to Wellness Hub',
+      'Member perks & discounts',
+    ],
+    color: '#4ade80',
+    active: true,
+    clientCount: clients.filter(c=>c.subscriptionType==='Nutrition only').length,
+  },
+];
+
+let discountCodes = [
+  { id:'dc1', code:'WELCOME20', type:'percent', value:20, appliesTo:['sp1','sp2','sp3'], frequency:'monthly', maxUses:100, usedCount:34, validUntil:'Jun 30, 2025', active:true, description:'New member welcome discount' },
+  { id:'dc2', code:'ANNUAL15', type:'percent', value:15, appliesTo:['sp1','sp2','sp3'], frequency:'annual', maxUses:null, usedCount:12, validUntil:'Dec 31, 2025', active:true, description:'Extra 15% off already-discounted annual plans' },
+  { id:'dc3', code:'SUMMER50', type:'fixed', value:50, appliesTo:['sp2'], frequency:'monthly', maxUses:20, usedCount:8, validUntil:'Mar 31, 2025', active:false, description:'Summer sale — $50 off first month of In-Person' },
+  { id:'dc4', code:'REFER30', type:'fixed', value:30, appliesTo:['sp1','sp3'], frequency:'monthly', maxUses:null, usedCount:21, validUntil:null, active:true, description:'Referral reward — $30 off for referred member' },
+  { id:'dc5', code:'CORP25', type:'percent', value:25, appliesTo:['sp1','sp2','sp3'], frequency:'monthly', maxUses:50, usedCount:6, validUntil:'Dec 31, 2025', active:true, description:'Corporate partnership discount' },
+];
+
+let offers = [
+  { id:'of1', name:'Free First Month', type:'trial', description:'First month completely free for new Virtual PT or Nutrition Only signups.', appliesTo:['sp1','sp3'], startDate:'Mar 1, 2025', endDate:'Apr 30, 2025', active:true },
+  { id:'of2', name:'Annual Pay Upfront — Save 22%', type:'bundle', description:'Pay 12 months upfront and save 22% vs monthly billing. Applied automatically at checkout.', appliesTo:['sp1','sp2','sp3'], startDate:'Jan 1, 2025', endDate:null, active:true },
+  { id:'of3', name:'Couple Bundle', type:'bundle', description:'Two members on the same plan together get 15% off each subscription.', appliesTo:['sp1','sp3'], startDate:'Feb 1, 2025', endDate:'Jun 30, 2025', active:true },
+  { id:'of4', name:'Summer Kickstart', type:'seasonal', description:'3 months for the price of 2 on Virtual PT. June–August intake only.', appliesTo:['sp1'], startDate:'Jun 1, 2025', endDate:'Aug 31, 2025', active:false },
+];
+
+let subTab = 'plans'; // 'plans' | 'codes' | 'offers' | 'revenue'
+
+/* ============================================================
+   OWNER SUBSCRIPTIONS — RENDER
+   ============================================================ */
+function renderOwnerSubscriptions(){
+  const totalMRR = clients.reduce((s,c)=>{
+    const plan = subscriptionPlans.find(p=>p.name===c.subscriptionType);
+    return s + (plan ? plan.monthlyPrice : 0);
+  }, 0);
+  const totalARR = Math.round(totalMRR * 12 * 0.78); // approx accounting for annual discounts
+  const avgRevenuePerClient = clients.length ? Math.round(totalMRR / clients.length) : 0;
+
+  return `
+  <div class="page-header animate-in">
+    <div class="page-title">Subscriptions & Billing</div>
+    <div class="page-subtitle">Manage plans, pricing, discount codes, and promotional offers.</div>
+  </div>
+
+  <!-- Revenue KPIs -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px">
+    <div class="revenue-stat">
+      <div class="kpi-label">Est. MRR</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.7rem;color:var(--accent);margin-top:4px">$${totalMRR.toLocaleString()}</div>
+      <div class="text-xs-muted mt-1">Monthly recurring</div>
+    </div>
+    <div class="revenue-stat">
+      <div class="kpi-label">Est. ARR</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.7rem;color:var(--accent2);margin-top:4px">$${totalARR.toLocaleString()}</div>
+      <div class="text-xs-muted mt-1">Annualised</div>
+    </div>
+    <div class="revenue-stat">
+      <div class="kpi-label">Avg Rev / Client</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.7rem;color:var(--warn);margin-top:4px">$${avgRevenuePerClient}</div>
+      <div class="text-xs-muted mt-1">Per month</div>
+    </div>
+    <div class="revenue-stat">
+      <div class="kpi-label">Active Subscribers</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.7rem;margin-top:4px">${clients.length}</div>
+      <div class="text-xs-muted mt-1">${discountCodes.filter(d=>d.active).length} active discount codes</div>
+    </div>
+  </div>
+
+  <!-- Sub-nav tabs -->
+  <div style="display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:24px">
+    <button class="sub-tab ${subTab==='plans'?'active':''}" onclick="subTab='plans';renderOwner('subscriptions')">📦 Plans & Pricing</button>
+    <button class="sub-tab ${subTab==='codes'?'active':''}" onclick="subTab='codes';renderOwner('subscriptions')">🏷️ Discount Codes</button>
+    <button class="sub-tab ${subTab==='offers'?'active':''}" onclick="subTab='offers';renderOwner('subscriptions')">🎯 Offers & Promotions</button>
+  </div>
+
+  ${subTab==='plans' ? renderSubPlans() : subTab==='codes' ? renderSubCodes() : renderSubOffers()}
+  `;
+}
+
+/* ---- PLANS TAB ---- */
+function renderSubPlans(){
+  return `
+  <div class="flex items-center justify-between mb-4">
+    <div class="text-sm text-muted">${subscriptionPlans.filter(p=>p.active).length} active plans</div>
+    <button class="btn btn-primary btn-sm" onclick="openPlanModal(null)">+ Add Plan</button>
+  </div>
+  <div class="grid-3">
+    ${subscriptionPlans.map(plan=>`
+      <div class="plan-card" style="--plan-accent:${plan.color}">
+        <div class="flex items-center justify-between mb-2">
+          <span class="badge" style="background:${plan.color}22;color:${plan.color};border:1px solid ${plan.color}55">${plan.name}</span>
+          <span class="${plan.active?'badge badge-green':'badge badge-red'}">${plan.active?'Active':'Inactive'}</span>
+        </div>
+        <div class="text-sm text-muted mb-2" style="font-size:.8rem;line-height:1.4">${plan.description}</div>
+
+        <!-- Pricing tiers -->
+        <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:12px">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs-muted">Monthly</span>
+            <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem">$${plan.monthlyPrice}<span style="font-size:.7rem;font-weight:400;color:var(--text3)">/mo</span></span>
+          </div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs-muted">Quarterly <span style="color:var(--accent);font-size:.68rem">Save ${Math.round((1-plan.quarterlyPrice/(plan.monthlyPrice*3))*100)}%</span></span>
+            <span style="font-weight:600;font-size:.95rem">$${plan.quarterlyPrice}<span style="font-size:.7rem;font-weight:400;color:var(--text3)">/3mo</span></span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-xs-muted">Annual <span style="color:var(--accent);font-size:.68rem">Save ${Math.round((1-plan.annualPrice/(plan.monthlyPrice*12))*100)}%</span></span>
+            <span style="font-weight:600;font-size:.95rem">$${plan.annualPrice}<span style="font-size:.7rem;font-weight:400;color:var(--text3)">/yr</span></span>
+          </div>
+          ${plan.setupFee>0?`<div class="flex items-center justify-between mt-2 pt-2" style="border-top:1px solid var(--border)"><span class="text-xs-muted">Setup fee</span><span style="font-size:.88rem;font-weight:600;color:var(--warn)">$${plan.setupFee} once</span></div>`:''}
+        </div>
+
+        <!-- Features -->
+        <div class="mb-3">
+          ${plan.features.map(f=>`<div class="plan-feature"><span class="plan-feature-check">✓</span><span>${f}</span></div>`).join('')}
+        </div>
+
+        <div class="flex items-center justify-between mt-2">
+          <span class="text-xs-muted">${plan.clientCount} active client${plan.clientCount!==1?'s':''}</span>
+          <div class="flex gap-2">
+            <button class="btn btn-secondary btn-xs" onclick="openPlanModal('${plan.id}')">✏️ Edit</button>
+            <button class="btn btn-${plan.active?'danger':'secondary'} btn-xs" onclick="togglePlanActive('${plan.id}')">${plan.active?'Pause':'Activate'}</button>
+          </div>
+        </div>
+      </div>
+    `).join('')}
+  </div>`;
+}
+
+/* ---- DISCOUNT CODES TAB ---- */
+function renderSubCodes(){
+  return `
+  <div class="flex items-center justify-between mb-4">
+    <div class="text-sm text-muted">${discountCodes.filter(d=>d.active).length} active · ${discountCodes.filter(d=>!d.active).length} inactive</div>
+    <button class="btn btn-primary btn-sm" onclick="openDiscountModal(null)">+ Create Code</button>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table class="data-table">
+      <thead><tr>
+        <th>Code</th>
+        <th>Description</th>
+        <th>Discount</th>
+        <th>Frequency</th>
+        <th>Applies To</th>
+        <th>Usage</th>
+        <th>Expires</th>
+        <th>Status</th>
+        <th></th>
+      </tr></thead>
+      <tbody>
+        ${discountCodes.map(dc=>`<tr>
+          <td><span class="discount-code-badge">${dc.code}</span></td>
+          <td class="text-muted" style="font-size:.82rem;max-width:160px">${dc.description}</td>
+          <td style="font-weight:700;color:var(--accent);white-space:nowrap">${dc.type==='percent'?`${dc.value}% off`:`$${dc.value} off`}</td>
+          <td class="text-muted text-sm" style="text-transform:capitalize">${dc.frequency}</td>
+          <td>
+            <div class="flex flex-wrap gap-1">
+              ${dc.appliesTo.map(pid=>{const p=subscriptionPlans.find(x=>x.id===pid);return p?`<span class="badge badge-gray" style="font-size:.62rem">${p.name}</span>`:''}).join('')}
+            </div>
+          </td>
+          <td style="font-size:.82rem">${dc.usedCount}${dc.maxUses?` / ${dc.maxUses}`:' uses'}</td>
+          <td class="text-muted text-sm" style="white-space:nowrap">${dc.validUntil||'No expiry'}</td>
+          <td><span class="badge ${dc.active?'badge-green':'badge-red'}">${dc.active?'Active':'Expired'}</span></td>
+          <td>
+            <div class="flex gap-1">
+              <button class="btn btn-secondary btn-xs" onclick="openDiscountModal('${dc.id}')">Edit</button>
+              <button class="btn btn-${dc.active?'danger':'secondary'} btn-xs" onclick="toggleDiscount('${dc.id}')">${dc.active?'Deactivate':'Activate'}</button>
+            </div>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+/* ---- OFFERS TAB ---- */
+function renderSubOffers(){
+  return `
+  <div class="flex items-center justify-between mb-4">
+    <div class="text-sm text-muted">${offers.filter(o=>o.active).length} active offers</div>
+    <button class="btn btn-primary btn-sm" onclick="openOfferModal(null)">+ Create Offer</button>
+  </div>
+  <div class="flex flex-col gap-3">
+    ${offers.map(o=>{
+      const typeColors={trial:'badge-blue',bundle:'badge-orange',seasonal:'badge-yellow'};
+      const typeIcons={trial:'🆓',bundle:'📦',seasonal:'🌟'};
+      const applyNames=o.appliesTo.map(pid=>{const p=subscriptionPlans.find(x=>x.id===pid);return p?p.name:''}).filter(Boolean);
+      return`<div class="offer-card" style="border-left:3px solid ${o.active?'var(--accent)':'var(--border)'}">
+        <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
+          <div class="flex items-center gap-2">
+            <span style="font-size:1.2rem">${typeIcons[o.type]||'🎁'}</span>
+            <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem">${o.name}</span>
+            <span class="badge ${typeColors[o.type]||'badge-gray'}">${o.type}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="${o.active?'offer-status-active':'offer-status-inactive'}">${o.active?'● LIVE':'○ INACTIVE'}</span>
+            <button class="btn btn-secondary btn-xs" onclick="openOfferModal('${o.id}')">Edit</button>
+            <button class="btn btn-${o.active?'danger':'secondary'} btn-xs" onclick="toggleOffer('${o.id}')">${o.active?'Pause':'Activate'}</button>
+          </div>
+        </div>
+        <div class="text-sm text-muted mb-2" style="line-height:1.5">${o.description}</div>
+        <div class="flex items-center gap-3 flex-wrap" style="font-size:.78rem;color:var(--text3)">
+          <span>📅 ${o.startDate}${o.endDate?' → '+o.endDate:' (ongoing)'}</span>
+          <span>Applies to: ${applyNames.join(', ')}</span>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+/* ============================================================
+   PLAN MODAL — ADD / EDIT
+   ============================================================ */
+function openPlanModal(id){
+  const p=id?subscriptionPlans.find(x=>x.id===id):null;
+  document.getElementById('modal-root').innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" style="width:min(580px,100%)" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div style="font-family:'Syne',sans-serif;font-weight:700">${p?'Edit Plan — '+p.name:'Add New Plan'}</div>
+      <button class="close-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row"><label>Plan Name *</label><input id="pl-name" value="${p?p.name:''}" placeholder="e.g. Virtual PT" /></div>
+      <div class="form-row"><label>Description</label><textarea id="pl-desc" rows="2">${p?p.description:''}</textarea></div>
+
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin:14px 0 10px">Pricing (USD)</div>
+      <div class="grid-3" style="gap:10px;margin-bottom:10px">
+        <div class="form-row" style="margin-bottom:0"><label>Monthly ($)</label><input type="number" id="pl-monthly" value="${p?p.monthlyPrice:''}" placeholder="149" min="0" /></div>
+        <div class="form-row" style="margin-bottom:0"><label>Quarterly ($)</label><input type="number" id="pl-quarterly" value="${p?p.quarterlyPrice:''}" placeholder="399" min="0" /></div>
+        <div class="form-row" style="margin-bottom:0"><label>Annual ($)</label><input type="number" id="pl-annual" value="${p?p.annualPrice:''}" placeholder="1399" min="0" /></div>
+      </div>
+      <div class="form-row"><label>One-time Setup Fee ($) — leave 0 for none</label><input type="number" id="pl-setup" value="${p?p.setupFee:0}" min="0" /></div>
+
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin:14px 0 10px">Features Included</div>
+      <div id="pl-features-list" class="flex flex-col gap-2 mb-2">
+        ${(p?p.features:['','','']).map((f,i)=>`<input id="pl-feat-${i}" value="${f}" placeholder="Feature ${i+1}" />`).join('')}
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="addPlanFeatureField()">+ Add feature</button>
+
+      <div class="form-row mt-3"><label>Accent Colour (hex)</label><div class="flex gap-2 items-center"><input id="pl-color" value="${p?p.color:'#4ade80'}" style="width:100px;font-family:monospace" /><div id="pl-color-preview" style="width:32px;height:32px;border-radius:6px;background:${p?p.color:'#4ade80'};flex-shrink:0;border:1px solid var(--border)"></div></div></div>
+
+      <div class="flex gap-3 mt-4">
+        <button class="btn btn-primary flex-1" onclick="savePlan('${id||''}')">Save Plan</button>
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+  </div></div>`;
+  document.getElementById('pl-color').addEventListener('input',e=>{document.getElementById('pl-color-preview').style.background=e.target.value;});
+}
+let planFeatureCount = 3;
+function addPlanFeatureField(){
+  const list=document.getElementById('pl-features-list');
+  if(!list) return;
+  const inp=document.createElement('input');
+  inp.id=`pl-feat-${planFeatureCount++}`;
+  inp.placeholder=`Feature ${planFeatureCount}`;
+  list.appendChild(inp);
+}
+function savePlan(id){
+  const name=document.getElementById('pl-name').value.trim();
+  if(!name){ showToast('⚠ Plan name required'); return; }
+  const desc=document.getElementById('pl-desc').value.trim();
+  const monthly=parseFloat(document.getElementById('pl-monthly').value)||0;
+  const quarterly=parseFloat(document.getElementById('pl-quarterly').value)||0;
+  const annual=parseFloat(document.getElementById('pl-annual').value)||0;
+  const setup=parseFloat(document.getElementById('pl-setup').value)||0;
+  const color=document.getElementById('pl-color').value.trim()||'#4ade80';
+  const features=[...document.querySelectorAll('[id^="pl-feat-"]')].map(i=>i.value.trim()).filter(Boolean);
+  if(id){
+    const p=subscriptionPlans.find(x=>x.id===id);
+    if(p) Object.assign(p,{name,description:desc,monthlyPrice:monthly,quarterlyPrice:quarterly,annualPrice:annual,setupFee:setup,color,features});
+  } else {
+    subscriptionPlans.push({id:uid(),name,description:desc,monthlyPrice:monthly,quarterlyPrice:quarterly,annualPrice:annual,setupFee:setup,currency:'USD',features,color,active:true,clientCount:0});
+  }
+  closeModal(); subTab='plans'; renderOwner('subscriptions');
+  showToast(id?'Plan updated ✓':'Plan created ✓');
+}
+function togglePlanActive(id){
+  const p=subscriptionPlans.find(x=>x.id===id); if(!p) return;
+  p.active=!p.active;
+  showToast(`${p.name} ${p.active?'activated':'paused'}`);
+  renderOwner('subscriptions');
+}
+
+/* ============================================================
+   DISCOUNT CODE MODAL
+   ============================================================ */
+function openDiscountModal(id){
+  const dc=id?discountCodes.find(x=>x.id===id):null;
+  document.getElementById('modal-root').innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div style="font-family:'Syne',sans-serif;font-weight:700">${dc?'Edit Code — '+dc.code:'Create Discount Code'}</div>
+      <button class="close-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="grid-2" style="gap:10px">
+        <div class="form-row" style="margin-bottom:0"><label>Code * <span style="font-size:.72rem;color:var(--text3)">(uppercase, no spaces)</span></label>
+          <input id="dc-code" value="${dc?dc.code:''}" placeholder="WELCOME20" style="font-family:monospace;text-transform:uppercase" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')" /></div>
+        <div class="form-row" style="margin-bottom:0"><label>Description</label><input id="dc-desc" value="${dc?dc.description:''}" placeholder="New member welcome" /></div>
+      </div>
+      <div class="grid-2" style="gap:10px;margin-top:12px">
+        <div class="form-row" style="margin-bottom:0"><label>Discount Type</label>
+          <select id="dc-type">
+            <option value="percent" ${dc&&dc.type==='percent'?'selected':''}>Percentage (%)</option>
+            <option value="fixed" ${dc&&dc.type==='fixed'?'selected':''}>Fixed Amount ($)</option>
+          </select></div>
+        <div class="form-row" style="margin-bottom:0"><label>Value</label><input type="number" id="dc-value" value="${dc?dc.value:''}" placeholder="e.g. 20" min="1" /></div>
+      </div>
+      <div class="form-row mt-3"><label>Applies to Billing Frequency</label>
+        <div class="flex gap-2 mt-1 flex-wrap">
+          ${['monthly','quarterly','annual'].map(f=>`<div class="checkbox-chip ${dc&&dc.frequency===f?'checked':f==='monthly'?'checked':''}" onclick="document.querySelectorAll('[data-dcfreq]').forEach(x=>x.classList.remove('checked'));this.classList.add('checked')" data-dcfreq="${f}">${f.charAt(0).toUpperCase()+f.slice(1)}</div>`).join('')}
+        </div>
+      </div>
+      <div class="form-row"><label>Applies to Plans</label>
+        <div class="checkbox-group mt-1">
+          ${subscriptionPlans.map(p=>`<div class="checkbox-chip ${dc&&dc.appliesTo.includes(p.id)?'checked':''}" onclick="this.classList.toggle('checked')" data-dcplan="${p.id}">${p.name}</div>`).join('')}
+        </div>
+      </div>
+      <div class="grid-2" style="gap:10px">
+        <div class="form-row" style="margin-bottom:0"><label>Max Uses <span style="font-size:.72rem;color:var(--text3)">(blank = unlimited)</span></label>
+          <input type="number" id="dc-maxuses" value="${dc&&dc.maxUses?dc.maxUses:''}" placeholder="Unlimited" min="1" /></div>
+        <div class="form-row" style="margin-bottom:0"><label>Expires <span style="font-size:.72rem;color:var(--text3)">(blank = no expiry)</span></label>
+          <input id="dc-expiry" value="${dc&&dc.validUntil?dc.validUntil:''}" placeholder="Dec 31, 2025" /></div>
+      </div>
+      <div class="flex gap-3 mt-4">
+        <button class="btn btn-primary flex-1" onclick="saveDiscount('${id||''}')">Save Code</button>
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+  </div></div>`;
+}
+function saveDiscount(id){
+  const code=document.getElementById('dc-code').value.trim().toUpperCase();
+  if(!code){ showToast('⚠ Code required'); return; }
+  const desc=document.getElementById('dc-desc').value.trim();
+  const type=document.getElementById('dc-type').value;
+  const value=parseFloat(document.getElementById('dc-value').value)||0;
+  const freqEl=document.querySelector('[data-dcfreq].checked');
+  const frequency=freqEl?freqEl.dataset.dcfreq:'monthly';
+  const appliesTo=[...document.querySelectorAll('[data-dcplan].checked')].map(el=>el.dataset.dcplan);
+  const maxUsesRaw=document.getElementById('dc-maxuses').value.trim();
+  const maxUses=maxUsesRaw?parseInt(maxUsesRaw):null;
+  const validUntil=document.getElementById('dc-expiry').value.trim()||null;
+  if(id){
+    const dc=discountCodes.find(x=>x.id===id);
+    if(dc) Object.assign(dc,{code,description:desc,type,value,frequency,appliesTo,maxUses,validUntil});
+  } else {
+    discountCodes.push({id:uid(),code,description:desc,type,value,frequency,appliesTo,maxUses,usedCount:0,validUntil,active:true});
+  }
+  closeModal(); subTab='codes'; renderOwner('subscriptions');
+  showToast(id?'Code updated ✓':'Code created ✓');
+}
+function toggleDiscount(id){
+  const dc=discountCodes.find(x=>x.id===id); if(!dc) return;
+  dc.active=!dc.active;
+  showToast(`Code ${dc.code} ${dc.active?'activated':'deactivated'}`);
+  renderOwner('subscriptions');
+}
+
+/* ============================================================
+   OFFER MODAL — ADD / EDIT
+   ============================================================ */
+function openOfferModal(id){
+  const o=id?offers.find(x=>x.id===id):null;
+  document.getElementById('modal-root').innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div style="font-family:'Syne',sans-serif;font-weight:700">${o?'Edit Offer — '+o.name:'Create Offer / Promotion'}</div>
+      <button class="close-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row"><label>Offer Name *</label><input id="of-name" value="${o?o.name:''}" placeholder="e.g. Free First Month" /></div>
+      <div class="form-row"><label>Offer Type</label>
+        <div class="flex gap-2 mt-1 flex-wrap">
+          ${[['trial','🆓 Trial'],['bundle','📦 Bundle'],['seasonal','🌟 Seasonal'],['referral','👥 Referral']].map(([val,label])=>`<div class="checkbox-chip ${o&&o.type===val?'checked':val==='seasonal'&&!o?'':''} ${!o&&val==='bundle'?'checked':''}" onclick="document.querySelectorAll('[data-oftype]').forEach(x=>x.classList.remove('checked'));this.classList.add('checked')" data-oftype="${val}">${label}</div>`).join('')}
+        </div>
+      </div>
+      <div class="form-row"><label>Description *</label><textarea id="of-desc" rows="3">${o?o.description:''}</textarea></div>
+      <div class="form-row"><label>Applies to Plans</label>
+        <div class="checkbox-group mt-1">
+          ${subscriptionPlans.map(p=>`<div class="checkbox-chip ${o&&o.appliesTo.includes(p.id)?'checked':''}" onclick="this.classList.toggle('checked')" data-ofplan="${p.id}">${p.name}</div>`).join('')}
+        </div>
+      </div>
+      <div class="grid-2" style="gap:10px">
+        <div class="form-row" style="margin-bottom:0"><label>Start Date</label><input id="of-start" value="${o?o.startDate:''}" placeholder="Mar 1, 2025" /></div>
+        <div class="form-row" style="margin-bottom:0"><label>End Date <span style="font-size:.72rem;color:var(--text3)">(blank = ongoing)</span></label><input id="of-end" value="${o&&o.endDate?o.endDate:''}" placeholder="Jun 30, 2025" /></div>
+      </div>
+      <div class="flex gap-3 mt-4">
+        <button class="btn btn-primary flex-1" onclick="saveOffer('${id||''}')">Save Offer</button>
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+  </div></div>`;
+}
+function saveOffer(id){
+  const name=document.getElementById('of-name').value.trim();
+  const desc=document.getElementById('of-desc').value.trim();
+  if(!name||!desc){ showToast('⚠ Name and description required'); return; }
+  const typeEl=document.querySelector('[data-oftype].checked');
+  const type=typeEl?typeEl.dataset.oftype:'bundle';
+  const appliesTo=[...document.querySelectorAll('[data-ofplan].checked')].map(el=>el.dataset.ofplan);
+  const startDate=document.getElementById('of-start').value.trim()||'';
+  const endDate=document.getElementById('of-end').value.trim()||null;
+  if(id){
+    const o=offers.find(x=>x.id===id);
+    if(o) Object.assign(o,{name,description:desc,type,appliesTo,startDate,endDate});
+  } else {
+    offers.push({id:uid(),name,description:desc,type,appliesTo,startDate,endDate,active:true});
+  }
+  closeModal(); subTab='offers'; renderOwner('subscriptions');
+  showToast(id?'Offer updated ✓':'Offer created ✓');
+}
+function toggleOffer(id){
+  const o=offers.find(x=>x.id===id); if(!o) return;
+  o.active=!o.active;
+  showToast(`"${o.name}" ${o.active?'activated':'paused'}`);
+  renderOwner('subscriptions');
+}
+
 function saveClientMacroTargets(cid, prefix='tgt-'){
   const c=getClient(cid); if(!c) return;
   const cal=parseInt(document.getElementById(`${prefix}cal-${cid}`).value)||c.calorieGoalPerDay;
