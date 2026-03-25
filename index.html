@@ -1,0 +1,1910 @@
+<!DOCTYPE html>
+<!-- Save as index.html and open in a browser. No build step required. -->
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>APEX — PT Coaching Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   THEME TOKENS — dark (default)
+   ============================================================ */
+:root, [data-theme="dark"] {
+  --bg: #0f1117;
+  --surface: #181c27;
+  --surface2: #1e2333;
+  --surface3: #252b3b;
+  --border: #2a3048;
+  --accent: #4ade80;
+  --accent2: #22d3ee;
+  --accent3: #f97316;
+  --danger: #f43f5e;
+  --warn: #fbbf24;
+  --text: #e8ecf4;
+  --text2: #9099b2;
+  --text3: #5a6380;
+  --shadow: 0 4px 24px rgba(0,0,0,.4);
+  --input-bg: #252b3b;
+  --theme-icon: '☀️';
+}
+[data-theme="light"] {
+  --bg: #f4f6fb;
+  --surface: #ffffff;
+  --surface2: #f0f2f8;
+  --surface3: #e8ebf4;
+  --border: #d4d9ec;
+  --accent: #16a34a;
+  --accent2: #0891b2;
+  --accent3: #ea580c;
+  --danger: #e11d48;
+  --warn: #d97706;
+  --text: #111827;
+  --text2: #4b5563;
+  --text3: #9ca3af;
+  --shadow: 0 4px 24px rgba(0,0,0,.12);
+  --input-bg: #f0f2f8;
+  --theme-icon: '🌙';
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  transition: background .25s, color .25s;
+}
+button { font-family: 'DM Sans', sans-serif; cursor: pointer; border: none; outline: none; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+input, textarea, select {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: .9rem;
+  width: 100%;
+  outline: none;
+  transition: border-color .2s, background .25s, color .25s;
+}
+input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+a { color: var(--accent); text-decoration: none; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ============================================================
+   LAYOUT HELPERS
+   ============================================================ */
+.hidden { display: none !important; }
+.flex { display: flex; }
+.flex-col { display: flex; flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+.gap-2 { gap: 8px; } .gap-3 { gap: 12px; } .gap-4 { gap: 16px; } .gap-5 { gap: 20px; }
+.w-full { width: 100%; }
+.flex-1 { flex: 1; }
+.text-sm { font-size: .85rem; } .text-xs { font-size: .75rem; }
+.text-lg { font-size: 1.1rem; } .text-xl { font-size: 1.3rem; }
+.text-2xl { font-size: 1.6rem; } .text-3xl { font-size: 2rem; }
+.font-bold { font-weight: 700; } .font-semibold { font-weight: 600; }
+.font-head { font-family: 'Syne', sans-serif; }
+.text-accent { color: var(--accent); } .text-accent2 { color: var(--accent2); }
+.text-warn { color: var(--warn); } .text-danger { color: var(--danger); }
+.text-muted { color: var(--text2); } .text-xs-muted { font-size:.75rem; color:var(--text3); }
+.mt-1{margin-top:4px} .mt-2{margin-top:8px} .mt-3{margin-top:12px} .mt-4{margin-top:16px} .mt-6{margin-top:24px}
+.mb-1{margin-bottom:4px} .mb-2{margin-bottom:8px} .mb-3{margin-bottom:12px} .mb-4{margin-bottom:16px} .mb-6{margin-bottom:24px}
+.p-3{padding:12px} .p-4{padding:16px} .p-5{padding:20px} .p-6{padding:24px}
+.rounded{border-radius:12px} .rounded-sm{border-radius:8px} .rounded-full{border-radius:999px}
+.overflow-hidden{overflow:hidden} .relative{position:relative} .cursor-pointer{cursor:pointer}
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+.grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+@media(max-width:700px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
+
+/* ============================================================
+   CORE COMPONENTS
+   ============================================================ */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  transition: background .25s, border-color .25s;
+}
+.card-sm { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:14px; transition:background .25s; }
+.badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:999px; font-size:.72rem; font-weight:600; letter-spacing:.03em; text-transform:uppercase; }
+.badge-green { background:rgba(74,222,128,.15); color:var(--accent); border:1px solid rgba(74,222,128,.3); }
+.badge-red { background:rgba(244,63,94,.15); color:var(--danger); border:1px solid rgba(244,63,94,.3); }
+.badge-yellow { background:rgba(251,191,36,.15); color:var(--warn); border:1px solid rgba(251,191,36,.3); }
+.badge-blue { background:rgba(34,211,238,.15); color:var(--accent2); border:1px solid rgba(34,211,238,.3); }
+.badge-orange { background:rgba(249,115,22,.15); color:var(--accent3); border:1px solid rgba(249,115,22,.3); }
+.badge-gray { background:rgba(90,99,128,.2); color:var(--text2); border:1px solid var(--border); }
+[data-theme="light"] .badge-green { background:rgba(22,163,74,.12); }
+[data-theme="light"] .badge-red { background:rgba(225,29,72,.12); }
+[data-theme="light"] .badge-blue { background:rgba(8,145,178,.12); }
+[data-theme="light"] .badge-orange { background:rgba(234,88,12,.12); }
+
+.btn { display:inline-flex; align-items:center; gap:6px; padding:10px 20px; border-radius:8px; font-weight:600; font-size:.88rem; transition:all .2s; white-space:nowrap; }
+.btn-primary { background:var(--accent); color:#fff; }
+[data-theme="dark"] .btn-primary { color:#0f1117; }
+.btn-primary:hover { filter:brightness(1.1); transform:translateY(-1px); box-shadow:0 6px 20px rgba(74,222,128,.25); }
+.btn-secondary { background:var(--surface3); color:var(--text); border:1px solid var(--border); }
+.btn-secondary:hover { background:var(--border); }
+.btn-ghost { background:transparent; color:var(--text2); padding:8px 14px; }
+.btn-ghost:hover { background:var(--surface2); color:var(--text); }
+.btn-danger { background:rgba(244,63,94,.12); color:var(--danger); border:1px solid rgba(244,63,94,.3); }
+.btn-danger:hover { background:rgba(244,63,94,.22); }
+.btn-sm { padding:6px 12px; font-size:.8rem; }
+.btn-xs { padding:4px 10px; font-size:.75rem; border-radius:6px; }
+
+.progress-bar { height:8px; background:var(--surface3); border-radius:999px; overflow:hidden; }
+.progress-fill { height:100%; border-radius:999px; transition:width .6s ease; }
+.divider { height:1px; background:var(--border); margin:16px 0; }
+
+/* ============================================================
+   THEME TOGGLE BUTTON
+   ============================================================ */
+.theme-toggle {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  font-size: 1rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+  flex-shrink: 0;
+}
+.theme-toggle:hover { border-color: var(--accent); transform: rotate(20deg); }
+
+/* ============================================================
+   TOP NAV
+   ============================================================ */
+.top-nav {
+  position: fixed; top:0; left:0; right:0;
+  height: 60px;
+  background: rgba(var(--nav-rgb,15,17,23),.92);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 20px; z-index: 100; gap: 10px;
+  transition: background .25s, border-color .25s;
+}
+[data-theme="light"] .top-nav { background: rgba(255,255,255,.92); }
+.logo { font-family:'Syne',sans-serif; font-weight:800; font-size:1.3rem; color:var(--accent); letter-spacing:-.02em; margin-right:auto; }
+.logo span { color:var(--text2); font-weight:400; font-size:.75rem; margin-left:6px; vertical-align:middle; }
+.nav-tabs { display:flex; gap:4px; }
+.nav-tab { padding:6px 14px; border-radius:8px; font-size:.88rem; font-weight:500; color:var(--text2); background:transparent; transition:all .15s; }
+.nav-tab.active, .nav-tab:hover { background:var(--surface2); color:var(--text); }
+.switch-role-btn { padding:6px 12px; border-radius:8px; font-size:.8rem; font-weight:600; background:var(--surface3); color:var(--text2); border:1px solid var(--border); transition:all .2s; }
+.switch-role-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+.sidebar {
+  width:220px; background:var(--surface); border-right:1px solid var(--border);
+  position:fixed; top:60px; bottom:0; left:0; overflow-y:auto;
+  padding:20px 12px; z-index:90; display:flex; flex-direction:column; gap:4px;
+  transition:background .25s, border-color .25s;
+}
+.sidebar-item { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:8px; font-size:.88rem; font-weight:500; color:var(--text2); cursor:pointer; transition:all .15s; border:none; background:transparent; text-align:left; width:100%; }
+.sidebar-item:hover { background:var(--surface2); color:var(--text); }
+.sidebar-item.active { background:rgba(74,222,128,.12); color:var(--accent); font-weight:600; }
+[data-theme="light"] .sidebar-item.active { background:rgba(22,163,74,.1); }
+.si-icon { font-size:1.1rem; width:20px; text-align:center; }
+.owner-main { margin-left:220px; flex:1; padding:32px 28px; max-width:1100px; }
+
+/* ============================================================
+   KPI CARDS
+   ============================================================ */
+.kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+@media(max-width:900px){.kpi-grid{grid-template-columns:1fr 1fr}}
+.kpi-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; position:relative; overflow:hidden; transition:box-shadow .2s,background .25s; }
+.kpi-card:hover { box-shadow:var(--shadow); }
+.kpi-card::before { content:''; position:absolute; top:0;left:0;right:0; height:3px; background:var(--kpi-color,var(--accent)); }
+.kpi-label { font-size:.78rem; color:var(--text3); text-transform:uppercase; letter-spacing:.06em; font-weight:600; }
+.kpi-value { font-family:'Syne',sans-serif; font-size:2rem; font-weight:800; margin-top:6px; line-height:1; }
+.kpi-sub { font-size:.8rem; color:var(--text2); margin-top:4px; }
+
+/* ============================================================
+   DATA TABLE
+   ============================================================ */
+.data-table { width:100%; border-collapse:collapse; }
+.data-table thead tr { border-bottom:1px solid var(--border); }
+.data-table th { padding:10px 12px; font-size:.78rem; text-transform:uppercase; letter-spacing:.06em; color:var(--text3); font-weight:600; text-align:left; }
+.data-table td { padding:12px 12px; font-size:.88rem; border-bottom:1px solid rgba(42,48,72,.3); }
+[data-theme="light"] .data-table td { border-bottom-color:rgba(212,217,236,.5); }
+.data-table tr:last-child td { border-bottom:none; }
+.data-table tbody tr { cursor:pointer; transition:background .15s; }
+.data-table tbody tr:hover { background:var(--surface2); }
+
+/* ============================================================
+   DRAWER
+   ============================================================ */
+.drawer-overlay { position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;animation:fadeIn .2s ease; }
+[data-theme="light"] .drawer-overlay { background:rgba(0,0,0,.35); }
+.drawer { position:fixed;top:0;right:0;bottom:0;width:min(580px,95vw);background:var(--surface);border-left:1px solid var(--border);z-index:201;display:flex;flex-direction:column;animation:slideLeft .25s ease;overflow:hidden;transition:background .25s; }
+.drawer-header { padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0;background:var(--surface); }
+.drawer-body { flex:1;overflow-y:auto;padding:20px 24px; }
+.drawer-tabs { display:flex;gap:2px;padding:0 24px;border-bottom:1px solid var(--border);flex-wrap:wrap; }
+.drawer-tab { padding:10px 12px;font-size:.8rem;font-weight:600;color:var(--text3);background:transparent;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s; }
+.drawer-tab.active { color:var(--accent);border-bottom-color:var(--accent); }
+.drawer-tab:hover { color:var(--text); }
+
+/* ============================================================
+   MINI BAR CHART
+   ============================================================ */
+.mini-bars { display:flex;align-items:flex-end;gap:4px;height:60px; }
+.mini-bar-wrap { flex:1;display:flex;flex-direction:column;align-items:center;gap:2px; }
+.mini-bar-track { flex:1;width:100%;background:var(--surface3);border-radius:3px 3px 0 0;position:relative;overflow:hidden;display:flex;align-items:flex-end;min-height:40px; }
+.mini-bar-fill { width:100%;border-radius:3px 3px 0 0;transition:height .6s; }
+.mini-bar-label { font-size:.62rem;color:var(--text3); }
+
+/* ============================================================
+   CHAT / MESSAGES
+   ============================================================ */
+.chat-messages { flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:16px 0;min-height:200px;max-height:340px; }
+.chat-bubble { max-width:75%;padding:10px 14px;border-radius:16px;font-size:.88rem;line-height:1.45; }
+.chat-bubble.from-pt { background:var(--accent);color:#0f1117;align-self:flex-end;border-bottom-right-radius:4px;font-weight:500; }
+[data-theme="light"] .chat-bubble.from-pt { color:#fff; }
+.chat-bubble.from-client { background:var(--surface3);color:var(--text);align-self:flex-start;border-bottom-left-radius:4px; }
+.chat-time { font-size:.7rem;color:var(--text3);margin-top:3px; }
+.chat-input-row { display:flex;gap:8px;padding-top:12px;border-top:1px solid var(--border); }
+.chat-input-row input { flex:1; }
+
+/* ============================================================
+   CLIENT MOBILE VIEW
+   ============================================================ */
+#client-view { padding-bottom:80px;min-height:100vh;background:var(--bg);transition:background .25s; }
+.client-top-bar { position:sticky;top:0;background:rgba(var(--nav-rgb,15,17,23),.95);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:10px;z-index:50;transition:background .25s; }
+[data-theme="light"] .client-top-bar { background:rgba(255,255,255,.95); }
+.client-content { padding:16px 16px 20px;max-width:500px;margin:0 auto; }
+.bottom-nav { position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;padding:8px 0 max(8px,env(safe-area-inset-bottom));z-index:100;transition:background .25s; }
+.bottom-nav-item { flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:.67rem;font-weight:500;color:var(--text3);cursor:pointer;padding:4px 0;transition:color .15s;background:transparent;border:none; }
+.bottom-nav-item .bn-icon { font-size:1.25rem;transition:transform .15s; }
+.bottom-nav-item.active { color:var(--accent); }
+.bottom-nav-item.active .bn-icon { transform:scale(1.15); }
+.bottom-nav-item:hover { color:var(--text); }
+
+/* ============================================================
+   CALORIE RING
+   ============================================================ */
+.calorie-ring-wrap { display:flex;align-items:center;justify-content:center;padding:12px 0; }
+.ring-container { position:relative;width:130px;height:130px; }
+.ring-container svg { transform:rotate(-90deg); }
+.ring-center-text { position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center; }
+.ring-val { font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800; }
+.ring-sub { font-size:.7rem;color:var(--text2); }
+
+/* ============================================================
+   STREAK BADGES
+   ============================================================ */
+.streak-strip { display:flex;gap:10px; }
+.streak-badge { flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:8px; }
+.streak-num { font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:var(--accent); }
+.streak-label { font-size:.78rem;color:var(--text2);line-height:1.2; }
+
+/* ============================================================
+   MEAL ROWS
+   ============================================================ */
+.meal-row { display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(42,48,72,.3); }
+[data-theme="light"] .meal-row { border-bottom-color:rgba(212,217,236,.5); }
+.meal-row:last-child { border-bottom:none; }
+.meal-toggle { width:20px;height:20px;border-radius:4px;border:2px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.75rem;color:transparent;transition:all .15s;flex-shrink:0; }
+.meal-toggle.checked { background:var(--accent);border-color:var(--accent);color:#0f1117;font-weight:700; }
+
+/* ============================================================
+   WEEK BARS (CLIENT)
+   ============================================================ */
+.week-bars { display:flex;align-items:flex-end;gap:6px;height:80px;padding:0 4px; }
+.week-bar-group { flex:1;display:flex;flex-direction:column;align-items:center;gap:3px; }
+.week-bar-track { width:100%;background:var(--surface3);border-radius:4px;position:relative;overflow:hidden;flex:1;min-height:60px; }
+.week-bar-goal { position:absolute;width:100%;border-radius:4px;bottom:0;background:rgba(74,222,128,.2); }
+.week-bar-actual { position:absolute;width:50%;left:25%;border-radius:3px;bottom:0;transition:height .6s; }
+.week-bar-day { font-size:.65rem;color:var(--text3); }
+
+/* ============================================================
+   PERK CARDS
+   ============================================================ */
+.perk-card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;transition:box-shadow .2s,border-color .2s; }
+.perk-card:hover { border-color:var(--accent2);box-shadow:0 4px 20px rgba(34,211,238,.1); }
+.perk-code { font-family:monospace;background:var(--surface3);padding:5px 10px;border-radius:4px;font-size:.82rem;color:var(--accent2);letter-spacing:.08em; }
+.copy-btn { font-size:.75rem;padding:5px 10px;border-radius:4px;background:var(--surface3);color:var(--text2);transition:all .15s;border:none;cursor:pointer; }
+.copy-btn:hover { background:var(--border);color:var(--text); }
+.copy-btn.copied { background:rgba(74,222,128,.2);color:var(--accent); }
+
+/* ============================================================
+   WORKOUT CARDS
+   ============================================================ */
+.workout-card { background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;transition:background .15s; }
+.workout-card:hover { background:var(--surface3); }
+.diff-pill { padding:2px 8px;border-radius:999px;font-size:.7rem;font-weight:600; }
+.diff-easy { background:rgba(74,222,128,.15);color:var(--accent); }
+.diff-medium { background:rgba(251,191,36,.15);color:var(--warn); }
+.diff-hard { background:rgba(249,115,22,.15);color:var(--accent3); }
+[data-theme="light"] .diff-easy { background:rgba(22,163,74,.12); }
+[data-theme="light"] .diff-medium { background:rgba(217,119,6,.12); }
+[data-theme="light"] .diff-hard { background:rgba(234,88,12,.12); }
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+.modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease; }
+[data-theme="light"] .modal-overlay { background:rgba(0,0,0,.4); }
+.modal { background:var(--surface);border:1px solid var(--border);border-radius:18px;width:min(520px,100%);max-height:85vh;overflow-y:auto;animation:scaleIn .2s ease;transition:background .25s; }
+.modal-header { padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between; }
+.modal-body { padding:20px 24px 24px; }
+.close-btn { width:32px;height:32px;border-radius:50%;background:var(--surface3);color:var(--text2);font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all .15s;border:none;cursor:pointer; }
+.close-btn:hover { background:var(--border);color:var(--text); }
+
+/* ============================================================
+   MEAL PLANNER GRID
+   ============================================================ */
+.meal-plan-grid { display:grid;grid-template-columns:80px repeat(7,1fr);gap:6px;font-size:.78rem; }
+.meal-plan-grid .day-head { background:var(--surface2);border-radius:6px;padding:6px;text-align:center;font-weight:700;font-size:.72rem;color:var(--text2); }
+.meal-plan-grid .meal-slot { background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px;min-height:50px;cursor:pointer;transition:all .15s;position:relative; }
+.meal-plan-grid .meal-slot:hover { border-color:var(--accent);background:var(--surface3); }
+.meal-plan-grid .meal-slot.filled { border-color:rgba(74,222,128,.3);background:rgba(74,222,128,.05); }
+[data-theme="light"] .meal-plan-grid .meal-slot.filled { background:rgba(22,163,74,.05); }
+.meal-plan-grid .row-label { display:flex;align-items:center;padding:4px 6px;font-weight:600;font-size:.75rem;color:var(--text3); }
+.meal-slot-name { font-weight:600;font-size:.72rem;line-height:1.3;color:var(--text); }
+.meal-slot-cal { font-size:.65rem;color:var(--text3);margin-top:2px; }
+.remove-slot { position:absolute;top:3px;right:3px;width:14px;height:14px;border-radius:50%;background:var(--danger);color:#fff;font-size:.6rem;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .15s; }
+.meal-slot:hover .remove-slot { opacity:1; }
+@media(max-width:700px){
+  .meal-plan-grid { grid-template-columns:60px repeat(7,1fr);font-size:.7rem; }
+  .owner-main { margin-left:0;padding:20px 14px; }
+  .sidebar { display:none; }
+}
+
+/* ============================================================
+   SHOPPING LIST
+   ============================================================ */
+.shopping-section { margin-bottom:16px; }
+.shopping-section-head { font-family:'Syne',sans-serif;font-weight:700;font-size:.85rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border); }
+.shopping-item { display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(42,48,72,.2); }
+.shopping-item:last-child { border-bottom:none; }
+.shopping-cb { width:18px;height:18px;border-radius:4px;border:2px solid var(--border);background:transparent;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.7rem;color:transparent;transition:all .15s; }
+.shopping-cb.checked { background:var(--accent);border-color:var(--accent);color:#0f1117; }
+
+/* ============================================================
+   ACTIVITY ROWS / INBOX
+   ============================================================ */
+.activity-item { display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(42,48,72,.25); }
+.activity-item:last-child { border-bottom:none; }
+.activity-dot { width:8px;height:8px;border-radius:50%;flex-shrink:0; }
+.inbox-row { display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:8px;cursor:pointer;transition:background .15s;border-bottom:1px solid rgba(42,48,72,.3); }
+.inbox-row:hover { background:var(--surface2); }
+.inbox-row:last-child { border-bottom:none; }
+.unread-dot { width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0; }
+.at-risk-avatar { width:36px;height:36px;border-radius:50%;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;color:var(--text2);flex-shrink:0; }
+.at-risk-row { display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);transition:background .15s; }
+.at-risk-row:hover { background:var(--surface3); }
+.at-risk-reason { font-size:.8rem;color:var(--danger);margin-top:2px; }
+
+/* ============================================================
+   TIER TABLE
+   ============================================================ */
+.tier-row { display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-radius:8px;margin-bottom:6px; }
+.tier-row.active-tier { border:1px solid var(--accent);background:rgba(74,222,128,.07); }
+.tier-row.inactive-tier { border:1px solid var(--border);background:var(--surface2); }
+
+/* ============================================================
+   FORM ELEMENTS
+   ============================================================ */
+.form-row { margin-bottom:14px; }
+.form-row label { display:block;font-size:.82rem;font-weight:600;color:var(--text2);margin-bottom:5px; }
+.checkbox-group { display:flex;flex-wrap:wrap;gap:8px;margin-top:4px; }
+.checkbox-chip { display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:999px;border:1px solid var(--border);background:var(--surface3);font-size:.8rem;font-weight:500;cursor:pointer;transition:all .15s; }
+.checkbox-chip:hover { border-color:var(--accent2); }
+.checkbox-chip.checked { background:rgba(34,211,238,.12);border-color:var(--accent2);color:var(--accent2); }
+
+/* ============================================================
+   SPLASH
+   ============================================================ */
+#splash { min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(74,222,128,.08) 0%,transparent 70%),var(--bg);padding:24px;transition:background .25s; }
+[data-theme="light"] #splash { background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(22,163,74,.06) 0%,transparent 70%),var(--bg); }
+.splash-card { background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:48px 40px;max-width:560px;width:100%;text-align:center;animation:fadeUp .5s ease both;transition:background .25s; }
+.splash-logo { font-family:'Syne',sans-serif;font-weight:800;font-size:3rem;color:var(--accent);letter-spacing:-.04em; }
+.splash-tagline { color:var(--text2);margin-top:8px;font-size:1rem;line-height:1.5; }
+.role-btns { display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:36px; }
+.role-btn { display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px 12px;border-radius:12px;border:2px solid var(--border);background:var(--surface2);transition:all .2s;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;color:var(--text); }
+.role-btn:hover { border-color:var(--accent);background:rgba(74,222,128,.07);transform:translateY(-3px);box-shadow:0 8px 30px rgba(74,222,128,.15);color:var(--accent); }
+.role-btn .role-icon { font-size:2rem; }
+.role-btn .role-sub { font-size:.72rem;color:var(--text3);font-family:'DM Sans',sans-serif;font-weight:400; }
+.what-shows { margin-top:32px;text-align:left;background:var(--surface2);border-radius:8px;padding:16px 20px; }
+.what-shows h4 { font-family:'Syne',sans-serif;font-size:.85rem;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.08em; }
+.what-shows ul { list-style:none;display:flex;flex-direction:column;gap:5px; }
+.what-shows ul li { font-size:.82rem;color:var(--text2);display:flex;gap:8px;align-items:flex-start; }
+.what-shows ul li::before { content:'→';color:var(--accent);font-weight:700;flex-shrink:0;margin-top:1px; }
+.splash-theme-row { display:flex;justify-content:flex-end;margin-bottom:16px; }
+
+/* ============================================================
+   PAGE HEADER
+   ============================================================ */
+.page-header { margin-bottom:24px; }
+.page-title { font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800; }
+.page-subtitle { color:var(--text2);font-size:.9rem;margin-top:4px; }
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+.toast { position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--accent);color:#0f1117;padding:10px 20px;border-radius:999px;font-weight:600;font-size:.88rem;z-index:500;animation:toastAnim .3s ease,toastOut .3s ease 1.7s both;box-shadow:0 4px 20px rgba(74,222,128,.4); }
+[data-theme="light"] .toast { color:#fff; }
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes fadeIn { from{opacity:0}to{opacity:1} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)} }
+@keyframes slideLeft { from{transform:translateX(100%)}to{transform:translateX(0)} }
+@keyframes scaleIn { from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)} }
+@keyframes toastAnim { from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)} }
+@keyframes toastOut { from{opacity:1}to{opacity:0} }
+.animate-in { animation:fadeUp .35s ease both; }
+/* ============================================================
+   MACRO RINGS (3-ring display)
+   ============================================================ */
+.macro-rings-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:12px; }
+.macro-ring-cell { display:flex; flex-direction:column; align-items:center; gap:6px; }
+.macro-ring-svg { display:block; }
+.macro-ring-label { font-size:.72rem; color:var(--text2); font-weight:600; text-align:center; }
+.macro-ring-val { font-family:'Syne',sans-serif; font-weight:800; font-size:.95rem; text-align:center; }
+.macro-ring-sub { font-size:.65rem; color:var(--text3); text-align:center; margin-top:-4px; }
+
+/* Macro progress bars (linear) */
+.macro-bar-section { margin-top:12px; display:flex; flex-direction:column; gap:8px; }
+.macro-bar-row { display:flex; align-items:center; gap:8px; }
+.macro-bar-name { font-size:.78rem; font-weight:600; width:60px; flex-shrink:0; }
+.macro-bar-track { flex:1; height:8px; background:var(--surface3); border-radius:999px; overflow:hidden; }
+.macro-bar-fill { height:100%; border-radius:999px; transition:width .6s ease; }
+.macro-bar-nums { font-size:.75rem; color:var(--text2); width:80px; text-align:right; flex-shrink:0; }
+
+/* ============================================================
+   BROADCAST / MESSAGING
+   ============================================================ */
+.broadcast-history-item {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  transition: background .15s;
+}
+.broadcast-history-item:hover { background: var(--surface3); }
+.broadcast-type-pill {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 999px;
+  font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
+}
+.bc-promotion { background:rgba(249,115,22,.15); color:var(--accent3); border:1px solid rgba(249,115,22,.3); }
+.bc-announcement { background:rgba(34,211,238,.15); color:var(--accent2); border:1px solid rgba(34,211,238,.3); }
+.bc-wellness { background:rgba(74,222,128,.15); color:var(--accent); border:1px solid rgba(74,222,128,.3); }
+.audience-chip {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:4px 12px; border-radius:999px; border:2px solid var(--border);
+  background:var(--surface3); font-size:.82rem; font-weight:600;
+  cursor:pointer; transition:all .15s; white-space:nowrap;
+}
+.audience-chip:hover { border-color:var(--accent); }
+.audience-chip.selected { border-color:var(--accent); background:rgba(74,222,128,.1); color:var(--accent); }
+[data-theme="light"] .audience-chip.selected { background:rgba(22,163,74,.08); }
+
+/* ============================================================
+   WELLNESS ARTICLES
+   ============================================================ */
+.wellness-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  transition: box-shadow .2s, border-color .2s, transform .15s;
+  cursor: pointer;
+}
+.wellness-card:hover { box-shadow: var(--shadow); border-color: var(--accent2); transform: translateY(-2px); }
+.wellness-emoji { font-size: 1.8rem; margin-bottom: 8px; display: block; }
+.wellness-cat { font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); font-weight: 600; margin-bottom: 4px; }
+.wellness-title { font-family:'Syne',sans-serif; font-weight:700; font-size:.95rem; margin-bottom:6px; line-height:1.3; }
+.wellness-summary { font-size:.8rem; color:var(--text2); line-height:1.5; margin-bottom:10px; }
+.wellness-meta { display:flex; align-items:center; justify-content:space-between; }
+.wellness-tag { font-size:.68rem; padding:2px 8px; border-radius:999px; background:rgba(34,211,238,.12); color:var(--accent2); font-weight:600; }
+.wellness-time { font-size:.72rem; color:var(--text3); }
+.resource-card {
+  display:flex; align-items:center; gap:12px;
+  background:var(--surface2); border:1px solid var(--border); border-radius:10px;
+  padding:12px 16px; transition:all .15s;
+}
+.resource-card:hover { border-color:var(--accent); background:var(--surface3); }
+.resource-emoji { font-size:1.4rem; flex-shrink:0; }
+.resource-type { display:inline-block; font-size:.65rem; padding:2px 7px; border-radius:999px; background:var(--surface3); color:var(--text3); font-weight:600; border:1px solid var(--border); margin-bottom:2px; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================  SPLASH  ============================================================ -->
+<div id="splash">
+  <div class="splash-card">
+    <div class="splash-theme-row">
+      <button class="theme-toggle" onclick="toggleTheme()" id="splash-theme-btn" title="Toggle theme">☀️</button>
+    </div>
+    <div class="splash-logo">APEX</div>
+    <p class="splash-tagline">The all-in-one platform for personal training businesses.<br/>Built for owners, PTs, and the clients they transform.</p>
+    <div class="role-btns">
+      <button class="role-btn" onclick="switchView('owner')"><span class="role-icon">🏢</span>Owner<span class="role-sub">Business dashboard</span></button>
+      <button class="role-btn" onclick="switchView('pt')"><span class="role-icon">💪</span>PT<span class="role-sub">Coach portal</span></button>
+      <button class="role-btn" onclick="switchView('client')"><span class="role-icon">🎯</span>Client<span class="role-sub">My progress</span></button>
+    </div>
+    <div class="what-shows">
+      <h4>What this demo shows</h4>
+      <ul>
+        <li>Owner: KPIs, client management, editable perks marketplace, PT payout tiers</li>
+        <li>PT: Client dashboard, workout assignment, weekly meal planner, two-way messaging</li>
+        <li>Client: Today/Week views, meal logging, weekly plan with edits, shopping list, perks</li>
+        <li>Dark / Light mode on every view</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================  OWNER VIEW  ============================================================ -->
+<div id="owner-view" class="hidden">
+  <div class="top-nav">
+    <div class="logo">APEX <span>Owner Portal</span></div>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" id="owner-theme-btn">☀️</button>
+    <button class="switch-role-btn" onclick="switchView('splash')">⇄ Switch Role</button>
+  </div>
+  <div class="sidebar" id="owner-sidebar">
+    <button class="sidebar-item active" onclick="ownerNav('dashboard',this)"><span class="si-icon">📊</span>Dashboard</button>
+    <button class="sidebar-item" onclick="ownerNav('signups',this)"><span class="si-icon">✨</span>New Sign-ups <span class="badge badge-yellow" style="margin-left:auto;font-size:.65rem;padding:2px 6px" id="signup-count-badge">2</span></button>
+    <button class="sidebar-item" onclick="ownerNav('clients',this)"><span class="si-icon">👥</span>Clients</button>
+    <button class="sidebar-item" onclick="ownerNav('ptmgmt',this)"><span class="si-icon">🧑‍💼</span>PT Management <span class="badge badge-blue" style="margin-left:auto;font-size:.65rem;padding:2px 6px" id="pt-count-badge">1</span></button>
+    <button class="sidebar-item" onclick="ownerNav('payouts',this)"><span class="si-icon">💰</span>Payouts</button>
+    <button class="sidebar-item" onclick="ownerNav('perks',this)"><span class="si-icon">🎁</span>Perks</button>
+    <button class="sidebar-item" onclick="ownerNav('broadcast',this)"><span class="si-icon">📣</span>Broadcast</button>
+  </div>
+  <div class="owner-main" id="owner-main-content"></div>
+</div>
+
+<!-- ============================================================  PT VIEW  ============================================================ -->
+<div id="pt-view" class="hidden">
+  <div class="top-nav">
+    <div class="logo">APEX <span>PT Portal</span></div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="ptNav('clients',this)">My Clients</button>
+      <button class="nav-tab" onclick="ptNav('library',this)">Workout Library</button>
+      <button class="nav-tab" onclick="ptNav('messages',this)">Messages</button>
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" id="pt-theme-btn">☀️</button>
+    <button class="switch-role-btn" onclick="switchView('splash')">⇄ Switch Role</button>
+  </div>
+  <div style="max-width:1060px;margin:0 auto;padding:92px 24px 32px" id="pt-main-content"></div>
+</div>
+
+<!-- ============================================================  CLIENT VIEW  ============================================================ -->
+<div id="client-view" class="hidden">
+  <div class="client-top-bar">
+    <button class="btn btn-ghost btn-sm" onclick="switchView('splash')" style="padding:6px 10px">← Exit</button>
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;color:var(--accent);margin-right:auto">APEX</div>
+    <div style="font-size:.82rem;color:var(--text2)" id="client-name-top"></div>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" id="client-theme-btn" style="margin-left:8px">☀️</button>
+  </div>
+  <div class="client-content" id="client-main-content"></div>
+  <nav class="bottom-nav">
+    <button class="bottom-nav-item active" onclick="clientNav('today',this)"><span class="bn-icon">☀️</span>Today</button>
+    <button class="bottom-nav-item" onclick="clientNav('week',this)"><span class="bn-icon">📅</span>Week</button>
+    <button class="bottom-nav-item" onclick="clientNav('meals',this)"><span class="bn-icon">🥗</span>Meals</button>
+    <button class="bottom-nav-item" onclick="clientNav('workout',this)"><span class="bn-icon">🏋️</span>Workout</button>
+    <button class="bottom-nav-item" onclick="clientNav('wellness',this)"><span class="bn-icon">🌿</span>Wellness</button>
+    <button class="bottom-nav-item" onclick="clientNav('perks',this)"><span class="bn-icon">🎁</span>Perks</button>
+    <button class="bottom-nav-item" onclick="clientNav('msg',this)"><span class="bn-icon">💬</span>Chat</button>
+  </nav>
+</div>
+
+<div id="drawer-root"></div>
+<div id="modal-root"></div>
+<div id="toast-root"></div>
+
+<script>
+/* ============================================================
+   THEME
+   ============================================================ */
+let currentTheme = 'dark';
+function toggleTheme() {
+  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', currentTheme);
+  const icon = currentTheme === 'dark' ? '☀️' : '🌙';
+  ['splash-theme-btn','owner-theme-btn','pt-theme-btn','client-theme-btn'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = icon;
+  });
+}
+
+/* ============================================================
+   DEMO DATA
+   ============================================================ */
+let pts = [
+  {
+    id:'pt1',
+    name:'Marcus Reid',
+    email:'marcus.reid@apexfit.com',
+    phone:'0412 345 678',
+    abn:'51 824 753 556',
+    address:'14 Fitness Lane',
+    suburb:'Bondi',
+    state:'NSW',
+    postcode:'2026',
+    rating:4.6,
+    payoutTier:'Gold',
+    payoutRate:45,
+    clientIds:['c1','c2','c3','c4','c5'],
+    maxClients:12,
+    prefersVirtual:true,
+    prefersInPerson:true,
+    prefersNutritionOnly:false,
+    bio:'Certified PT with 8 years experience. Specialises in strength, fat loss and running programs.',
+    specialisations:['Strength','Fat Loss','Running'],
+    status:'active',
+    joinedDate:'Jan 2023'
+  }
+];
+
+const clients = [
+  { id:'c1', name:'Sarah Chen', email:'sarah@email.com', subscriptionType:'Virtual PT', assignedPtId:'pt1',
+    calorieGoalPerDay:1800, fatGoalPerDay:60, carbGoalPerDay:200, proteinGoalPerDay:140,
+    weeklyWorkoutGoal:4, lastLoginDaysAgo:1, lastWorkoutDaysAgo:2, lastMealLogDaysAgo:1,
+    loginStreakDays:12, workoutStreakWeeks:3,
+    weeklyCalories:[1650,1820,1750,1900,1600,1780,1500], weeklyCalorieGoal:1800, weeklyWorkoutsCompleted:3,
+    goals:'Lose 8kg over 6 months, build core strength, train for a 5K.',
+    context:'Two kids, busy schedule. Prefers morning workouts before 7am.',
+    motivation:'Progress photos + milestone rewards. Responds well to positive reinforcement.',
+    assignedWorkoutIds:['w1','w3','w5'], todayMeals:['m1','m2','m3','m4'], mealEaten:{}, ptNotes:'', mealEdits:{} },
+  { id:'c2', name:'James Okafor', email:'james@email.com', subscriptionType:'PT in person', assignedPtId:'pt1',
+    calorieGoalPerDay:2400, fatGoalPerDay:80, carbGoalPerDay:300, proteinGoalPerDay:200,
+    weeklyWorkoutGoal:5, lastLoginDaysAgo:5, lastWorkoutDaysAgo:8, lastMealLogDaysAgo:6,
+    loginStreakDays:0, workoutStreakWeeks:0,
+    weeklyCalories:[2200,2100,0,1900,2300,0,0], weeklyCalorieGoal:2400, weeklyWorkoutsCompleted:1,
+    goals:'Bulk to 90kg, increase bench press to 120kg.',
+    context:'Works night shifts. Energy low on Tuesdays and Wednesdays.',
+    motivation:'Competitive. Likes seeing strength numbers go up.',
+    assignedWorkoutIds:['w2','w4','w6'], todayMeals:['m5','m6','m7'], mealEaten:{}, ptNotes:'', mealEdits:{} },
+  { id:'c3', name:'Priya Sharma', email:'priya@email.com', subscriptionType:'Nutrition only', assignedPtId:'pt1',
+    calorieGoalPerDay:1600, fatGoalPerDay:50, carbGoalPerDay:220, proteinGoalPerDay:120,
+    weeklyWorkoutGoal:3, lastLoginDaysAgo:2, lastWorkoutDaysAgo:3, lastMealLogDaysAgo:2,
+    loginStreakDays:7, workoutStreakWeeks:2,
+    weeklyCalories:[1550,1600,1480,1620,1590,1700,1580], weeklyCalorieGoal:1600, weeklyWorkoutsCompleted:3,
+    goals:'Manage PCOS through diet, improve energy levels, lose 5kg.',
+    context:'Vegetarian. Dislikes high-intensity cardio.',
+    motivation:'Feels motivated by how clothes fit and energy levels.',
+    assignedWorkoutIds:['w7','w8'], todayMeals:['m8','m9','m10'], mealEaten:{}, ptNotes:'', mealEdits:{} },
+  { id:'c4', name:'Tom Whitfield', email:'tom@email.com', subscriptionType:'Virtual PT', assignedPtId:'pt1',
+    calorieGoalPerDay:2000, fatGoalPerDay:65, carbGoalPerDay:250, proteinGoalPerDay:160,
+    weeklyWorkoutGoal:3, lastLoginDaysAgo:0, lastWorkoutDaysAgo:1, lastMealLogDaysAgo:0,
+    loginStreakDays:21, workoutStreakWeeks:5,
+    weeklyCalories:[1950,2050,1980,2100,2000,1920,2010], weeklyCalorieGoal:2000, weeklyWorkoutsCompleted:3,
+    goals:'General fitness, reduce body fat to 15%, improve flexibility.',
+    context:'Travels for work 2 weeks/month. Hotel gym only.',
+    motivation:'Data-driven. Loves tracking streaks and numbers.',
+    assignedWorkoutIds:['w1','w9','w10'], todayMeals:['m11','m12','m13'], mealEaten:{}, ptNotes:'', mealEdits:{} },
+  { id:'c5', name:'Amy Zhang', email:'amy@email.com', subscriptionType:'PT in person', assignedPtId:'pt1',
+    calorieGoalPerDay:1900, fatGoalPerDay:65, carbGoalPerDay:230, proteinGoalPerDay:130,
+    weeklyWorkoutGoal:4, lastLoginDaysAgo:4, lastWorkoutDaysAgo:5, lastMealLogDaysAgo:4,
+    loginStreakDays:1, workoutStreakWeeks:0,
+    weeklyCalories:[1700,1800,1600,1750,0,0,0], weeklyCalorieGoal:1900, weeklyWorkoutsCompleted:2,
+    goals:'Post-partum fitness, rebuild strength, sleep better.',
+    context:'4-month-old baby. Limited time windows. Very tired.',
+    motivation:'Feeling stronger and having energy to play with baby.',
+    assignedWorkoutIds:['w3','w5','w7'], todayMeals:['m14','m15','m1'], mealEaten:{}, ptNotes:'', mealEdits:{} }
+];
+
+const mealLibrary = [
+  { id:'m1', name:'Overnight Oats', calories:380, protein:14, carbs:58, fat:10, tags:['breakfast','veg'],
+    ingredients:['1 cup rolled oats','1 cup almond milk','1 tbsp chia seeds','1 tbsp honey','½ cup mixed berries'] },
+  { id:'m2', name:'Grilled Chicken Salad', calories:420, protein:42, carbs:18, fat:16, tags:['lunch','high-protein'],
+    ingredients:['200g chicken breast','2 cups mixed greens','1 cucumber','½ avocado','2 tbsp olive oil','1 lemon'] },
+  { id:'m3', name:'Greek Yoghurt & Berries', calories:180, protein:12, carbs:22, fat:4, tags:['snack','veg'],
+    ingredients:['200g Greek yoghurt','½ cup mixed berries','1 tsp honey'] },
+  { id:'m4', name:'Salmon & Sweet Potato', calories:540, protein:38, carbs:52, fat:14, tags:['dinner','omega-3'],
+    ingredients:['200g salmon fillet','1 medium sweet potato','1 cup broccoli','1 tbsp olive oil','lemon & herbs'] },
+  { id:'m5', name:'Protein Shake', calories:300, protein:40, carbs:18, fat:6, tags:['snack','high-protein'],
+    ingredients:['2 scoops whey protein','300ml whole milk','1 banana'] },
+  { id:'m6', name:'Beef Stir Fry & Rice', calories:680, protein:45, carbs:72, fat:18, tags:['dinner','bulk'],
+    ingredients:['250g beef strips','1 cup jasmine rice','2 cups mixed veg','2 tbsp soy sauce','1 tbsp sesame oil','garlic & ginger'] },
+  { id:'m7', name:'Eggs & Wholegrain Toast', calories:420, protein:22, carbs:38, fat:16, tags:['breakfast'],
+    ingredients:['3 eggs','2 slices wholegrain bread','1 tbsp butter','salt & pepper'] },
+  { id:'m8', name:'Lentil Dahl', calories:380, protein:18, carbs:60, fat:8, tags:['dinner','veg','high-fibre'],
+    ingredients:['1 cup red lentils','1 can chopped tomatoes','1 onion','2 cloves garlic','1 tsp cumin','1 tsp turmeric','1 tbsp coconut oil'] },
+  { id:'m9', name:'Tofu Scramble', calories:290, protein:20, carbs:16, fat:14, tags:['breakfast','veg'],
+    ingredients:['300g firm tofu','½ red pepper','½ onion','1 tbsp olive oil','turmeric & cumin','2 slices sourdough'] },
+  { id:'m10', name:'Chickpea Buddha Bowl', calories:450, protein:22, carbs:64, fat:12, tags:['lunch','veg'],
+    ingredients:['1 can chickpeas','1 cup brown rice','1 cup roasted veg','2 tbsp tahini','1 lemon','fresh herbs'] },
+  { id:'m11', name:'Avocado Toast', calories:350, protein:10, carbs:42, fat:18, tags:['breakfast'],
+    ingredients:['1 avocado','2 slices sourdough','2 eggs (poached)','chilli flakes','salt & pepper'] },
+  { id:'m12', name:'Turkey Wrap', calories:440, protein:34, carbs:48, fat:10, tags:['lunch'],
+    ingredients:['150g turkey breast','1 large wholegrain wrap','lettuce','tomato','cucumber','2 tbsp hummus'] },
+  { id:'m13', name:'Cottage Cheese & Fruit', calories:220, protein:18, carbs:24, fat:4, tags:['snack'],
+    ingredients:['200g cottage cheese','1 cup pineapple chunks','1 tsp honey'] },
+  { id:'m14', name:'Banana Protein Pancakes', calories:340, protein:28, carbs:40, fat:8, tags:['breakfast','high-protein'],
+    ingredients:['2 bananas','3 eggs','1 scoop protein powder','pinch of cinnamon','coconut oil for frying'] },
+  { id:'m15', name:'Chicken Noodle Soup', calories:310, protein:28, carbs:34, fat:6, tags:['lunch'],
+    ingredients:['200g chicken breast','100g rice noodles','2 cups chicken broth','1 carrot','1 stalk celery','spring onions','ginger'] }
+];
+
+// Weekly meal plans: clientId -> { Mon: { Breakfast: mealId, Lunch: mealId, Snack: mealId, Dinner: mealId }, ... }
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const MEAL_TYPES = ['Breakfast','Lunch','Snack','Dinner'];
+
+const weeklyMealPlans = {
+  c1: {
+    Mon:{Breakfast:'m1',Lunch:'m2',Snack:'m3',Dinner:'m4'},
+    Tue:{Breakfast:'m7',Lunch:'m12',Snack:'m3',Dinner:'m4'},
+    Wed:{Breakfast:'m1',Lunch:'m10',Snack:'m13',Dinner:'m2'},
+    Thu:{Breakfast:'m14',Lunch:'m2',Snack:'m5',Dinner:'m8'},
+    Fri:{Breakfast:'m1',Lunch:'m12',Snack:'m3',Dinner:'m4'},
+    Sat:{Breakfast:'m11',Lunch:'m10',Snack:'m13',Dinner:'m6'},
+    Sun:{Breakfast:'m7',Lunch:'m2',Snack:'m3',Dinner:'m4'}
+  },
+  c2: {
+    Mon:{Breakfast:'m7',Lunch:'m6',Snack:'m5',Dinner:'m6'},
+    Tue:{Breakfast:'m7',Lunch:'m12',Snack:'m5',Dinner:'m6'},
+    Wed:{Breakfast:'m14',Lunch:'m2',Snack:'m5',Dinner:'m6'},
+    Thu:{Breakfast:'m7',Lunch:'m6',Snack:'m5',Dinner:'m4'},
+    Fri:{Breakfast:'m14',Lunch:'m12',Snack:'m5',Dinner:'m6'},
+    Sat:{Breakfast:'m7',Lunch:'m2',Snack:'m13',Dinner:'m6'},
+    Sun:{Breakfast:'m1',Lunch:'m12',Snack:'m5',Dinner:'m4'}
+  },
+  c3: {
+    Mon:{Breakfast:'m9',Lunch:'m10',Snack:'m3',Dinner:'m8'},
+    Tue:{Breakfast:'m1',Lunch:'m10',Snack:'m13',Dinner:'m8'},
+    Wed:{Breakfast:'m9',Lunch:'m2',Snack:'m3',Dinner:'m10'},
+    Thu:{Breakfast:'m1',Lunch:'m15',Snack:'m3',Dinner:'m8'},
+    Fri:{Breakfast:'m9',Lunch:'m10',Snack:'m13',Dinner:'m8'},
+    Sat:{Breakfast:'m1',Lunch:'m12',Snack:'m3',Dinner:'m10'},
+    Sun:{Breakfast:'m9',Lunch:'m10',Snack:'m3',Dinner:'m8'}
+  },
+  c4: {
+    Mon:{Breakfast:'m11',Lunch:'m12',Snack:'m13',Dinner:'m4'},
+    Tue:{Breakfast:'m7',Lunch:'m15',Snack:'m5',Dinner:'m2'},
+    Wed:{Breakfast:'m1',Lunch:'m12',Snack:'m13',Dinner:'m4'},
+    Thu:{Breakfast:'m11',Lunch:'m2',Snack:'m3',Dinner:'m6'},
+    Fri:{Breakfast:'m7',Lunch:'m12',Snack:'m13',Dinner:'m4'},
+    Sat:{Breakfast:'m14',Lunch:'m10',Snack:'m3',Dinner:'m6'},
+    Sun:{Breakfast:'m1',Lunch:'m2',Snack:'m13',Dinner:'m4'}
+  },
+  c5: {
+    Mon:{Breakfast:'m14',Lunch:'m15',Snack:'m3',Dinner:'m4'},
+    Tue:{Breakfast:'m1',Lunch:'m12',Snack:'m13',Dinner:'m8'},
+    Wed:{Breakfast:'m7',Lunch:'m2',Snack:'m3',Dinner:'m4'},
+    Thu:{Breakfast:'m1',Lunch:'m15',Snack:'m3',Dinner:'m8'},
+    Fri:{Breakfast:'m14',Lunch:'m12',Snack:'m13',Dinner:'m4'},
+    Sat:{Breakfast:'m9',Lunch:'m10',Snack:'m3',Dinner:'m8'},
+    Sun:{Breakfast:'m1',Lunch:'m2',Snack:'m3',Dinner:'m4'}
+  }
+};
+
+const workoutLibrary = [
+  { id:'w1', name:'Full Body Burn', focus:'Full Body', difficulty:'Medium', description:'Compound movements targeting all major muscle groups.', exercises:['Goblet Squats 3×12','Push-ups 3×15','Dumbbell Rows 3×12','Hip Hinges 3×10','Plank 3×45s'] },
+  { id:'w2', name:'Upper Body Power', focus:'Upper', difficulty:'Hard', description:'Bench press, shoulder press, and pull-down variations.', exercises:['Bench Press 4×8','Overhead Press 3×10','Lat Pulldown 4×10','Cable Rows 3×12','Face Pulls 3×15'] },
+  { id:'w3', name:'Core & Stability', focus:'Core', difficulty:'Easy', description:'Low impact core routine focused on deep stabilisers.', exercises:['Dead Bug 3×10','Bird Dog 3×12','Pallof Press 3×12','Side Plank 3×30s','RKC Plank 3×20s'] },
+  { id:'w4', name:'Leg Day Heavy', focus:'Lower', difficulty:'Hard', description:'Progressive overload lower body session.', exercises:['Back Squat 4×6','Romanian Deadlift 4×8','Leg Press 3×12','Nordic Curl 3×8','Calf Raises 4×20'] },
+  { id:'w5', name:'Cardio Intervals', focus:'Cardio', difficulty:'Medium', description:'HIIT-style intervals on bike or treadmill. 20 min total.', exercises:['5 min warm-up','8× (40s hard / 20s rest)','2 min active recovery','Repeat ×2','5 min cool-down'] },
+  { id:'w6', name:'Push Day', focus:'Upper', difficulty:'Medium', description:'Chest, shoulders, and triceps volume session.', exercises:['Dumbbell Press 4×10','Incline Press 3×12','Lateral Raises 4×15','Tricep Dips 3×12','Cable Flyes 3×15'] },
+  { id:'w7', name:'Yoga Flow', focus:'Flexibility', difficulty:'Easy', description:'Gentle yoga-inspired mobility flow for active recovery.', exercises:['Sun Salutation ×5','Warrior I & II ×3','Pigeon Pose 2min/side','Cat-Cow ×20','Child\'s Pose 3min'] },
+  { id:'w8', name:'Low Impact Full Body', focus:'Full Body', difficulty:'Easy', description:'Joint-friendly session using bands and bodyweight.', exercises:['Banded Squats 3×15','Seated Row 3×12','Step-ups 3×10/side','Wall Push-ups 3×15','Glute Bridges 3×20'] },
+  { id:'w9', name:'Hotel Room Workout', focus:'Full Body', difficulty:'Medium', description:'Equipment-free session for travel days. 30 mins.', exercises:['Jump Squats 4×15','Decline Push-ups 3×12','Single-leg RDL 3×10/side','Mountain Climbers 3×30s','Slow Squat Eccentric 3×10'] },
+  { id:'w10', name:'Pull Day', focus:'Upper', difficulty:'Medium', description:'Back and bicep session with chin-up focus.', exercises:['Chin-ups 4×max','Dumbbell Rows 4×10','Face Pulls 3×15','Hammer Curls 3×12','Straight-arm Pulldown 3×15'] }
+];
+
+const messages = {
+  c1:[
+    {sender:'pt',text:'Hey Sarah! Great consistency this week 🔥',timestamp:'Mon 9:12am'},
+    {sender:'client',text:'Thanks Marcus! Struggled Wednesday but got back on track.',timestamp:'Mon 11:30am'},
+    {sender:'pt',text:'That\'s exactly the right mindset. One off day doesn\'t break progress.',timestamp:'Mon 12:01pm'},
+    {sender:'client',text:'Can we adjust Saturday\'s workout? Only have 20 mins.',timestamp:'Tue 8:45am'},
+    {sender:'pt',text:'Absolutely — swapping it for the Hotel Room Workout. Done in 20!',timestamp:'Tue 9:02am'}
+  ],
+  c2:[
+    {sender:'pt',text:'James, haven\'t seen a workout logged this week — everything okay?',timestamp:'Thu 10:00am'},
+    {sender:'client',text:'Sorry mate, slammed at work. Back on it this weekend.',timestamp:'Thu 6:30pm'},
+    {sender:'pt',text:'No stress. Check-in call Saturday morning?',timestamp:'Thu 6:45pm'}
+  ],
+  c3:[
+    {sender:'pt',text:'Priya your nutrition this week has been on point — nearly 100% adherence!',timestamp:'Wed 8:00am'},
+    {sender:'client',text:'Really? That feels great to hear. The lentil dahl has been a lifesaver.',timestamp:'Wed 9:15am'},
+    {sender:'pt',text:'Keep it up! Next week we\'ll add the tofu scramble variation.',timestamp:'Wed 9:22am'}
+  ],
+  c4:[
+    {sender:'client',text:'21-day login streak today! Do I get a trophy? 😂',timestamp:'Today 7:15am'},
+    {sender:'pt',text:'Ha! You earned it. Check your perks tab!',timestamp:'Today 8:00am'}
+  ],
+  c5:[
+    {sender:'pt',text:'Amy, just checking in ❤️',timestamp:'Mon 10:00am'},
+    {sender:'client',text:'Thank you. I feel like I\'m failing but trying to be kind to myself.',timestamp:'Tue 2:00pm'},
+    {sender:'pt',text:'You\'re not failing at all. Two workouts with a 4-month-old is incredible.',timestamp:'Tue 2:15pm'}
+  ]
+};
+
+// PERKS — editable in owner view
+let perks = [
+  { id:'p1', category:'Supplements', partnerName:'Myprotein', description:'25% off all protein powders and bars', discountCode:'APEX25', price:'$0', applicableSubs:['Virtual PT','PT in person','Nutrition only'] },
+  { id:'p2', category:'Gear', partnerName:'Gymshark', description:'15% off your next order of gym kit', discountCode:'APEXFIT15', price:'$0', applicableSubs:['Virtual PT','PT in person'] },
+  { id:'p3', category:'Massage', partnerName:'Urban Massage', description:'Book a 60-min sports massage at 20% off', discountCode:'APEXMASS20', price:'From $65', applicableSubs:['PT in person'] },
+  { id:'p4', category:'Recovery', partnerName:'TheraGun', description:'10% off all percussion devices', discountCode:'APEXTHERA', price:'From $199', applicableSubs:['Virtual PT','PT in person'] },
+  { id:'p5', category:'Supplements', partnerName:'Huel', description:'$10 off your first Huel order', discountCode:'APEXHUEL10', price:'$10 saving', applicableSubs:['Virtual PT','Nutrition only'] },
+  { id:'p6', category:'Recovery', partnerName:'Whoop', description:'1 month free on Whoop 4.0 subscription', discountCode:'APEXWHOOP', price:'$30 value', applicableSubs:['Virtual PT','PT in person'] },
+  { id:'p7', category:'Gear', partnerName:'Alphalete', description:'20% off leggings and shorts', discountCode:'APEX20AL', price:'$0', applicableSubs:['Virtual PT','PT in person','Nutrition only'] },
+  { id:'p8', category:'Massage', partnerName:'Soothe', description:'In-home massage for $85 (was $110)', discountCode:'APEXSOOTHE', price:'$85', applicableSubs:['PT in person','Virtual PT'] },
+  { id:'p9', category:'Supplements', partnerName:'Grenade', description:'3 protein bars for the price of 2', discountCode:'APEXBAR3', price:'$0', applicableSubs:['Virtual PT','PT in person','Nutrition only'] },
+  { id:'p10', category:'Recovery', partnerName:'Hypervolt', description:'$30 off the Go 2 massager', discountCode:'APEXHYP30', price:'$30 saving', applicableSubs:['PT in person'] },
+  { id:'p11', category:'Gear', partnerName:'Nike Training', description:'10% off Nike training shoes', discountCode:'APEXNIKE10', price:'$0', applicableSubs:['Virtual PT','PT in person'] },
+  { id:'p12', category:'Supplements', partnerName:'Bulk', description:'20% off creatine and pre-workout', discountCode:'APEXBULK20', price:'$0', applicableSubs:['Virtual PT','PT in person'] }
+];
+
+let signupsData = [
+  { id:'ns1', name:'David Li', email:'david.li@email.com', preferredSub:'Virtual PT', signupDate:'Mar 22, 2025', assignedPtId:null },
+  { id:'ns2', name:'Rosa Martinez', email:'rosa.m@email.com', preferredSub:'Nutrition only', signupDate:'Mar 24, 2025', assignedPtId:null }
+];
+
+// Broadcast messages history
+let broadcastHistory = [
+  { id:'b1', sent:'Mar 20, 2025 · 9:00am', audience:'All Clients', subject:'New Perks Added 🎁', body:'Hey team! We\'ve just added 3 new partner perks to your account — check your Perks tab for exclusive discounts on Whoop and TheraGun.', type:'promotion' },
+  { id:'b2', sent:'Mar 15, 2025 · 2:00pm', audience:'All PTs', subject:'Payout Update — Q1', body:'Hi PTs! Q1 payout statements are ready. Platinum and Gold tier PTs will see a bonus 2% this quarter. Keep up the amazing work.', type:'announcement' },
+];
+
+// Wellness articles
+const wellnessArticles = [
+  { id:'wa1', category:'Nutrition', emoji:'🥦', title:'Why Protein Timing Matters', summary:'Spreading your protein across 4–5 meals can maximise muscle protein synthesis, especially around training windows.', readTime:'3 min', tag:'Evidence-based' },
+  { id:'wa2', category:'Recovery', emoji:'😴', title:'The Sleep–Fat Loss Connection', summary:'Poor sleep raises cortisol and ghrelin (hunger hormone), making fat loss significantly harder. Prioritise 7–9 hours for best results.', readTime:'4 min', tag:'Must-read' },
+  { id:'wa3', category:'Mindset', emoji:'🧠', title:'Building Habits That Stick', summary:'James Clear\'s research shows habit stacking — pairing a new behaviour with an existing routine — is the most reliable way to make exercise automatic.', readTime:'5 min', tag:'Popular' },
+  { id:'wa4', category:'Hydration', emoji:'💧', title:'Hydration and Performance', summary:'Even mild dehydration (1–2% body weight) can reduce strength by up to 5% and endurance by 10%. Aim for 35ml per kg of bodyweight daily.', readTime:'2 min', tag:'Quick read' },
+  { id:'wa5', category:'Nutrition', emoji:'🍳', title:'The Truth About Breakfast', summary:'Skipping breakfast isn\'t inherently harmful, but for those training in the morning, a protein-rich meal can meaningfully improve performance and recovery.', readTime:'3 min', tag:'Evidence-based' },
+  { id:'wa6', category:'Mental Health', emoji:'🌿', title:'Exercise as Medicine for Anxiety', summary:'Consistent moderate exercise is as effective as SSRIs for mild-to-moderate anxiety, with compounding benefits over 12+ weeks.', readTime:'4 min', tag:'Important' },
+  { id:'wa7', category:'Recovery', emoji:'🛁', title:'Ice Bath Science: What Actually Works', summary:'Cold water immersion reduces muscle soreness post-exercise but may blunt long-term strength adaptations if used too frequently. Best used sparingly.', readTime:'3 min', tag:'Trending' },
+  { id:'wa8', category:'Mindset', emoji:'🎯', title:'Goal Setting for Long-Term Fitness', summary:'Process goals (e.g. "train 4x/week") outperform outcome goals (e.g. "lose 10kg") for sustaining motivation. Learn to love the system.', readTime:'4 min', tag:'Popular' },
+  { id:'wa9', category:'Nutrition', emoji:'🧬', title:'Creatine: The Evidence', summary:'Creatine monohydrate is the most researched supplement in sports science. 3–5g daily improves power output, cognition, and recovery with no meaningful downsides.', readTime:'3 min', tag:'Evidence-based' },
+];
+
+// Resources
+const wellnessResources = [
+  { emoji:'📱', title:'APEX Movement App', desc:'Companion app for on-the-go logging', url:'#', type:'App' },
+  { emoji:'🎙️', title:'Huberman Lab Podcast', desc:'Science-based tools for everyday life', url:'https://hubermanlab.com', type:'Podcast' },
+  { emoji:'📚', title:'Examine.com', desc:'Unbiased supplement and nutrition research', url:'https://examine.com', type:'Research' },
+  { emoji:'🧘', title:'Insight Timer', desc:'Free guided meditations and sleep tools', url:'https://insighttimer.com', type:'App' },
+  { emoji:'📊', title:'Cronometer', desc:'Detailed micronutrient food tracking', url:'https://cronometer.com', type:'Tool' },
+  { emoji:'💤', title:'Sleep Foundation', desc:'Evidence-based sleep improvement guides', url:'https://sleepfoundation.org', type:'Resource' },
+];
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function getAtRisk(c){ const r=[]; if(c.lastLoginDaysAgo>3)r.push(`No login ${c.lastLoginDaysAgo} days`); if(c.lastWorkoutDaysAgo>7)r.push(`No workout ${c.lastWorkoutDaysAgo} days`); if(c.lastMealLogDaysAgo>3)r.push(`No meal log ${c.lastMealLogDaysAgo} days`); return{atRisk:r.length>0,reasons:r}; }
+function getCalorieAdherence(c){ const l=c.weeklyCalories.filter(x=>x>0); if(!l.length)return 0; const avg=l.reduce((a,b)=>a+b,0)/l.length; return Math.min(100,Math.round(avg/c.weeklyCalorieGoal*100)); }
+function getWorkoutProgress(c){ return Math.round(c.weeklyWorkoutsCompleted/c.weeklyWorkoutGoal*100); }
+function getMeal(id){ return mealLibrary.find(m=>m.id===id); }
+function getWorkout(id){ return workoutLibrary.find(w=>w.id===id); }
+function getClient(id){ return clients.find(c=>c.id===id); }
+function avgAdherence(){ return Math.round(clients.reduce((s,c)=>s+getCalorieAdherence(c),0)/clients.length); }
+function avgWorkouts(){ return{done:clients.reduce((s,c)=>s+c.weeklyWorkoutsCompleted,0),goal:clients.reduce((s,c)=>s+c.weeklyWorkoutGoal,0)}; }
+function subColor(sub){ if(sub==='Virtual PT')return'badge-blue'; if(sub==='PT in person')return'badge-orange'; return'badge-green'; }
+function diffClass(d){ return d==='Easy'?'diff-easy':d==='Hard'?'diff-hard':'diff-medium'; }
+function catIcon(cat){ return{Supplements:'💊',Gear:'👟',Massage:'💆',Recovery:'🔄'}[cat]||'🎁'; }
+function uid(){ return 'id_'+Math.random().toString(36).substr(2,9); }
+function statusColor(d){ return d>5?'var(--danger)':d>2?'var(--warn)':'var(--accent)'; }
+function fmtDays(d){ return d===0?'Today':d===1?'Yesterday':`${d} days ago`; }
+
+/* ============================================================
+   ROUTING
+   ============================================================ */
+let currentView='splash', activeClientForPt=null, activePtTab='overview';
+let selectedClientId=null, activeDrawerTab='overview';
+let shoppingChecked={};
+
+function switchView(v){
+  ['splash','owner-view','pt-view','client-view'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+  if(v==='splash') document.getElementById('splash').classList.remove('hidden');
+  else if(v==='owner'){ document.getElementById('owner-view').classList.remove('hidden'); renderOwner('dashboard'); }
+  else if(v==='pt'){ document.getElementById('pt-view').classList.remove('hidden'); renderPt('clients'); }
+  else if(v==='client'){ document.getElementById('client-view').classList.remove('hidden'); document.getElementById('client-name-top').textContent=clients[0].name; renderClient('today'); }
+  currentView=v;
+}
+function ownerNav(s,btn){ document.querySelectorAll('.sidebar-item').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderOwner(s); }
+function ptNav(s,btn){ document.querySelectorAll('#pt-view .nav-tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); activeClientForPt=null; renderPt(s); }
+function clientNav(s,btn){ document.querySelectorAll('.bottom-nav-item').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderClient(s); }
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+function showToast(msg){ const r=document.getElementById('toast-root'); const t=document.createElement('div'); t.className='toast'; t.textContent=msg; r.appendChild(t); setTimeout(()=>t.remove(),2200); }
+
+/* ============================================================
+   OWNER — RENDER
+   ============================================================ */
+function renderOwner(s){
+  const mc=document.getElementById('owner-main-content');
+  if(s==='dashboard') mc.innerHTML=renderOwnerDashboard();
+  else if(s==='signups') mc.innerHTML=renderOwnerSignups();
+  else if(s==='clients') mc.innerHTML=renderOwnerClients();
+  else if(s==='ptmgmt') mc.innerHTML=renderOwnerPtMgmt();
+  else if(s==='payouts') mc.innerHTML=renderOwnerPayouts();
+  else if(s==='perks') mc.innerHTML=renderOwnerPerks();
+  else if(s==='broadcast') mc.innerHTML=renderOwnerBroadcast();
+  const badge=document.getElementById('pt-count-badge'); if(badge) badge.textContent=pts.length;
+}
+
+function renderOwnerDashboard(){
+  const atR=clients.filter(c=>getAtRisk(c).atRisk);
+  const wo=avgWorkouts();
+  return `<div class="page-header animate-in"><div class="page-title">Dashboard</div><div class="page-subtitle">Wednesday, 25 March 2025 — Here's your business at a glance.</div></div>
+  <div class="kpi-grid">
+    <div class="kpi-card" style="--kpi-color:var(--accent2)"><div class="kpi-label">Total Clients</div><div class="kpi-value">${clients.length}</div><div class="kpi-sub">+${signupsData.length} pending</div></div>
+    <div class="kpi-card" style="--kpi-color:var(--danger)"><div class="kpi-label">At-Risk</div><div class="kpi-value" style="color:var(--danger)">${atR.length}</div><div class="kpi-sub">${clients.length-atR.length} active</div></div>
+    <div class="kpi-card" style="--kpi-color:var(--accent)"><div class="kpi-label">Avg Cal Adherence</div><div class="kpi-value">${avgAdherence()}%</div><div class="kpi-sub">This week</div></div>
+    <div class="kpi-card" style="--kpi-color:var(--warn)"><div class="kpi-label">Workouts Done</div><div class="kpi-value">${wo.done}<span style="font-size:1rem;color:var(--text3)">/${wo.goal}</span></div><div class="kpi-sub">Weekly total</div></div>
+  </div>
+  <div class="grid-2" style="gap:20px">
+    <div class="card">
+      <div class="flex items-center justify-between mb-3"><div style="font-family:'Syne',sans-serif;font-weight:700">⚠️ At-Risk Clients</div><button class="btn btn-secondary btn-sm" onclick="ownerNav('clients',document.querySelectorAll('.sidebar-item')[2])">View All →</button></div>
+      <div class="flex flex-col gap-2">
+        ${atR.map(c=>{const ar=getAtRisk(c);return`<div class="at-risk-row"><div class="at-risk-avatar">${c.name[0]}</div><div style="flex:1"><div class="flex items-center gap-2"><span style="font-weight:600;font-size:.9rem">${c.name}</span><span class="badge ${subColor(c.subscriptionType)}">${c.subscriptionType}</span></div><div class="at-risk-reason">${ar.reasons.join(' · ')}</div></div><button class="btn btn-secondary btn-xs" onclick="openClientDrawer('${c.id}')">View</button></div>`;}).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:12px">📈 Recent Activity</div>
+      <div class="flex flex-col">
+        <div class="activity-item"><div class="activity-dot" style="background:var(--accent)"></div><div><span style="font-weight:600">Tom Whitfield</span> <span class="text-muted text-sm">reached a 21-day login streak 🎉</span></div></div>
+        <div class="activity-item"><div class="activity-dot" style="background:var(--accent)"></div><div><span style="font-weight:600">Sarah Chen</span> <span class="text-muted text-sm">completed 3/4 workouts this week</span></div></div>
+        <div class="activity-item"><div class="activity-dot" style="background:var(--accent)"></div><div><span style="font-weight:600">Priya Sharma</span> <span class="text-muted text-sm">hit 99% calorie adherence!</span></div></div>
+        <div class="activity-item"><div class="activity-dot" style="background:var(--danger)"></div><div><span style="font-weight:600">James Okafor</span> <span class="text-muted text-sm">missed last 3 meal logs</span></div></div>
+        <div class="activity-item"><div class="activity-dot" style="background:var(--warn)"></div><div><span style="font-weight:600">Amy Zhang</span> <span class="text-muted text-sm">logged in after 4-day gap</span></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card mt-4">
+    <div style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:14px">📊 Weekly Workout Completion</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${clients.map(c=>{const p=getWorkoutProgress(c);const col=p>=80?'var(--accent)':p>=50?'var(--warn)':'var(--danger)';return`<div><div class="flex items-center justify-between mb-1"><span style="font-size:.88rem;font-weight:500">${c.name}</span><span style="font-size:.8rem;color:var(--text2)">${c.weeklyWorkoutsCompleted}/${c.weeklyWorkoutGoal}</span></div><div class="progress-bar"><div class="progress-fill" style="width:${p}%;background:${col}"></div></div></div>`;}).join('')}
+    </div>
+  </div>`;
+}
+
+function renderOwnerSignups(){
+  const b=document.getElementById('signup-count-badge'); if(b) b.textContent=signupsData.length;
+  return`<div class="page-header animate-in"><div class="page-title">New Sign-ups</div><div class="page-subtitle">Assign incoming clients to activate their plan.</div></div>
+  ${signupsData.length===0?`<div class="card" style="text-align:center;padding:48px;color:var(--text2)"><div style="font-size:2rem;margin-bottom:12px">🎉</div><div style="font-weight:600">All sign-ups assigned!</div></div>`:`
+  <div class="card"><table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Preferred Plan</th><th>Signed Up</th><th>Assign</th></tr></thead><tbody>
+    ${signupsData.map(s=>`<tr><td style="font-weight:600">${s.name}</td><td class="text-muted">${s.email}</td><td><span class="badge ${subColor(s.preferredSub)}">${s.preferredSub}</span></td><td class="text-muted">${s.signupDate}</td><td><div class="flex items-center gap-2"><select id="pt-sel-${s.id}" style="width:150px">${pts.filter(p=>p.status==='active').map(p=>`<option value="${p.id}">${p.name}</option>`).join('')}</select><button class="btn btn-primary btn-sm" onclick="assignClient('${s.id}')">Assign</button></div></td></tr>`).join('')}
+  </tbody></table></div>`}`;
+}
+function assignClient(id){ const i=signupsData.findIndex(s=>s.id===id); if(i!==-1){const s=signupsData.splice(i,1)[0];showToast(`✓ ${s.name} assigned`);renderOwner('signups');} }
+
+function renderOwnerClients(){
+  return`<div class="page-header animate-in"><div class="page-title">All Clients</div><div class="page-subtitle">Click a row to view full details.</div></div>
+  <div class="card"><table class="data-table"><thead><tr><th>Client</th><th>Plan</th><th>PT</th><th>Status</th><th>Last Login</th><th>Adherence</th></tr></thead><tbody>
+    ${clients.map(c=>{const ar=getAtRisk(c);const adh=getCalorieAdherence(c);const ptName=(pts.find(p=>p.id===c.assignedPtId)||{name:'Unassigned'}).name;return`<tr onclick="openClientDrawer('${c.id}')"><td><div class="flex items-center gap-2"><div class="at-risk-avatar" style="width:30px;height:30px;font-size:.8rem">${c.name[0]}</div><div><div style="font-weight:600">${c.name}</div><div class="text-xs-muted">${c.email}</div></div></div></td><td><span class="badge ${subColor(c.subscriptionType)}">${c.subscriptionType}</span></td><td class="text-muted">${ptName}</td><td>${ar.atRisk?`<span class="badge badge-red">At Risk</span>`:`<span class="badge badge-green">Active</span>`}</td><td class="text-muted">${fmtDays(c.lastLoginDaysAgo)}</td><td><div class="flex items-center gap-2"><div class="progress-bar" style="width:70px"><div class="progress-fill" style="width:${adh}%;background:${adh>=80?'var(--accent)':adh>=60?'var(--warn)':'var(--danger)'}"></div></div><span style="font-size:.82rem">${adh}%</span></div></td></tr>`;}).join('')}
+  </tbody></table></div>`;
+}
+
+/* ============================================================
+   OWNER — PT MANAGEMENT
+   ============================================================ */
+function tierFromRating(r){ if(r>=4.8)return'Platinum'; if(r>=4.5)return'Gold'; if(r>=4.0)return'Silver'; return'Bronze'; }
+function tierFromRatingColor(t){ return{Platinum:'badge-blue',Gold:'badge-yellow',Silver:'badge-gray',Bronze:'badge-orange'}[t]||'badge-gray'; }
+function ptClientCount(pt){ return clients.filter(c=>c.assignedPtId===pt.id).length; }
+function ptCapacityColor(pt){ const used=ptClientCount(pt); const pct=pt.maxClients?Math.round(used/pt.maxClients*100):0; return pct>=90?'var(--danger)':pct>=70?'var(--warn)':'var(--accent)'; }
+
+function renderOwnerPtMgmt(){
+  return`<div class="page-header animate-in"><div class="page-title">PT Management</div><div class="page-subtitle">View, add and edit Personal Trainers on your roster.</div></div>
+  <div class="flex items-center justify-between mb-4">
+    <div class="text-sm text-muted">${pts.length} PT${pts.length!==1?'s':''} on roster</div>
+    <button class="btn btn-primary" onclick="openPtModal(null)">+ Add New PT</button>
+  </div>
+  <div class="flex flex-col gap-4">
+    ${pts.map(pt=>{
+      const clientCount=ptClientCount(pt);
+      const cap=pt.maxClients||'–';
+      const capPct=pt.maxClients?Math.round(clientCount/pt.maxClients*100):0;
+      const tier=pt.payoutTier||tierFromRating(pt.rating);
+      const tierCol=tierFromRatingColor(tier);
+      const ptClients=clients.filter(c=>c.assignedPtId===pt.id);
+      return`<div class="card" style="border-left:4px solid var(--accent)">
+        <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+          <div class="flex items-center gap-4">
+            <div style="width:52px;height:52px;border-radius:50%;background:rgba(74,222,128,.12);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem;color:var(--accent);flex-shrink:0">${pt.name.split(' ').map(n=>n[0]).join('')}</div>
+            <div>
+              <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem">${pt.name}</div>
+              <div class="flex items-center gap-2 mt-1 flex-wrap">
+                <span class="badge ${tierCol}">${tier}</span>
+                <span style="color:var(--warn);font-size:.88rem">★ ${pt.rating}</span>
+                ${pt.status==='active'?`<span class="badge badge-green">Active</span>`:`<span class="badge badge-red">Inactive</span>`}
+                <span class="text-xs-muted">Joined ${pt.joinedDate||'–'}</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button class="btn btn-secondary btn-sm" onclick="openPtModal('${pt.id}')">✏️ Edit Details</button>
+            <button class="btn btn-danger btn-sm" onclick="deactivatePt('${pt.id}')">${pt.status==='active'?'Deactivate':'Reactivate'}</button>
+          </div>
+        </div>
+        <div class="grid-3" style="gap:12px;margin-bottom:16px">
+          <div class="card-sm">
+            <div class="text-xs-muted mb-1">ABN</div>
+            <div style="font-weight:600;font-size:.9rem;letter-spacing:.03em">${pt.abn||'Not set'}</div>
+          </div>
+          <div class="card-sm">
+            <div class="text-xs-muted mb-1">Email</div>
+            <div style="font-weight:500;font-size:.85rem;color:var(--accent2)">${pt.email||'Not set'}</div>
+          </div>
+          <div class="card-sm">
+            <div class="text-xs-muted mb-1">Phone</div>
+            <div style="font-weight:500;font-size:.9rem">${pt.phone||'Not set'}</div>
+          </div>
+          <div class="card-sm">
+            <div class="text-xs-muted mb-1">Address</div>
+            <div style="font-weight:500;font-size:.85rem">${pt.address?`${pt.address}, ${pt.suburb} ${pt.state} ${pt.postcode}`:'Not set'}</div>
+          </div>
+          <div class="card-sm">
+            <div class="text-xs-muted mb-1">Payout Rate</div>
+            <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;color:var(--accent)">${pt.payoutRate}%</div>
+          </div>
+          <div class="card-sm">
+            <div class="text-xs-muted mb-1">Specialisations</div>
+            <div class="flex flex-wrap gap-1 mt-1">${(pt.specialisations||[]).map(s=>`<span class="badge badge-blue" style="font-size:.65rem">${s}</span>`).join('') || '<span class="text-xs-muted">None set</span>'}</div>
+          </div>
+        </div>
+        <div class="grid-2" style="gap:12px;margin-bottom:16px">
+          <div class="card-sm">
+            <div class="text-xs-muted mb-2">Client Capacity</div>
+            <div class="flex items-center justify-between mb-2">
+              <span style="font-weight:700;font-size:.9rem">${clientCount} / ${cap} clients</span>
+              <span style="font-size:.8rem;color:${ptCapacityColor(pt)}">${capPct}% full</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${capPct}%;background:${ptCapacityColor(pt)}"></div></div>
+          </div>
+          <div class="card-sm">
+            <div class="text-xs-muted mb-2">Accepts</div>
+            <div class="flex flex-wrap gap-2 mt-1">
+              ${pt.prefersVirtual?`<span class="badge badge-blue">Virtual PT</span>`:''}
+              ${pt.prefersInPerson?`<span class="badge badge-orange">In Person</span>`:''}
+              ${pt.prefersNutritionOnly?`<span class="badge badge-green">Nutrition Only</span>`:''}
+              ${!pt.prefersVirtual&&!pt.prefersInPerson&&!pt.prefersNutritionOnly?`<span class="text-xs-muted">No preferences set</span>`:''}
+            </div>
+          </div>
+        </div>
+        ${pt.bio?`<div class="card-sm mb-3"><div class="text-xs-muted mb-1">Bio</div><div class="text-sm text-muted">${pt.bio}</div></div>`:''}
+        ${ptClients.length>0?`<div>
+          <div class="text-xs-muted mb-2">Assigned Clients</div>
+          <div class="flex flex-wrap gap-2">
+            ${ptClients.map(c=>`<div class="flex items-center gap-2 card-sm" style="padding:8px 12px;display:inline-flex">
+              <div style="width:24px;height:24px;border-radius:50%;background:rgba(74,222,128,.1);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700">${c.name[0]}</div>
+              <span style="font-size:.82rem;font-weight:500">${c.name}</span>
+              <span class="badge ${subColor(c.subscriptionType)}" style="font-size:.62rem">${c.subscriptionType}</span>
+            </div>`).join('')}
+          </div>
+        </div>`:''}
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function deactivatePt(id){
+  const pt=pts.find(p=>p.id===id);
+  if(!pt) return;
+  pt.status=pt.status==='active'?'inactive':'active';
+  showToast(pt.status==='active'?`${pt.name} reactivated`:`${pt.name} deactivated`);
+  renderOwner('ptmgmt');
+}
+
+function openPtModal(id){
+  const pt=id?pts.find(p=>p.id===id):null;
+  const specs=['Strength','Fat Loss','Running','Nutrition','Flexibility','HIIT','Rehabilitation','Bodybuilding'];
+  document.getElementById('modal-root').innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" style="width:min(640px,100%)" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem">${pt?`Edit — ${pt.name}`:'Add New PT'}</div>
+      <button class="close-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:10px">Personal Details</div>
+      <div class="grid-2" style="gap:12px">
+        <div class="form-row" style="margin-bottom:0"><label>Full Name *</label><input id="pt-name" value="${pt?pt.name:''}" placeholder="e.g. Marcus Reid" /></div>
+        <div class="form-row" style="margin-bottom:0"><label>Email *</label><input id="pt-email" type="email" value="${pt?pt.email:''}" placeholder="pt@example.com" /></div>
+        <div class="form-row" style="margin-bottom:0"><label>Phone</label><input id="pt-phone" value="${pt?pt.phone:''}" placeholder="04XX XXX XXX" /></div>
+        <div class="form-row" style="margin-bottom:0"><label>ABN</label><input id="pt-abn" value="${pt?pt.abn:''}" placeholder="XX XXX XXX XXX" /></div>
+      </div>
+
+      <div class="divider"></div>
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:10px">Address</div>
+      <div class="form-row"><label>Street Address</label><input id="pt-address" value="${pt?pt.address:''}" placeholder="14 Fitness Lane" /></div>
+      <div class="grid-3" style="gap:12px">
+        <div class="form-row" style="margin-bottom:0"><label>Suburb</label><input id="pt-suburb" value="${pt?pt.suburb:''}" placeholder="Bondi" /></div>
+        <div class="form-row" style="margin-bottom:0"><label>State</label><select id="pt-state">
+          ${['NSW','VIC','QLD','WA','SA','TAS','ACT','NT'].map(s=>`<option value="${s}" ${pt&&pt.state===s?'selected':''}>${s}</option>`).join('')}
+        </select></div>
+        <div class="form-row" style="margin-bottom:0"><label>Postcode</label><input id="pt-postcode" value="${pt?pt.postcode:''}" placeholder="2000" maxlength="4" /></div>
+      </div>
+
+      <div class="divider"></div>
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:10px">Preferences & Capacity</div>
+      <div class="grid-2" style="gap:12px;margin-bottom:12px">
+        <div class="form-row" style="margin-bottom:0"><label>Max Clients</label><input id="pt-maxclients" type="number" min="1" max="50" value="${pt?pt.maxClients:10}" /></div>
+        <div class="form-row" style="margin-bottom:0"><label>Rating (0–5)</label><input id="pt-rating" type="number" min="0" max="5" step="0.1" value="${pt?pt.rating:4.0}" /></div>
+      </div>
+      <div class="form-row"><label>Accepts Client Types</label>
+        <div class="checkbox-group">
+          <div class="checkbox-chip ${pt&&pt.prefersVirtual?'checked':''}" onclick="this.classList.toggle('checked')" data-pref="virtual">📱 Virtual PT</div>
+          <div class="checkbox-chip ${pt&&pt.prefersInPerson?'checked':''}" onclick="this.classList.toggle('checked')" data-pref="inperson">🏋️ In Person</div>
+          <div class="checkbox-chip ${pt&&pt.prefersNutritionOnly?'checked':''}" onclick="this.classList.toggle('checked')" data-pref="nutrition">🥗 Nutrition Only</div>
+        </div>
+      </div>
+      <div class="form-row"><label>Specialisations</label>
+        <div class="checkbox-group">
+          ${specs.map(s=>`<div class="checkbox-chip ${pt&&(pt.specialisations||[]).includes(s)?'checked':''}" onclick="this.classList.toggle('checked')" data-spec="${s}">${s}</div>`).join('')}
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:10px">Bio</div>
+      <div class="form-row"><textarea id="pt-bio" rows="3" placeholder="Brief bio visible to clients and staff…">${pt?pt.bio:''}</textarea></div>
+
+      <div class="flex gap-3 mt-2">
+        <button class="btn btn-primary flex-1" onclick="savePtDetails('${id||''}')">Save PT</button>
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+  </div></div>`;
+}
+
+function savePtDetails(id){
+  const name=document.getElementById('pt-name').value.trim();
+  const email=document.getElementById('pt-email').value.trim();
+  if(!name||!email){ showToast('⚠ Name and email are required'); return; }
+  const phone=document.getElementById('pt-phone').value.trim();
+  const abn=document.getElementById('pt-abn').value.trim();
+  const address=document.getElementById('pt-address').value.trim();
+  const suburb=document.getElementById('pt-suburb').value.trim();
+  const state=document.getElementById('pt-state').value;
+  const postcode=document.getElementById('pt-postcode').value.trim();
+  const maxClients=parseInt(document.getElementById('pt-maxclients').value)||10;
+  const ratingRaw=parseFloat(document.getElementById('pt-rating').value)||4.0;
+  const rating=Math.min(5,Math.max(0,Math.round(ratingRaw*10)/10));
+  const prefChips=[...document.querySelectorAll('[data-pref]')];
+  const prefersVirtual=prefChips.find(c=>c.dataset.pref==='virtual')?.classList.contains('checked')||false;
+  const prefersInPerson=prefChips.find(c=>c.dataset.pref==='inperson')?.classList.contains('checked')||false;
+  const prefersNutritionOnly=prefChips.find(c=>c.dataset.pref==='nutrition')?.classList.contains('checked')||false;
+  const specialisations=[...document.querySelectorAll('[data-spec].checked')].map(el=>el.dataset.spec);
+  const bio=document.getElementById('pt-bio').value.trim();
+  const payoutTier=tierFromRating(rating);
+  const payoutRate={Platinum:48,Gold:45,Silver:43,Bronze:40}[payoutTier];
+  if(id){
+    const pt=pts.find(p=>p.id===id);
+    if(pt){ Object.assign(pt,{name,email,phone,abn,address,suburb,state,postcode,maxClients,rating,payoutTier,payoutRate,prefersVirtual,prefersInPerson,prefersNutritionOnly,specialisations,bio}); }
+  } else {
+    pts.push({id:uid(),name,email,phone,abn,address,suburb,state,postcode,maxClients,rating,payoutTier,payoutRate,prefersVirtual,prefersInPerson,prefersNutritionOnly,specialisations,bio,clientIds:[],status:'active',joinedDate:'Mar 2025'});
+  }
+  closeModal();
+  renderOwner('ptmgmt');
+  showToast(id?`${name} updated ✓`:`${name} added to roster ✓`);
+}
+
+function renderOwnerPayouts(){
+  return`<div class="page-header animate-in"><div class="page-title">Payouts</div><div class="page-subtitle">Tier-based payout structure. Rates auto-update when you edit a PT's rating.</div></div>
+  ${pts.map(pt=>{
+    const ptClients=clients.filter(c=>c.assignedPtId===pt.id);
+    return`<div class="card mb-4">
+      <div class="flex items-center gap-4 mb-4">
+        <div style="width:48px;height:48px;border-radius:50%;background:rgba(74,222,128,.1);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;color:var(--accent)">${pt.name.split(' ').map(n=>n[0]).join('')}</div>
+        <div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem">${pt.name}</div><div class="flex items-center gap-2 mt-1"><span style="color:var(--warn)">★</span><span style="font-weight:700">${pt.rating}</span><span class="text-muted text-sm">/ 5.0</span><span class="badge ${tierFromRatingColor(pt.payoutTier)}">${pt.payoutTier}</span></div></div>
+        <div style="margin-left:auto;text-align:right"><div class="text-xs-muted">Payout Rate</div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:2rem;color:var(--accent)">${pt.payoutRate}%</div></div>
+      </div>
+      <div class="grid-2" style="gap:16px">
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;margin-bottom:10px">Tier Structure</div>
+          ${[{tier:'Bronze',range:'< 4.0',rate:'40%',icon:'🥉',key:'bronze'},{tier:'Silver',range:'4.0–4.4',rate:'43%',icon:'🥈',key:'silver'},{tier:'Gold',range:'4.5–4.7',rate:'45%',icon:'🥇',key:'gold'},{tier:'Platinum',range:'4.8–5.0',rate:'48%',icon:'💎',key:'platinum'}].map(t=>`<div class="tier-row ${t.key===pt.payoutTier.toLowerCase()?'active-tier':'inactive-tier'}"><div class="flex items-center gap-3"><span>${t.icon}</span><div><div style="font-weight:600;font-size:.88rem">${t.tier}</div><div class="text-xs-muted">${t.range}</div></div></div><div style="font-family:'Syne',sans-serif;font-weight:800;${t.key===pt.payoutTier.toLowerCase()?'color:var(--accent)':''}">${t.rate}</div></div>`).join('')}
+        </div>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;margin-bottom:10px">Client Load</div>
+          ${ptClients.map((c,i)=>{const hrs=[2.5,3.0,1.5,2.0,2.8][i]||2.0;return`<div class="flex items-center justify-between mb-2" style="font-size:.85rem"><span style="font-weight:500">${c.name}</span><span style="color:var(--accent2);font-weight:600">$${(hrs*65).toFixed(0)}</span></div>`;}).join('')}
+          ${ptClients.length===0?`<div class="text-xs-muted">No clients assigned</div>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('')}
+  <div class="card" style="background:rgba(74,222,128,.04);border-color:rgba(74,222,128,.2)">
+    <div style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:6px">ℹ️ How Tiers Work</div>
+    <div class="text-sm text-muted">Payout tier is calculated from a PT's star rating. Edit a PT's rating in <strong>PT Management</strong> to update their tier and rate instantly.</div>
+  </div>`;
+}
+
+
+/* ============================================================
+   OWNER PERKS — EDITABLE
+   ============================================================ */
+function renderOwnerPerks(){
+  return`<div class="page-header animate-in"><div class="page-title">Perks Marketplace</div><div class="page-subtitle">Add, edit or remove perks. They appear on clients' Perks tab filtered by their plan.</div></div>
+  <div class="flex items-center justify-between mb-4">
+    <div class="text-sm text-muted">${perks.length} active perks</div>
+    <button class="btn btn-primary" onclick="openPerkModal(null)">+ Add Perk</button>
+  </div>
+  <div class="grid-3">
+    ${perks.map(p=>`<div class="perk-card" style="position:relative">
+      <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);font-weight:600;margin-bottom:6px">${catIcon(p.category)} ${p.category}</div>
+      <div style="font-weight:700;font-size:1rem;margin-bottom:2px">${p.partnerName}</div>
+      <div class="text-sm text-muted mb-2">${p.description}</div>
+      <div class="flex items-center gap-2 mb-2">
+        <span class="perk-code">${p.discountCode}</span>
+        ${p.price?`<span class="text-xs-muted">${p.price}</span>`:''}
+      </div>
+      <div class="flex flex-wrap gap-1 mb-3">${p.applicableSubs.map(s=>`<span class="badge ${subColor(s)}" style="font-size:.65rem">${s}</span>`).join('')}</div>
+      <div class="flex gap-2">
+        <button class="btn btn-secondary btn-xs" onclick="openPerkModal('${p.id}')">✏️ Edit</button>
+        <button class="btn btn-danger btn-xs" onclick="deletePerk('${p.id}')">Delete</button>
+      </div>
+    </div>`).join('')}
+  </div>`;
+}
+function deletePerk(id){ if(confirm('Delete this perk?')){ perks=perks.filter(p=>p.id!==id); renderOwner('perks'); showToast('Perk deleted'); } }
+function openPerkModal(id){
+  const p=id?perks.find(x=>x.id===id):null;
+  const subs=['Virtual PT','PT in person','Nutrition only'];
+  const cats=['Supplements','Gear','Massage','Recovery'];
+  document.getElementById('modal-root').innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header"><div style="font-family:'Syne',sans-serif;font-weight:700">${p?'Edit Perk':'Add New Perk'}</div><button class="close-btn" onclick="closeModal()">✕</button></div>
+      <div class="modal-body">
+        <div class="form-row"><label>Partner Name</label><input id="pk-partner" value="${p?p.partnerName:''}" placeholder="e.g. Myprotein" /></div>
+        <div class="form-row"><label>Category</label><select id="pk-cat">${cats.map(c=>`<option value="${c}" ${p&&p.category===c?'selected':''}>${catIcon(c)} ${c}</option>`).join('')}</select></div>
+        <div class="form-row"><label>Description</label><textarea id="pk-desc" rows="2">${p?p.description:''}</textarea></div>
+        <div class="form-row"><label>Discount Code</label><input id="pk-code" value="${p?p.discountCode:''}" placeholder="e.g. APEX20" /></div>
+        <div class="form-row"><label>Price / Value</label><input id="pk-price" value="${p?p.price:''}" placeholder="e.g. $10 saving or $0" /></div>
+        <div class="form-row"><label>Applicable Plans</label><div class="checkbox-group">${subs.map(s=>`<div class="checkbox-chip ${p&&p.applicableSubs.includes(s)?'checked':''}" onclick="this.classList.toggle('checked')" data-sub="${s}">${s}</div>`).join('')}</div></div>
+        <div class="flex gap-3 mt-4">
+          <button class="btn btn-primary flex-1" onclick="savePerk('${id||''}')">Save Perk</button>
+          <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+function savePerk(id){
+  const partner=document.getElementById('pk-partner').value.trim();
+  const cat=document.getElementById('pk-cat').value;
+  const desc=document.getElementById('pk-desc').value.trim();
+  const code=document.getElementById('pk-code').value.trim();
+  const price=document.getElementById('pk-price').value.trim();
+  const subs=[...document.querySelectorAll('.checkbox-chip.checked')].map(el=>el.dataset.sub);
+  if(!partner||!code){ showToast('⚠ Partner name and code required'); return; }
+  if(id){ const p=perks.find(x=>x.id===id); if(p){p.partnerName=partner;p.category=cat;p.description=desc;p.discountCode=code;p.price=price;p.applicableSubs=subs;} }
+  else { perks.push({id:uid(),category:cat,partnerName:partner,description:desc,discountCode:code,price:price,applicableSubs:subs}); }
+  closeModal(); renderOwner('perks'); showToast(id?'Perk updated ✓':'Perk added ✓');
+}
+
+/* ============================================================
+   CLIENT DRAWER (Owner)
+   ============================================================ */
+function openClientDrawer(clientId){ selectedClientId=clientId; activeDrawerTab='overview'; renderDrawer(); }
+function closeDrawer(){ document.getElementById('drawer-root').innerHTML=''; }
+function renderDrawer(){
+  const c=getClient(selectedClientId); if(!c) return;
+  const ar=getAtRisk(c);
+  const tabs=['Overview','Goals','Nutrition','Workouts','Activity','Messages'];
+  document.getElementById('drawer-root').innerHTML=`<div class="drawer-overlay" onclick="closeDrawer()"></div>
+  <div class="drawer"><div class="drawer-header"><div class="at-risk-avatar" style="width:42px;height:42px;font-size:1rem;background:rgba(74,222,128,.1);color:var(--accent)">${c.name[0]}</div><div style="flex:1"><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem">${c.name}</div><div class="flex items-center gap-2 mt-1"><span class="badge ${subColor(c.subscriptionType)}">${c.subscriptionType}</span>${ar.atRisk?`<span class="badge badge-red">⚠ At Risk</span>`:`<span class="badge badge-green">Active</span>`}</div></div><button class="close-btn" onclick="closeDrawer()">✕</button></div>
+  <div class="drawer-tabs">${tabs.map(t=>`<button class="drawer-tab ${activeDrawerTab===t.toLowerCase().replace(/[& ]/g,'')&&activeDrawerTab===t.toLowerCase()?'active':''}" onclick="setDrawerTab('${t.toLowerCase()}')">${t}</button>`).join('')}</div>
+  <div class="drawer-body" id="drawer-body-content">${renderDrawerTab(c)}</div></div>`;
+  document.querySelectorAll('.drawer-tab').forEach(t=>t.classList.toggle('active',t.textContent.toLowerCase()===activeDrawerTab));
+}
+function setDrawerTab(tab){ activeDrawerTab=tab; const c=getClient(selectedClientId); document.getElementById('drawer-body-content').innerHTML=renderDrawerTab(c); document.querySelectorAll('.drawer-tab').forEach(t=>t.classList.toggle('active',t.textContent.toLowerCase()===tab)); }
+function renderDrawerTab(c){
+  const adh=getCalorieAdherence(c); const woPct=getWorkoutProgress(c);
+  if(activeDrawerTab==='overview') return`<div class="card-sm mb-3"><div class="text-xs-muted mb-1">Subscription</div><div style="font-weight:600">${c.subscriptionType}</div><div class="text-sm text-muted mt-1">Next billing: Apr 1, 2025</div></div><div class="card-sm mb-3"><div class="text-xs-muted mb-1">Assigned PT</div><div style="font-weight:600">Marcus Reid</div><div class="text-sm" style="color:var(--warn)">★ 4.6 · Gold Tier</div></div><div class="grid-2 mt-3"><div class="card-sm" style="text-align:center"><div class="text-xs-muted">Cal Adherence</div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;color:${adh>=80?'var(--accent)':adh>=60?'var(--warn)':'var(--danger)'}">${adh}%</div></div><div class="card-sm" style="text-align:center"><div class="text-xs-muted">Workouts</div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;color:var(--accent2)">${c.weeklyWorkoutsCompleted}/${c.weeklyWorkoutGoal}</div></div></div><div class="flex gap-3 mt-3"><div class="streak-badge" style="flex:1"><span class="streak-num">${c.loginStreakDays}</span><div class="streak-label">Day Login Streak</div></div><div class="streak-badge" style="flex:1"><span class="streak-num">${c.workoutStreakWeeks}</span><div class="streak-label">Week Workout Streak</div></div></div>`;
+  if(activeDrawerTab==='goals') return`<div class="mb-3"><div class="text-xs-muted mb-1">Goals</div><div class="card-sm">${c.goals}</div></div><div class="mb-3"><div class="text-xs-muted mb-1">Context</div><div class="card-sm">${c.context}</div></div><div class="mb-3"><div class="text-xs-muted mb-1">Motivation</div><div class="card-sm">${c.motivation}</div></div><div class="form-row"><label>PT Notes</label><textarea id="ptn-${c.id}" rows="3">${c.ptNotes||''}</textarea><button class="btn btn-primary btn-sm mt-2" onclick="savePtNotes('${c.id}','ptn-')">Save</button></div>`;
+  if(activeDrawerTab==='nutrition'){const days=['M','T','W','T','F','S','S'];return`<div class="card-sm mb-3">
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem;margin-bottom:10px">Daily Nutrition Targets</div>
+    <div class="grid-2" style="gap:8px;margin-bottom:10px">
+      <div class="form-row" style="margin-bottom:0"><label>Calories (kcal)</label><input type="number" id="tgt-cal-${c.id}" value="${c.calorieGoalPerDay}" min="800" max="6000" /></div>
+      <div class="form-row" style="margin-bottom:0"><label>Protein (g)</label><input type="number" id="tgt-prot-${c.id}" value="${c.proteinGoalPerDay||150}" min="20" max="400" /></div>
+      <div class="form-row" style="margin-bottom:0"><label>Carbs (g)</label><input type="number" id="tgt-carb-${c.id}" value="${c.carbGoalPerDay||250}" min="20" max="600" /></div>
+      <div class="form-row" style="margin-bottom:0"><label>Fat (g)</label><input type="number" id="tgt-fat-${c.id}" value="${c.fatGoalPerDay||65}" min="10" max="300" /></div>
+    </div>
+    <button class="btn btn-primary btn-sm w-full" onclick="saveClientMacroTargets('${c.id}','tgt-')">Save Targets</button>
+  </div>
+  <div class="card-sm mb-3"><div class="text-xs-muted mb-2">Weekly Calories vs Goal</div><div class="mini-bars">${c.weeklyCalories.map((cal,i)=>{const p=Math.min(100,Math.round(cal/c.weeklyCalorieGoal*100));return`<div class="mini-bar-wrap"><div class="mini-bar-track"><div class="mini-bar-fill" style="height:${p}%;background:${p>=90?'var(--accent)':p>=70?'var(--warn)':'var(--danger)'}"></div></div><div class="mini-bar-label">${days[i]}</div></div>`;}).join('')}</div><div class="text-xs-muted mt-2">Adherence: <strong style="color:var(--accent)">${adh}%</strong></div></div>`;}
+  if(activeDrawerTab==='workouts') return`<div class="card-sm mb-3"><div class="flex items-center justify-between mb-2"><span class="text-xs-muted">Weekly Progress</span><span style="font-weight:700">${c.weeklyWorkoutsCompleted}/${c.weeklyWorkoutGoal}</span></div><div class="progress-bar"><div class="progress-fill" style="width:${woPct}%;background:var(--accent)"></div></div></div>${c.assignedWorkoutIds.map(wid=>{const w=getWorkout(wid);return w?`<div class="workout-card mb-2"><div><div style="font-weight:600;font-size:.9rem">${w.name}</div><div class="text-xs-muted">${w.focus}</div></div><span class="diff-pill ${diffClass(w.difficulty)}">${w.difficulty}</span></div>`:''}).join('')}`;
+  if(activeDrawerTab==='activity') return`<div class="flex flex-col gap-3"><div class="card-sm"><div class="text-xs-muted mb-1">Last Login</div><div style="font-weight:600;color:${statusColor(c.lastLoginDaysAgo)}">${fmtDays(c.lastLoginDaysAgo)}</div></div><div class="card-sm"><div class="text-xs-muted mb-1">Last Workout</div><div style="font-weight:600;color:${statusColor(c.lastWorkoutDaysAgo)}">${fmtDays(c.lastWorkoutDaysAgo)}</div></div><div class="card-sm"><div class="text-xs-muted mb-1">Last Meal Log</div><div style="font-weight:600;color:${statusColor(c.lastMealLogDaysAgo)}">${fmtDays(c.lastMealLogDaysAgo)}</div></div></div>`;
+  if(activeDrawerTab==='messages') return`<div class="chat-messages">${(messages[c.id]||[]).map(m=>`<div><div class="chat-bubble ${m.sender==='pt'?'from-pt':'from-client'}">${m.text}</div><div class="chat-time" style="text-align:${m.sender==='pt'?'right':'left'}">${m.timestamp}</div></div>`).join('')}</div><div class="chat-input-row"><input type="text" id="dwr-msg" placeholder="Reply as PT…" onkeydown="if(event.key==='Enter')sendDrawerMsg('${c.id}')" /><button class="btn btn-primary btn-sm" onclick="sendDrawerMsg('${c.id}')">Send</button></div>`;
+  return'';
+}
+function savePtNotes(cid,prefix){ const c=getClient(cid); const el=document.getElementById((prefix||'')+cid); if(c&&el){c.ptNotes=el.value;showToast('Notes saved');} }
+function sendDrawerMsg(cid){ const i=document.getElementById('dwr-msg'); if(!i||!i.value.trim())return; messages[cid]=[...(messages[cid]||[]),{sender:'pt',text:i.value.trim(),timestamp:'Now'}]; i.value=''; setDrawerTab('messages'); }
+
+/* ============================================================
+   PT — RENDER
+   ============================================================ */
+function renderPt(s){
+  const mc=document.getElementById('pt-main-content');
+  if(s==='clients') mc.innerHTML=activeClientForPt?renderPtClientPanel():renderPtClientList();
+  else if(s==='library') mc.innerHTML=renderPtLibrary();
+  else if(s==='messages') mc.innerHTML=renderPtInbox();
+}
+
+function renderPtClientList(){
+  return`<div class="page-header animate-in"><div class="page-title">My Clients</div><div class="page-subtitle">Click a client to manage workouts, meals and messages.</div></div>
+  <div class="grid-2">
+    ${clients.map(c=>{const ar=getAtRisk(c);const adh=getCalorieAdherence(c);return`<div class="card cursor-pointer" onclick="openPtClient('${c.id}')" style="transition:box-shadow .2s,border-color .2s;border-color:${ar.atRisk?'rgba(244,63,94,.3)':'var(--border)'}" onmouseover="this.style.boxShadow='var(--shadow)'" onmouseout="this.style.boxShadow=''"><div class="flex items-center gap-3 mb-3"><div class="at-risk-avatar" style="width:40px;height:40px;background:rgba(74,222,128,.1);color:var(--accent)">${c.name[0]}</div><div style="flex:1"><div style="font-weight:700">${c.name}</div><span class="badge ${subColor(c.subscriptionType)}">${c.subscriptionType}</span></div>${ar.atRisk?`<span class="badge badge-red">⚠</span>`:`<span class="badge badge-green">✓</span>`}</div><div class="grid-2" style="gap:8px"><div style="text-align:center;background:var(--surface2);border-radius:8px;padding:8px"><div class="text-xs-muted">Login streak</div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;color:var(--accent)">${c.loginStreakDays}d</div></div><div style="text-align:center;background:var(--surface2);border-radius:8px;padding:8px"><div class="text-xs-muted">Workout streak</div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;color:var(--accent2)">${c.workoutStreakWeeks}w</div></div></div><div class="mt-3"><div class="flex items-center justify-between mb-1"><span class="text-xs-muted">Calorie adherence</span><span style="font-size:.8rem;font-weight:600">${adh}%</span></div><div class="progress-bar"><div class="progress-fill" style="width:${adh}%;background:${adh>=80?'var(--accent)':adh>=60?'var(--warn)':'var(--danger)'}"></div></div></div></div>`;}).join('')}
+  </div>`;
+}
+
+function openPtClient(id){ activeClientForPt=id; activePtTab='overview'; renderPt('clients'); }
+function renderPtClientPanel(){
+  const c=getClient(activeClientForPt); if(!c) return'';
+  const adh=getCalorieAdherence(c); const woPct=getWorkoutProgress(c);
+  const tabs=['Overview','Nutrition','Meal Planner','Workouts','Goals','Messages'];
+  return`<div class="flex items-center gap-3 mb-4 animate-in"><button class="btn btn-ghost btn-sm" onclick="activeClientForPt=null;renderPt('clients')">← Back</button><div class="at-risk-avatar" style="width:36px;height:36px;background:rgba(74,222,128,.1);color:var(--accent)">${c.name[0]}</div><div><div style="font-family:'Syne',sans-serif;font-weight:700">${c.name}</div><span class="badge ${subColor(c.subscriptionType)}">${c.subscriptionType}</span></div></div>
+  <div style="display:flex;gap:3px;margin-bottom:20px;border-bottom:1px solid var(--border)">${tabs.map(t=>`<button class="drawer-tab ${activePtTab===t.toLowerCase().replace(' ','')&&activePtTab===(t.toLowerCase().replace(' ',''))?'active':''}" onclick="setPtTab('${t.toLowerCase().replace(' ','')}')">${t}</button>`).join('')}</div>
+  <div id="pt-panel-body">${renderPtPanelTab(c)}</div>`;
+}
+function setPtTab(tab){
+  activePtTab=tab;
+  const c=getClient(activeClientForPt);
+  document.getElementById('pt-panel-body').innerHTML=renderPtPanelTab(c);
+  document.querySelectorAll('#pt-main-content .drawer-tab').forEach(t=>t.classList.toggle('active',t.textContent.toLowerCase().replace(' ','')=== tab));
+}
+function renderPtPanelTab(c){
+  const adh=getCalorieAdherence(c); const woPct=getWorkoutProgress(c);
+  if(activePtTab==='overview') return`<div class="grid-4" style="gap:12px;margin-bottom:16px"><div class="kpi-card" style="--kpi-color:var(--accent);padding:14px"><div class="kpi-label" style="font-size:.7rem">Login Streak</div><div class="kpi-value" style="font-size:1.6rem">${c.loginStreakDays}d</div></div><div class="kpi-card" style="--kpi-color:var(--accent2);padding:14px"><div class="kpi-label" style="font-size:.7rem">Workout Streak</div><div class="kpi-value" style="font-size:1.6rem">${c.workoutStreakWeeks}w</div></div><div class="kpi-card" style="--kpi-color:var(--accent);padding:14px"><div class="kpi-label" style="font-size:.7rem">Cal Adherence</div><div class="kpi-value" style="font-size:1.6rem">${adh}%</div></div><div class="kpi-card" style="--kpi-color:var(--warn);padding:14px"><div class="kpi-label" style="font-size:.7rem">Workouts</div><div class="kpi-value" style="font-size:1.6rem">${c.weeklyWorkoutsCompleted}/${c.weeklyWorkoutGoal}</div></div></div><div class="card"><div class="text-xs-muted mb-2">Calorie Adherence</div><div class="progress-bar" style="height:12px"><div class="progress-fill" style="width:${adh}%;background:var(--accent)"></div></div><div class="text-xs-muted mt-3 mb-1">Workout Goal</div><div class="progress-bar" style="height:12px"><div class="progress-fill" style="width:${woPct}%;background:var(--accent2)"></div></div></div>`;
+  if(activePtTab==='nutrition') return`
+    <div class="card mb-3">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;margin-bottom:14px">Daily Nutrition Targets</div>
+      <div class="grid-2" style="gap:10px;margin-bottom:14px">
+        <div class="form-row" style="margin-bottom:0"><label>Calories (kcal)</label><input type="number" id="ptgt-cal-${c.id}" value="${c.calorieGoalPerDay}" min="800" max="6000" /></div>
+        <div class="form-row" style="margin-bottom:0"><label>Protein (g)</label><input type="number" id="ptgt-prot-${c.id}" value="${c.proteinGoalPerDay||150}" min="20" max="400" /></div>
+        <div class="form-row" style="margin-bottom:0"><label>Carbs (g)</label><input type="number" id="ptgt-carb-${c.id}" value="${c.carbGoalPerDay||250}" min="20" max="600" /></div>
+        <div class="form-row" style="margin-bottom:0"><label>Fat (g)</label><input type="number" id="ptgt-fat-${c.id}" value="${c.fatGoalPerDay||65}" min="10" max="300" /></div>
+      </div>
+      <button class="btn btn-primary btn-sm w-full" onclick="savePtMacroTargets('${c.id}')">💾 Save Targets</button>
+      <div class="text-xs-muted mt-2 text-center">Changes are reflected immediately in the client's Today view.</div>
+    </div>
+    <div class="card-sm mb-3">
+      <div style="font-weight:600;font-size:.85rem;margin-bottom:10px">Current Macro Breakdown (estimated daily)</div>
+      <div class="macro-bar-section">
+        <div class="macro-bar-row"><span class="macro-bar-name" style="color:var(--accent)">Protein</span><div class="macro-bar-track"><div class="macro-bar-fill" style="width:${Math.min(100,Math.round((c.proteinGoalPerDay||150)*4/(c.calorieGoalPerDay)*100))}%;background:var(--accent)"></div></div><span class="macro-bar-nums">${c.proteinGoalPerDay||150}g · ${Math.round((c.proteinGoalPerDay||150)*4/(c.calorieGoalPerDay)*100)}%</span></div>
+        <div class="macro-bar-row"><span class="macro-bar-name" style="color:var(--accent2)">Carbs</span><div class="macro-bar-track"><div class="macro-bar-fill" style="width:${Math.min(100,Math.round((c.carbGoalPerDay||250)*4/(c.calorieGoalPerDay)*100))}%;background:var(--accent2)"></div></div><span class="macro-bar-nums">${c.carbGoalPerDay||250}g · ${Math.round((c.carbGoalPerDay||250)*4/(c.calorieGoalPerDay)*100)}%</span></div>
+        <div class="macro-bar-row"><span class="macro-bar-name" style="color:var(--warn)">Fat</span><div class="macro-bar-track"><div class="macro-bar-fill" style="width:${Math.min(100,Math.round((c.fatGoalPerDay||65)*9/(c.calorieGoalPerDay)*100))}%;background:var(--warn)"></div></div><span class="macro-bar-nums">${c.fatGoalPerDay||65}g · ${Math.round((c.fatGoalPerDay||65)*9/(c.calorieGoalPerDay)*100)}%</span></div>
+      </div>
+    </div>
+    <div class="text-xs-muted mb-2">Weekly Calorie History</div>
+    <div class="card-sm">
+      <div class="mini-bars">${c.weeklyCalories.map((cal,i)=>{const p=Math.min(100,Math.round(cal/(c.weeklyCalorieGoal||c.calorieGoalPerDay)*100));return`<div class="mini-bar-wrap"><div class="mini-bar-track"><div class="mini-bar-fill" style="height:${p}%;background:${p>=90?'var(--accent)':p>=70?'var(--warn)':'var(--danger)'}"></div></div><div class="mini-bar-label">${['M','T','W','T','F','S','S'][i]}</div></div>`;}).join('')}</div>
+      <div class="text-xs-muted mt-2">Adherence: <strong style="color:var(--accent)">${adh}%</strong></div>
+    </div>`;
+  if(activePtTab==='mealplanner') return renderPtMealPlanner(c);
+  if(activePtTab==='workouts') return`<div class="card-sm mb-3"><div class="flex items-center justify-between mb-1"><span class="text-xs-muted">Weekly Progress</span><span style="font-weight:700">${c.weeklyWorkoutsCompleted}/${c.weeklyWorkoutGoal}</span></div><div class="progress-bar"><div class="progress-fill" style="width:${woPct}%;background:${woPct>=80?'var(--accent)':woPct>=50?'var(--warn)':'var(--danger)'}"></div></div></div><div class="flex flex-col gap-2 mb-3">${c.assignedWorkoutIds.map(wid=>{const w=getWorkout(wid);return w?`<div class="workout-card"><div><div style="font-weight:600;font-size:.9rem">${w.name}</div><div class="text-xs-muted">${w.focus}</div></div><div class="flex items-center gap-2"><span class="diff-pill ${diffClass(w.difficulty)}">${w.difficulty}</span><button class="btn btn-secondary btn-xs" onclick="openReplaceModal('${c.id}','${wid}')">Replace</button></div></div>`:''}).join('')}</div><button class="btn btn-primary btn-sm" onclick="openAddWorkoutModal('${c.id}')">+ Assign from Library</button>`;
+  if(activePtTab==='goals') return`<div class="mb-3"><div class="text-xs-muted mb-1">Client Goals</div><div class="card-sm">${c.goals}</div></div><div class="mb-3"><div class="text-xs-muted mb-1">Context</div><div class="card-sm">${c.context}</div></div><div class="form-row"><label>PT Notes</label><textarea id="ptnp-${c.id}" rows="4">${c.ptNotes||''}</textarea><button class="btn btn-primary btn-sm mt-2" onclick="savePtNotes('${c.id}','ptnp-')">Save</button></div>`;
+  if(activePtTab==='messages') return`<div class="chat-messages">${(messages[c.id]||[]).map(m=>`<div><div class="chat-bubble ${m.sender==='pt'?'from-pt':'from-client'}">${m.text}</div><div class="chat-time" style="text-align:${m.sender==='pt'?'right':'left'}">${m.timestamp}</div></div>`).join('')}</div><div class="chat-input-row"><input type="text" id="ptmsg-${c.id}" placeholder="Message ${c.name}…" onkeydown="if(event.key==='Enter')sendPtMsg('${c.id}')" /><button class="btn btn-primary btn-sm" onclick="sendPtMsg('${c.id}')">Send</button></div>`;
+  return'';
+}
+function sendPtMsg(cid){ const i=document.getElementById(`ptmsg-${cid}`); if(!i||!i.value.trim())return; messages[cid]=[...(messages[cid]||[]),{sender:'pt',text:i.value.trim(),timestamp:'Now'}]; i.value=''; setPtTab('messages'); }
+
+/* ============================================================
+   PT MEAL PLANNER
+   ============================================================ */
+function renderPtMealPlanner(c){
+  const plan=weeklyMealPlans[c.id]||{};
+  return`<div class="flex items-center justify-between mb-4"><div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem">Weekly Meal Plan — ${c.name}</div><div class="text-xs-muted mt-1">Click any slot to assign a meal from the library</div></div></div>
+  <div style="overflow-x:auto">
+  <div class="meal-plan-grid" style="min-width:600px">
+    <div></div>${DAYS.map(d=>`<div class="day-head">${d}</div>`).join('')}
+    ${MEAL_TYPES.map(type=>`
+      <div class="row-label">${type}</div>
+      ${DAYS.map(day=>{
+        const mid=(plan[day]||{})[type];
+        const m=mid?getMeal(mid):null;
+        return`<div class="meal-slot ${m?'filled':''}" onclick="openPtMealSlotModal('${c.id}','${day}','${type}')">
+          ${m?`<div class="meal-slot-name">${m.name}</div><div class="meal-slot-cal">${m.calories}kcal</div><div class="remove-slot" onclick="event.stopPropagation();clearMealSlot('${c.id}','${day}','${type}')">✕</div>`:`<div style="font-size:.65rem;color:var(--text3)">+ Add</div>`}
+        </div>`;
+      }).join('')}
+    `).join('')}
+  </div></div>
+  <div class="card-sm mt-4">
+    <div class="text-xs-muted mb-2">Weekly Calorie Estimate</div>
+    ${DAYS.map(day=>{
+      const dayMeals=plan[day]||{};
+      const total=Object.values(dayMeals).reduce((s,mid)=>{const m=getMeal(mid);return s+(m?m.calories:0);},0);
+      const pct=Math.min(100,Math.round(total/c.calorieGoalPerDay*100));
+      return`<div class="flex items-center gap-2 mb-1"><span style="font-size:.75rem;width:32px;color:var(--text3)">${day}</span><div class="progress-bar flex-1"><div class="progress-fill" style="width:${pct}%;background:${pct>=90?'var(--accent)':pct>=70?'var(--warn)':'var(--accent2)'}"></div></div><span style="font-size:.75rem;color:var(--text2);width:50px;text-align:right">${total} kcal</span></div>`;
+    }).join('')}
+  </div>`;
+}
+function openPtMealSlotModal(cid, day, type){
+  document.getElementById('modal-root').innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header"><div style="font-family:'Syne',sans-serif;font-weight:700">${type} · ${day}</div><button class="close-btn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div style="font-size:.82rem;color:var(--text2);margin-bottom:12px">Select a meal from the library:</div>
+      <div class="flex flex-col gap-2">
+        ${mealLibrary.map(m=>`<div class="workout-card cursor-pointer" onclick="assignMealSlot('${cid}','${day}','${type}','${m.id}')">
+          <div><div style="font-weight:600;font-size:.88rem">${m.name}</div><div class="text-xs-muted">${m.protein}g protein · ${m.calories} kcal</div></div>
+          <div class="flex flex-wrap gap-1">${m.tags.map(t=>`<span class="badge badge-gray" style="font-size:.62rem">${t}</span>`).join('')}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div></div>`;
+}
+function assignMealSlot(cid, day, type, mid){
+  if(!weeklyMealPlans[cid]) weeklyMealPlans[cid]={};
+  if(!weeklyMealPlans[cid][day]) weeklyMealPlans[cid][day]={};
+  weeklyMealPlans[cid][day][type]=mid;
+  closeModal();
+  const c=getClient(cid);
+  document.getElementById('pt-panel-body').innerHTML=renderPtMealPlanner(c);
+  showToast('Meal assigned ✓');
+}
+function clearMealSlot(cid, day, type){
+  if(weeklyMealPlans[cid]&&weeklyMealPlans[cid][day]) delete weeklyMealPlans[cid][day][type];
+  const c=getClient(cid);
+  document.getElementById('pt-panel-body').innerHTML=renderPtMealPlanner(c);
+}
+
+function renderPtLibrary(){
+  return`<div class="page-header animate-in"><div class="page-title">Workout Library</div><div class="page-subtitle">All available workouts. Assign to clients from their Workouts tab.</div></div>
+  <div class="flex flex-col gap-3">${workoutLibrary.map(w=>`<div class="card"><div class="flex items-center justify-between mb-2"><div><div style="font-family:'Syne',sans-serif;font-weight:700">${w.name}</div><div class="text-xs-muted">${w.focus}</div></div><span class="diff-pill ${diffClass(w.difficulty)}">${w.difficulty}</span></div><div class="text-sm text-muted mb-2">${w.description}</div><div class="flex flex-wrap gap-1">${w.exercises.map(e=>`<span class="badge badge-gray" style="font-size:.68rem">${e}</span>`).join('')}</div></div>`).join('')}</div>`;
+}
+function renderPtInbox(){
+  return`<div class="page-header animate-in"><div class="page-title">Messages</div></div><div class="card">${clients.map(c=>{const msgs=messages[c.id]||[];const last=msgs[msgs.length-1];const unread=last&&last.sender==='client';return`<div class="inbox-row" onclick="openPtClient('${c.id}');setTimeout(()=>setPtTab('messages'),50)"><div class="at-risk-avatar" style="width:36px;height:36px;background:rgba(74,222,128,.1);color:var(--accent)">${c.name[0]}</div><div style="flex:1;min-width:0"><div style="font-weight:600">${c.name}</div><div class="text-sm text-muted" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px">${last?last.text:'No messages yet'}</div></div><div class="flex flex-col items-end gap-1"><span class="text-xs-muted">${last?last.timestamp:''}</span>${unread?`<div class="unread-dot"></div>`:''}</div></div>`;}).join('')}</div>`;
+}
+
+/* ============================================================
+   WORKOUT MODALS
+   ============================================================ */
+function openReplaceModal(cid,cwid){ const c=getClient(cid); document.getElementById('modal-root').innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header"><div style="font-family:'Syne',sans-serif;font-weight:700">Replace Workout</div><button class="close-btn" onclick="closeModal()">✕</button></div><div class="modal-body"><div class="flex flex-col gap-2">${workoutLibrary.filter(w=>w.id!==cwid).map(w=>`<div class="workout-card cursor-pointer" onclick="replaceWorkout('${cid}','${cwid}','${w.id}')"><div><div style="font-weight:600;font-size:.9rem">${w.name}</div><div class="text-xs-muted">${w.focus} · ${w.description.substring(0,55)}…</div></div><span class="diff-pill ${diffClass(w.difficulty)}">${w.difficulty}</span></div>`).join('')}</div></div></div></div>`; }
+function openAddWorkoutModal(cid){ const c=getClient(cid); document.getElementById('modal-root').innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header"><div style="font-family:'Syne',sans-serif;font-weight:700">Assign Workout</div><button class="close-btn" onclick="closeModal()">✕</button></div><div class="modal-body"><div class="flex flex-col gap-2">${workoutLibrary.filter(w=>!c.assignedWorkoutIds.includes(w.id)).map(w=>`<div class="workout-card cursor-pointer" onclick="addWorkout('${cid}','${w.id}')"><div><div style="font-weight:600;font-size:.9rem">${w.name}</div><div class="text-xs-muted">${w.focus}</div></div><span class="diff-pill ${diffClass(w.difficulty)}">${w.difficulty}</span></div>`).join('')}</div></div></div></div>`; }
+function replaceWorkout(cid,ow,nw){ const c=getClient(cid); const i=c.assignedWorkoutIds.indexOf(ow); if(i!==-1)c.assignedWorkoutIds[i]=nw; closeModal(); showToast('Workout updated'); setPtTab('workouts'); }
+function addWorkout(cid,wid){ const c=getClient(cid); c.assignedWorkoutIds.push(wid); closeModal(); showToast('Workout assigned'); setPtTab('workouts'); }
+function closeModal(){ document.getElementById('modal-root').innerHTML=''; }
+
+/* ============================================================
+   CLIENT — RENDER
+   ============================================================ */
+const demoClient=clients[0];
+let clientShoppingChecked={};
+
+function renderClient(s){
+  const mc=document.getElementById('client-main-content');
+  const c=demoClient;
+  if(s==='today') mc.innerHTML=renderClientToday(c);
+  else if(s==='week') mc.innerHTML=renderClientWeek(c);
+  else if(s==='meals') mc.innerHTML=renderClientMeals(c);
+  else if(s==='workout') mc.innerHTML=renderClientWorkout(c);
+  else if(s==='wellness') mc.innerHTML=renderClientWellness(c);
+  else if(s==='perks') mc.innerHTML=renderClientPerks(c);
+  else if(s==='msg') mc.innerHTML=renderClientMessages(c);
+}
+
+function renderClientToday(c){
+  // Eaten totals
+  const eaten     = c.todayMeals.reduce((s,mid)=>{const m=getMeal(mid);return s+(c.mealEaten[mid]&&m?m.calories:0);},0);
+  const eatenFat  = c.todayMeals.reduce((s,mid)=>{const m=getMeal(mid);return s+(c.mealEaten[mid]&&m?m.fat:0);},0);
+  const eatenCarb = c.todayMeals.reduce((s,mid)=>{const m=getMeal(mid);return s+(c.mealEaten[mid]&&m?m.carbs:0);},0);
+  const eatenProt = c.todayMeals.reduce((s,mid)=>{const m=getMeal(mid);return s+(c.mealEaten[mid]&&m?m.protein:0);},0);
+  // Goals
+  const calGoal  = c.calorieGoalPerDay  || 2000;
+  const fatGoal  = c.fatGoalPerDay      || 65;
+  const carbGoal = c.carbGoalPerDay     || 250;
+  const protGoal = c.proteinGoalPerDay  || 150;
+  // Pcts
+  const calPct  = Math.min(100, Math.round(eaten/calGoal*100));
+  const fatPct  = Math.min(100, Math.round(eatenFat/fatGoal*100));
+  const carbPct = Math.min(100, Math.round(eatenCarb/carbGoal*100));
+  const protPct = Math.min(100, Math.round(eatenProt/protGoal*100));
+  const remCal  = Math.max(0, calGoal - eaten);
+  // SVG ring helper
+  function macroRing(pct, color, val, goal, unit, label){
+    const R=30, circ=2*Math.PI*R, dash=circ-(pct/100)*circ;
+    return`<div class="macro-ring-cell">
+      <svg class="macro-ring-svg" width="74" height="74" viewBox="0 0 74 74" style="transform:rotate(-90deg)">
+        <circle cx="37" cy="37" r="${R}" fill="none" stroke="var(--surface3)" stroke-width="8"/>
+        <circle cx="37" cy="37" r="${R}" fill="none" stroke="${color}" stroke-width="8"
+          stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${dash.toFixed(1)}"
+          stroke-linecap="round" style="transition:stroke-dashoffset .7s ease"/>
+      </svg>
+      <div class="macro-ring-val" style="color:${color}">${val}${unit}</div>
+      <div class="macro-ring-sub">of ${goal}${unit}</div>
+      <div class="macro-ring-label">${label}</div>
+    </div>`;
+  }
+  const todayW=getWorkout(c.assignedWorkoutIds[0]);
+  const ptName=(pts.find(p=>p.id===c.assignedPtId)||{name:'your PT'}).name;
+  return`<div class="animate-in" style="padding-bottom:8px">
+  <div style="margin-bottom:18px"><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.5rem">Hi, ${c.name.split(' ')[0]} 👋</div><div class="text-sm text-muted mt-1">Wednesday · Let's make today count.</div></div>
+  <div class="card mb-3" style="border-top:3px solid var(--accent2)"><div class="text-xs-muted mb-1">Your Plan</div><div style="font-weight:700;color:var(--accent2)">${c.subscriptionType}</div><div class="text-xs-muted mt-1">with ${ptName} · PT</div></div>
+
+  <div class="card mb-3">
+    <div class="flex items-center justify-between mb-3">
+      <div style="font-family:'Syne',sans-serif;font-weight:700">Today's Nutrition</div>
+      <div style="text-align:right"><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;color:${calPct>=90?'var(--accent)':calPct>=70?'var(--warn)':'var(--accent2)'}">${eaten} <span style="font-size:.75rem;font-weight:400;color:var(--text3)">/ ${calGoal} kcal</span></div><div class="text-xs-muted">${remCal} kcal remaining</div></div>
+    </div>
+    <div class="progress-bar" style="height:10px;margin-bottom:16px">
+      <div class="progress-fill" style="width:${calPct}%;background:${calPct>=90?'var(--accent)':calPct>=70?'var(--warn)':'var(--accent2)'}"></div>
+    </div>
+    <div class="macro-rings-row">
+      ${macroRing(protPct,'var(--accent)',eatenProt,protGoal,'g','Protein')}
+      ${macroRing(carbPct,'var(--accent2)',eatenCarb,carbGoal,'g','Carbs')}
+      ${macroRing(fatPct,'var(--warn)',eatenFat,fatGoal,'g','Fat')}
+    </div>
+    <div class="divider"></div>
+    <div class="text-xs-muted mb-2">Today's meals — tap to mark eaten</div>
+    ${c.todayMeals.map(mid=>{const m=getMeal(mid);if(!m)return'';const e=!!c.mealEaten[mid];return`<div class="meal-row" style="opacity:${e?.6:1}"><button class="meal-toggle ${e?'checked':''}" onclick="toggleMeal('${mid}')">${e?'✓':''}</button><div style="flex:1;margin-left:10px"><div style="font-weight:500;font-size:.88rem;${e?'text-decoration:line-through;color:var(--text3)':''}">${m.name}</div><div class="text-xs-muted">${m.protein}g P · ${m.carbs}g C · ${m.fat}g F</div></div><div style="font-weight:600;color:${e?'var(--text3)':'var(--accent2)'};font-size:.9rem">${m.calories} kcal</div></div>`;}).join('')}
+  </div>
+
+  ${todayW?`<div class="card mb-3" style="border-top:3px solid var(--warn)"><div class="text-xs-muted mb-1">Today's Workout</div><div style="font-family:'Syne',sans-serif;font-weight:700">${todayW.name}</div><div class="text-sm text-muted mt-1">${todayW.focus} · ${todayW.difficulty}</div><div class="flex gap-2 mt-3"><button class="btn btn-secondary btn-sm" onclick="clientNav('workout',document.querySelectorAll('.bottom-nav-item')[3])">View Details</button><button class="btn btn-primary btn-sm" onclick="showToast('🎉 Workout logged!')">Mark Done</button></div></div>`:''}
+  <div class="streak-strip mb-3"><div class="streak-badge"><span style="font-size:1.2rem">🔥</span><div><div class="streak-num">${c.loginStreakDays}</div><div class="streak-label">Day streak<br/><span style="font-size:.65rem;color:var(--text3)">Keep showing up!</span></div></div></div><div class="streak-badge"><span style="font-size:1.2rem">💪</span><div><div class="streak-num" style="color:var(--accent2)">${c.workoutStreakWeeks}</div><div class="streak-label">Week streak<br/><span style="font-size:.65rem;color:var(--text3)">Consistency = results</span></div></div></div></div>
+  </div>`;
+}
+function toggleMeal(mid){ demoClient.mealEaten[mid]=!demoClient.mealEaten[mid]; if(demoClient.mealEaten[mid])showToast('Meal logged ✓'); renderClient('today'); }
+
+function renderClientWeek(c){
+  const adh=getCalorieAdherence(c); const woPct=getWorkoutProgress(c);
+  return`<div class="animate-in"><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;margin-bottom:16px">This Week</div>
+  <div class="card mb-3"><div class="flex items-center justify-between mb-3"><div style="font-family:'Syne',sans-serif;font-weight:700">Calorie Adherence</div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;color:var(--accent)">${adh}%</div></div>
+  <div class="week-bars">${c.weeklyCalories.map((cal,i)=>{const M=Math.max(...c.weeklyCalories,c.weeklyCalorieGoal);const gH=Math.round(c.weeklyCalorieGoal/M*100);const aH=cal>0?Math.round(cal/M*100):0;return`<div class="week-bar-group"><div class="week-bar-track"><div class="week-bar-goal" style="height:${gH}%"></div>${aH>0?`<div class="week-bar-actual" style="height:${aH}%;background:${aH>=gH*.9?'var(--accent)':aH>=gH*.7?'var(--warn)':'var(--danger)'}"></div>`:''}</div><div class="week-bar-day">${['M','T','W','T','F','S','S'][i]}</div></div>`;}).join('')}</div>
+  <div class="flex gap-3 mt-2 text-xs"><div class="flex items-center gap-1"><div style="width:10px;height:10px;border-radius:2px;background:rgba(74,222,128,.2)"></div><span class="text-muted">Goal</span></div><div class="flex items-center gap-1"><div style="width:10px;height:10px;border-radius:2px;background:var(--accent)"></div><span class="text-muted">Actual</span></div></div></div>
+  <div class="card mb-3"><div style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:10px">Workout Goal</div><div class="flex items-center gap-3 mb-2"><div style="font-size:2rem;font-family:'Syne',sans-serif;font-weight:800;color:var(--accent2)">${c.weeklyWorkoutsCompleted}</div><div class="text-muted">of <strong>${c.weeklyWorkoutGoal}</strong> workouts done</div></div><div class="progress-bar" style="height:10px"><div class="progress-fill" style="width:${woPct}%;background:var(--accent2)"></div></div><div class="text-sm mt-3" style="color:${woPct>=80?'var(--accent)':woPct>=50?'var(--warn)':'var(--text2)'}">${woPct>=100?'🎉 Weekly goal smashed!':woPct>=80?`💪 Almost there — finish strong!`:woPct>=50?`📈 ${c.weeklyWorkoutGoal-c.weeklyWorkoutsCompleted} more session(s) to go.`:`⚡ ${c.weeklyWorkoutGoal-c.weeklyWorkoutsCompleted} sessions to hit your goal.`}</div></div>
+  <div class="card" style="background:rgba(74,222,128,.06);border-color:rgba(74,222,128,.2)"><div style="font-size:.88rem;color:var(--text2)">Weekly Consistency Score</div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:2.2rem;color:var(--accent)">${Math.round((adh+woPct)/2)}%</div><div class="text-sm text-muted mt-1">Based on calorie adherence & workout completion.</div></div>
+  </div>`;
+}
+
+/* ============================================================
+   CLIENT MEALS — WEEKLY PLAN + EDIT + SHOPPING LIST
+   ============================================================ */
+let clientMealView='plan'; // 'plan' | 'shopping'
+
+function renderClientMeals(c){
+  const plan=weeklyMealPlans[c.id]||{};
+  if(clientMealView==='shopping') return renderClientShopping(c, plan);
+  return`<div class="animate-in">
+  <div class="flex items-center justify-between mb-4">
+    <div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem">Meal Plan</div><div class="text-xs-muted mt-1">Your week, planned by Marcus · tap to swap a meal</div></div>
+    <button class="btn btn-secondary btn-sm" onclick="clientMealView='shopping';renderClient('meals')">🛒 Shopping List</button>
+  </div>
+  ${DAYS.map(day=>{
+    const dayPlan=plan[day]||{};
+    const total=Object.values(dayPlan).reduce((s,mid)=>{const m=getMeal(mid);return s+(m?m.calories:0);},0);
+    const isToday=day==='Wed';
+    return`<div class="card mb-3 ${isToday?'':''}">
+      <div class="flex items-center justify-between mb-2">
+        <div style="font-weight:700;font-size:.92rem;${isToday?'color:var(--accent)':''}">${day}${isToday?' · Today':''}</div>
+        <div style="font-size:.8rem;color:var(--text2)">${total} kcal</div>
+      </div>
+      ${MEAL_TYPES.map(type=>{
+        const mid=(c.mealEdits[day+type]!==undefined)?c.mealEdits[day+type]:dayPlan[type];
+        const m=mid?getMeal(mid):null;
+        return`<div class="meal-row">
+          <div style="width:60px;font-size:.72rem;color:var(--text3);font-weight:600;flex-shrink:0">${type}</div>
+          <div style="flex:1">${m?`<div style="font-weight:500;font-size:.85rem">${m.name}</div><div class="text-xs-muted">${m.calories} kcal · ${m.protein}g protein</div>`:`<div class="text-xs-muted">Not set</div>`}</div>
+          <button class="btn btn-secondary btn-xs" onclick="openClientMealSwap('${day}','${type}')">Swap</button>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('')}
+  </div>`;
+}
+
+function openClientMealSwap(day, type){
+  document.getElementById('modal-root').innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header"><div style="font-family:'Syne',sans-serif;font-weight:700">Swap ${type} · ${day}</div><button class="close-btn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="text-sm text-muted mb-3">Choose a replacement meal:</div>
+      <div class="flex flex-col gap-2">
+        ${mealLibrary.map(m=>`<div class="workout-card cursor-pointer" onclick="applyClientMealSwap('${day}','${type}','${m.id}')">
+          <div><div style="font-weight:600;font-size:.85rem">${m.name}</div><div class="text-xs-muted">${m.calories} kcal · ${m.protein}g protein · tags: ${m.tags.join(', ')}</div></div>
+        </div>`).join('')}
+      </div>
+      <button class="btn btn-ghost btn-sm w-full mt-3" onclick="applyClientMealSwap('${day}','${type}','')">✕ Remove this meal</button>
+    </div>
+  </div></div>`;
+}
+function applyClientMealSwap(day, type, mid){
+  demoClient.mealEdits[day+type]=mid||null;
+  closeModal();
+  showToast(mid?'Meal swapped ✓':'Meal removed');
+  renderClient('meals');
+}
+
+function renderClientShopping(c, plan){
+  // Aggregate all ingredients for the week
+  const ingredientMap={};
+  DAYS.forEach(day=>{
+    MEAL_TYPES.forEach(type=>{
+      const mid=(c.mealEdits[day+type]!==undefined)?c.mealEdits[day+type]:((plan[day]||{})[type]);
+      if(!mid)return;
+      const m=getMeal(mid);
+      if(!m)return;
+      m.ingredients.forEach(ing=>{
+        const key=ing.toLowerCase();
+        if(!ingredientMap[key]) ingredientMap[key]={name:ing,count:0};
+        ingredientMap[key].count++;
+      });
+    });
+  });
+  // Group by rough category
+  const categories={Proteins:[],Produce:[],Dairy:[],Grains:[],Pantry:[]};
+  const proteinKw=['chicken','beef','salmon','tuna','tofu','turkey','egg','protein','whey'];
+  const produceKw=['banana','berries','avocado','tomato','cucumber','carrot','pepper','onion','garlic','lemon','lettuce','veg','broccoli','celery','ginger','pineapple','herbs','spring'];
+  const dairyKw=['milk','yoghurt','cheese','butter','cottage'];
+  const grainKw=['oats','bread','rice','noodle','wrap','pasta','sourdough','toast','pancake'];
+  Object.values(ingredientMap).forEach(item=>{
+    const l=item.name.toLowerCase();
+    if(proteinKw.some(k=>l.includes(k))) categories.Proteins.push(item);
+    else if(produceKw.some(k=>l.includes(k))) categories.Produce.push(item);
+    else if(dairyKw.some(k=>l.includes(k))) categories.Dairy.push(item);
+    else if(grainKw.some(k=>l.includes(k))) categories.Grains.push(item);
+    else categories.Pantry.push(item);
+  });
+  const total=Object.values(ingredientMap).length;
+  const checked=Object.values(clientShoppingChecked).filter(Boolean).length;
+  return`<div class="animate-in">
+  <div class="flex items-center justify-between mb-4">
+    <div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem">🛒 Shopping List</div><div class="text-xs-muted mt-1">${checked}/${total} items ticked off</div></div>
+    <button class="btn btn-secondary btn-sm" onclick="clientMealView='plan';renderClient('meals')">← Back to Plan</button>
+  </div>
+  <div class="progress-bar mb-4"><div class="progress-fill" style="width:${total?Math.round(checked/total*100):0}%;background:var(--accent)"></div></div>
+  ${Object.entries(categories).filter(([,items])=>items.length>0).map(([cat,items])=>`
+  <div class="shopping-section">
+    <div class="shopping-section-head">${{Proteins:'🥩 Proteins',Produce:'🥦 Produce',Dairy:'🥛 Dairy',Grains:'🌾 Grains & Carbs',Pantry:'🧂 Pantry & Extras'}[cat]}</div>
+    ${items.map(item=>{
+      const key=item.name.toLowerCase();
+      const ck=!!clientShoppingChecked[key];
+      return`<div class="shopping-item">
+        <div class="shopping-cb ${ck?'checked':''}" onclick="toggleShoppingItem('${key}')">${ck?'✓':''}</div>
+        <div style="flex:1;${ck?'text-decoration:line-through;color:var(--text3)':''}font-size:.88rem">${item.name}</div>
+        ${item.count>1?`<span class="text-xs-muted">×${item.count}</span>`:''}
+      </div>`;
+    }).join('')}
+  </div>`).join('')}
+  <button class="btn btn-ghost btn-sm w-full mt-4" onclick="clientShoppingChecked={};renderClient('meals')">↺ Reset list</button>
+  </div>`;
+}
+function toggleShoppingItem(key){ clientShoppingChecked[key]=!clientShoppingChecked[key]; renderClient('meals'); }
+
+function renderClientWorkout(c){
+  return`<div class="animate-in"><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;margin-bottom:16px">My Workouts</div>
+  ${c.assignedWorkoutIds.map(wid=>{const w=getWorkout(wid);if(!w)return'';return`<div class="card mb-3"><div class="flex items-center justify-between mb-2"><div><div style="font-family:'Syne',sans-serif;font-weight:700">${w.name}</div><div class="text-xs-muted">${w.focus}</div></div><span class="diff-pill ${diffClass(w.difficulty)}">${w.difficulty}</span></div><div class="text-sm text-muted mb-3">${w.description}</div><div class="flex flex-col gap-1">${w.exercises.map(e=>`<label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:7px 0;border-bottom:1px solid rgba(42,48,72,.2)"><input type="checkbox" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0" /><span style="font-size:.88rem">${e}</span></label>`).join('')}</div><button class="btn btn-primary w-full mt-3" onclick="showToast('🎉 Workout complete!')">Mark Done</button></div>`;}).join('')}</div>`;
+}
+
+function renderClientPerks(c){
+  const filtered=perks.filter(p=>p.applicableSubs.includes(c.subscriptionType));
+  return`<div class="animate-in"><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;margin-bottom:4px">Your Perks</div><div class="text-sm text-muted mb-4">Exclusive discounts for <strong style="color:var(--accent)">${c.subscriptionType}</strong> members.</div>
+  <div class="flex flex-col gap-3">${filtered.map(p=>`<div class="perk-card"><div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);font-weight:600;margin-bottom:4px">${catIcon(p.category)} ${p.category}</div><div style="font-weight:700;margin-bottom:4px">${p.partnerName}</div><div class="text-sm text-muted mb-3">${p.description}</div><div class="flex items-center gap-2 flex-wrap"><span class="perk-code">${p.discountCode}</span>${p.price?`<span class="text-xs-muted">${p.price}</span>`:''}<button class="copy-btn" onclick="copyCode(this,'${p.discountCode}')">Copy</button></div></div>`).join('')}
+  ${filtered.length===0?`<div class="card" style="text-align:center;padding:32px;color:var(--text2)">No perks for your plan yet — check back soon!</div>`:''}
+  <div class="text-xs-muted text-center mt-2">More perks unlock as your streak grows 🚀</div></div>`;
+}
+function copyCode(btn,code){ btn.textContent='Copied!'; btn.classList.add('copied'); showToast(`${code} copied!`); setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},2000); }
+
+function renderClientMessages(c){
+  const ptName=(pts.find(p=>p.id===c.assignedPtId)||{name:'your PT'}).name;
+  return`<div class="animate-in flex flex-col" style="height:calc(100vh - 170px)"><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;margin-bottom:4px">Messages</div><div class="text-sm text-muted mb-3">with ${ptName} · PT</div>
+  <div class="chat-messages" style="flex:1;max-height:none">${(messages[c.id]||[]).map(m=>`<div><div class="chat-bubble ${m.sender==='client'?'from-pt':'from-client'}">${m.text}</div><div class="chat-time" style="text-align:${m.sender==='client'?'right':'left'}">${m.sender==='client'?'You':ptName} · ${m.timestamp}</div></div>`).join('')}</div>
+  <div class="chat-input-row"><input type="text" id="cli-msg" placeholder="Message ${ptName}…" onkeydown="if(event.key==='Enter')sendClientMsg('${c.id}')" /><button class="btn btn-primary btn-sm" onclick="sendClientMsg('${c.id}')">Send</button></div>
+  </div>`;
+}
+function sendClientMsg(cid){ const i=document.getElementById('cli-msg'); if(!i||!i.value.trim())return; messages[cid]=[...(messages[cid]||[]),{sender:'client',text:i.value.trim(),timestamp:'Now'}]; i.value=''; renderClient('msg'); }
+
+/* ============================================================
+   MACRO TARGET SAVE FUNCTIONS
+   ============================================================ */
+function saveClientMacroTargets(cid, prefix='tgt-'){
+  const c=getClient(cid); if(!c) return;
+  const cal=parseInt(document.getElementById(`${prefix}cal-${cid}`).value)||c.calorieGoalPerDay;
+  const prot=parseInt(document.getElementById(`${prefix}prot-${cid}`).value)||c.proteinGoalPerDay;
+  const carb=parseInt(document.getElementById(`${prefix}carb-${cid}`).value)||c.carbGoalPerDay;
+  const fat=parseInt(document.getElementById(`${prefix}fat-${cid}`).value)||c.fatGoalPerDay;
+  c.calorieGoalPerDay=cal; c.weeklyCalorieGoal=cal;
+  c.proteinGoalPerDay=prot; c.carbGoalPerDay=carb; c.fatGoalPerDay=fat;
+  showToast(`Targets saved for ${c.name} ✓`);
+}
+function savePtMacroTargets(cid){
+  const c=getClient(cid); if(!c) return;
+  const cal=parseInt(document.getElementById(`ptgt-cal-${cid}`).value)||c.calorieGoalPerDay;
+  const prot=parseInt(document.getElementById(`ptgt-prot-${cid}`).value)||c.proteinGoalPerDay;
+  const carb=parseInt(document.getElementById(`ptgt-carb-${cid}`).value)||c.carbGoalPerDay;
+  const fat=parseInt(document.getElementById(`ptgt-fat-${cid}`).value)||c.fatGoalPerDay;
+  c.calorieGoalPerDay=cal; c.weeklyCalorieGoal=cal;
+  c.proteinGoalPerDay=prot; c.carbGoalPerDay=carb; c.fatGoalPerDay=fat;
+  showToast(`Targets saved for ${c.name} ✓`);
+  setPtTab('nutrition');
+}
+
+/* ============================================================
+   OWNER BROADCAST
+   ============================================================ */
+let bcAudience='All';
+function renderOwnerBroadcast(){
+  const typeColors={'promotion':'bc-promotion','announcement':'bc-announcement','wellness':'bc-wellness'};
+  const audienceLabels={'All':'Everyone (PTs + Clients)','PTs':'Personal Trainers only','Clients':'All Clients','VirtualPT':'Virtual PT Clients','InPerson':'In-Person Clients','NutritionOnly':'Nutrition-Only Clients'};
+  return`<div class="page-header animate-in"><div class="page-title">Broadcast Messages</div><div class="page-subtitle">Send announcements, promotions or wellness content to your community.</div></div>
+  <div class="grid-2" style="gap:24px;align-items:start">
+
+    <!-- COMPOSE PANEL -->
+    <div class="card">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:16px">📣 Compose Message</div>
+
+      <div class="form-row"><label>Message Type</label>
+        <div class="flex gap-2 flex-wrap mt-1">
+          ${[['promotion','🎁 Promotion'],['announcement','📢 Announcement'],['wellness','🌿 Wellness']].map(([val,label])=>`
+            <div class="audience-chip ${val==='announcement'?'selected':''}" onclick="document.querySelectorAll('[data-bctype]').forEach(x=>x.classList.remove('selected'));this.classList.add('selected')" data-bctype="${val}">${label}</div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="form-row"><label>Audience</label>
+        <div class="flex flex-wrap gap-2 mt-1">
+          ${Object.entries(audienceLabels).map(([key,label])=>`
+            <div class="audience-chip ${key==='All'?'selected':''}" onclick="selectBcAudience('${key}',this)" data-bcaud="${key}">${key==='All'?'👥':key==='PTs'?'💪':key==='Clients'?'🎯':key==='VirtualPT'?'📱':key==='InPerson'?'🏋️':'🥗'} ${key==='All'?'All':label}</div>
+          `).join('')}
+        </div>
+        <div class="text-xs-muted mt-2" id="bc-aud-count">${getAudienceCount('All')} recipient(s)</div>
+      </div>
+
+      <div class="form-row"><label>Subject Line</label><input id="bc-subject" placeholder="e.g. New perks just dropped! 🎁" /></div>
+      <div class="form-row"><label>Message Body</label><textarea id="bc-body" rows="5" placeholder="Write your message here. Keep it clear, positive, and action-oriented."></textarea></div>
+
+      <div class="card-sm mb-3" style="background:rgba(34,211,238,.05);border-color:rgba(34,211,238,.2)">
+        <div class="text-xs-muted mb-1">💡 Tips for high open rates</div>
+        <div class="text-sm text-muted">Use the client's first name where possible. Lead with the benefit. Keep to under 80 words. End with a clear action (e.g. "Check your Perks tab now").</div>
+      </div>
+
+      <button class="btn btn-primary w-full" onclick="sendBroadcast()">📣 Send Broadcast</button>
+    </div>
+
+    <!-- HISTORY PANEL -->
+    <div>
+      <div style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:14px">Sent History</div>
+      ${broadcastHistory.length===0?`<div class="card" style="text-align:center;padding:32px;color:var(--text2)">No messages sent yet.</div>`:''}
+      ${broadcastHistory.slice().reverse().map(b=>`
+        <div class="broadcast-history-item">
+          <div class="flex items-center justify-between mb-1 flex-wrap gap-2">
+            <span class="broadcast-type-pill ${typeColors[b.type]||'bc-announcement'}">${b.type}</span>
+            <span class="text-xs-muted">${b.sent} · ${b.audience}</span>
+          </div>
+          <div style="font-weight:700;font-size:.92rem;margin-bottom:4px">${b.subject}</div>
+          <div class="text-sm text-muted" style="line-height:1.5">${b.body.length>120?b.body.substring(0,120)+'…':b.body}</div>
+        </div>
+      `).join('')}
+    </div>
+  </div>`;
+}
+function getAudienceCount(aud){
+  if(aud==='All') return pts.length + clients.length;
+  if(aud==='PTs') return pts.length;
+  if(aud==='Clients') return clients.length;
+  if(aud==='VirtualPT') return clients.filter(c=>c.subscriptionType==='Virtual PT').length;
+  if(aud==='InPerson') return clients.filter(c=>c.subscriptionType==='PT in person').length;
+  if(aud==='NutritionOnly') return clients.filter(c=>c.subscriptionType==='Nutrition only').length;
+  return 0;
+}
+function selectBcAudience(key, el){
+  document.querySelectorAll('[data-bcaud]').forEach(x=>x.classList.remove('selected'));
+  el.classList.add('selected');
+  const countEl=document.getElementById('bc-aud-count');
+  if(countEl) countEl.textContent=getAudienceCount(key)+' recipient(s)';
+}
+function sendBroadcast(){
+  const subject=document.getElementById('bc-subject')?.value.trim();
+  const body=document.getElementById('bc-body')?.value.trim();
+  const typeEl=document.querySelector('[data-bctype].selected');
+  const audEl=document.querySelector('[data-bcaud].selected');
+  const type=typeEl?.dataset.bctype||'announcement';
+  const aud=audEl?.dataset.bcaud||'All';
+  const audienceLabels={'All':'Everyone','PTs':'All PTs','Clients':'All Clients','VirtualPT':'Virtual PT Clients','InPerson':'In-Person Clients','NutritionOnly':'Nutrition-Only Clients'};
+  if(!subject){ showToast('⚠ Please add a subject line'); return; }
+  if(!body){ showToast('⚠ Please write a message body'); return; }
+  const now=new Date();
+  broadcastHistory.push({
+    id:uid(), type, audience:audienceLabels[aud]||aud,
+    subject, body,
+    sent:`${now.toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'})} · ${now.toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'})}`
+  });
+  showToast(`📣 Broadcast sent to ${getAudienceCount(aud)} recipients`);
+  renderOwner('broadcast');
+}
+
+/* ============================================================
+   CLIENT WELLNESS
+   ============================================================ */
+let wellnessFilter='All';
+function renderClientWellness(){
+  const cats=['All','Nutrition','Recovery','Mindset','Mental Health','Hydration'];
+  const filtered=wellnessFilter==='All'?wellnessArticles:wellnessArticles.filter(a=>a.category===wellnessFilter);
+  return`<div class="animate-in">
+  <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;margin-bottom:4px">🌿 Wellness Hub</div>
+  <div class="text-sm text-muted mb-4">Evidence-based articles and trusted resources to support your journey.</div>
+
+  <!-- Category filter -->
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;overflow-x:auto;padding-bottom:4px">
+    ${cats.map(cat=>`<button style="padding:5px 14px;border-radius:999px;font-size:.8rem;font-weight:600;border:1px solid ${cat===wellnessFilter?'var(--accent)':'var(--border)'};background:${cat===wellnessFilter?'rgba(74,222,128,.1)':'var(--surface2)'};color:${cat===wellnessFilter?'var(--accent)':'var(--text2)'};cursor:pointer;white-space:nowrap;transition:all .15s" onclick="wellnessFilter='${cat}';renderClient('wellness')">${cat}</button>`).join('')}
+  </div>
+
+  <!-- Articles grid -->
+  <div class="grid-2" style="margin-bottom:24px">
+    ${filtered.map(a=>`<div class="wellness-card" onclick="showWellnessArticle('${a.id}')">
+      <span class="wellness-emoji">${a.emoji}</span>
+      <div class="wellness-cat">${a.category}</div>
+      <div class="wellness-title">${a.title}</div>
+      <div class="wellness-summary">${a.summary}</div>
+      <div class="wellness-meta">
+        <span class="wellness-tag">${a.tag}</span>
+        <span class="wellness-time">📖 ${a.readTime} read</span>
+      </div>
+    </div>`).join('')}
+  </div>
+
+  <!-- Resources section -->
+  <div style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:12px">🔗 Trusted Resources</div>
+  <div class="flex flex-col gap-2">
+    ${wellnessResources.map(r=>`<a href="${r.url}" target="_blank" rel="noopener" style="text-decoration:none">
+      <div class="resource-card">
+        <span class="resource-emoji">${r.emoji}</span>
+        <div style="flex:1">
+          <div><span class="resource-type">${r.type}</span></div>
+          <div style="font-weight:600;font-size:.88rem">${r.title}</div>
+          <div class="text-xs-muted">${r.desc}</div>
+        </div>
+        <span style="color:var(--text3);font-size:.9rem">→</span>
+      </div>
+    </a>`).join('')}
+  </div>
+  <div class="text-xs-muted text-center mt-4">Content is for general wellness. Always consult your PT or healthcare provider for personalised advice.</div>
+  </div>`;
+}
+function showWellnessArticle(id){
+  const a=wellnessArticles.find(x=>x.id===id); if(!a) return;
+  document.getElementById('modal-root').innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <div class="text-xs-muted mb-1">${a.category} · ${a.readTime} read</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem">${a.emoji} ${a.title}</div>
+      </div>
+      <button class="close-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.2);border-radius:8px;padding:14px;margin-bottom:16px">
+        <div class="text-sm" style="line-height:1.7;color:var(--text)">${a.summary}</div>
+      </div>
+      <div class="text-sm text-muted" style="line-height:1.8">
+        ${generateWellnessExpanded(a)}
+      </div>
+      <div class="flex gap-3 mt-4">
+        <button class="btn btn-primary flex-1" onclick="closeModal()">Got it 👍</button>
+      </div>
+    </div>
+  </div></div>`;
+}
+function generateWellnessExpanded(a){
+  const extras={
+    wa1:`<p><strong>How much protein do you need?</strong> Most research points to 1.6–2.2g per kg of bodyweight per day for those training regularly. Distributing this evenly across meals (20–40g per sitting) maximises muscle protein synthesis throughout the day.</p><br><p><strong>Practical tip:</strong> Start your day with a protein-rich breakfast — eggs, Greek yoghurt, or a protein shake — to front-load your intake when it matters most.</p>`,
+    wa2:`<p><strong>What happens when you sleep poorly?</strong> Chronic sleep restriction raises cortisol, which promotes fat storage and muscle breakdown. It also elevates ghrelin (hunger hormone) while reducing leptin (fullness hormone), creating a double hit on body composition goals.</p><br><p><strong>Practical tip:</strong> Set a consistent sleep and wake time, keep your room cool (18°C is ideal), and avoid screens for 30 minutes before bed.</p>`,
+    wa3:`<p><strong>The 2-minute rule:</strong> If a new habit takes less than 2 minutes, do it now. This lowers the barrier to starting — showing up to the gym, even for 5 minutes, is the hardest part.</p><br><p><strong>Habit stacking example:</strong> "After I pour my morning coffee, I will immediately put on my workout clothes." This pairs a new behaviour with an established cue.</p>`,
+    wa4:`<p><strong>Signs you're dehydrated:</strong> Dark urine, headaches, fatigue before a session even starts, and difficulty concentrating are all red flags. Thirst is a late indicator — by the time you feel thirsty, you're already mildly dehydrated.</p><br><p><strong>Practical tip:</strong> Keep a 1L water bottle visible at your desk and aim to finish it before lunch, then refill for the afternoon.</p>`,
+    wa5:`<p><strong>The evidence:</strong> Studies show people who eat breakfast consume more fibre, calcium, and vitamins than those who skip it. However, the quality of what you eat matters more than the timing.</p><br><p><strong>For morning trainers:</strong> A small carbohydrate and protein snack 60–90 minutes before training can meaningfully improve performance, especially for high-intensity sessions.</p>`,
+    wa6:`<p><strong>The mechanism:</strong> Exercise increases serotonin, dopamine, and BDNF (brain-derived neurotrophic factor) — natural mood stabilisers. The effect is cumulative, building over weeks of consistent training.</p><br><p><strong>Practical tip:</strong> Even a 20-minute brisk walk significantly reduces anxiety symptoms. You don't need to go hard — consistency matters more than intensity for mental health benefits.</p>`,
+    wa7:`<p><strong>The nuance:</strong> Cold water immersion (10–15°C for 10–15 minutes) within 1 hour post-exercise effectively reduces delayed onset muscle soreness (DOMS). However, research shows it may blunt muscle hypertrophy adaptations if used after every resistance training session.</p><br><p><strong>Best use case:</strong> Use ice baths after high-volume competition or back-to-back training days. Avoid them as a regular post-lifting routine if building muscle is your primary goal.</p>`,
+    wa8:`<p><strong>Why outcome goals fail:</strong> "Lose 10kg" gives you no clear daily action. It also creates a binary pass/fail — any week you don't lose weight feels like failure, eroding motivation over time.</p><br><p><strong>Reframe:</strong> "I will train 4 times per week and log my meals 5 days per week" is entirely within your control. Results become the natural by-product of process consistency.</p>`,
+    wa9:`<p><strong>Dosing and timing:</strong> 3–5g of creatine monohydrate daily is sufficient. There's no need to load. Timing doesn't matter much — taking it consistently is what counts. Mixing it with carbohydrates may slightly improve uptake.</p><br><p><strong>Who benefits most?</strong> Vegetarians and vegans have lower baseline muscle creatine stores and tend to see the most significant performance gains from supplementation.</p>`,
+  };
+  return extras[a.id]||`<p>${a.summary}</p><br><p>For more detailed guidance specific to your goals and health history, speak with your PT or a registered dietitian.</p>`;
+}
+
+</script>
+</body>
+</html>
