@@ -6,6 +6,7 @@ const navItems = [
   { href: '/client/dashboard', icon: '🏠', label: 'Dashboard' },
   { href: '/client/food', icon: '🥗', label: 'Food' },
   { href: '/client/workouts', icon: '💪', label: 'Workouts' },
+  { href: '/client/wellness', icon: '🧘', label: 'Wellness' },
   { href: '/client/perks', icon: '🎁', label: 'Rewards' },
   { href: '/client/chat', icon: '💬', label: 'Chat' },
 ]

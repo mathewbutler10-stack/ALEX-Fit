@@ -30,6 +30,21 @@ function Badge({ children, color }: { children: React.ReactNode; color: string }
   )
 }
 
+// TODO: replace with Supabase query
+const MOCK_AT_RISK = [
+  { id: '2', name: 'James Okafor', plan: 'PT In Person', initial: 'JO', reasons: ['No login 5 days', 'No workout 8 days'] },
+  { id: '3', name: 'Amy Zhang', plan: 'Virtual PT', initial: 'AZ', reasons: ['No login 4 days', 'Low adherence'] },
+]
+
+// TODO: replace with Supabase query
+const MOCK_ACTIVITY = [
+  { icon: '🔥', text: 'Tom Whitfield reached a 21-day login streak', time: '2h ago', positive: true },
+  { icon: '✅', text: 'Sarah Chen completed 3/4 workouts this week', time: '4h ago', positive: true },
+  { icon: '🥗', text: 'Priya Sharma hit 99% calorie adherence!', time: '6h ago', positive: true },
+  { icon: '⚠️', text: 'James Okafor has not logged in for 5 days', time: '1d ago', positive: false },
+  { icon: '📉', text: 'Amy Zhang calorie adherence dropped to 61%', time: '1d ago', positive: false },
+]
+
 interface AtRiskClient {
   id: string
   name: string
@@ -234,6 +249,51 @@ export default function DashboardPage() {
               ))}
             </div>
           )}
+        </div>
+      </div>
+
+      {/* At-Risk Clients Panel */}
+      <div style={{ background: 'var(--surface, #181c27)', border: '1px solid #f43f5e33', borderRadius: '12px', padding: '20px', marginTop: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h2 style={{ fontFamily: 'var(--font-syne, Syne, sans-serif)', fontSize: '1rem', fontWeight: 700, color: 'var(--text, #e8ecf4)', margin: 0 }}>⚠️ At-Risk Clients</h2>
+          <a href="/owner/clients" style={{ color: '#f43f5e', fontSize: '0.8rem', textDecoration: 'none' }}>View all →</a>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {MOCK_AT_RISK.map(c => (
+            <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'var(--surface2, #1e2333)', borderRadius: '8px' }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#f43f5e22', color: '#f43f5e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 700, flexShrink: 0 }}>
+                {c.initial}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text, #e8ecf4)' }}>{c.name}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text2, #9099b2)', marginTop: '2px' }}>{c.plan}</div>
+                <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginTop: '5px' }}>
+                  {c.reasons.map(r => (
+                    <span key={r} style={{ background: '#f43f5e15', border: '1px solid #f43f5e33', borderRadius: '4px', padding: '2px 7px', fontSize: '0.68rem', fontWeight: 600, color: '#f43f5e' }}>
+                      {r}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <a href="/owner/clients" style={{ padding: '6px 14px', background: '#f43f5e22', border: '1px solid #f43f5e44', borderRadius: '6px', color: '#f43f5e', fontSize: '0.78rem', fontWeight: 600, textDecoration: 'none', flexShrink: 0 }}>
+                View
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Recent Activity */}
+      <div style={{ background: 'var(--surface, #181c27)', border: '1px solid var(--border, #2a3048)', borderRadius: '12px', padding: '20px', marginTop: '24px' }}>
+        <h2 style={{ fontFamily: 'var(--font-syne, Syne, sans-serif)', fontSize: '1rem', fontWeight: 700, color: 'var(--text, #e8ecf4)', marginBottom: '16px', marginTop: 0 }}>Recent Activity</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {MOCK_ACTIVITY.map((item, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px', background: 'var(--surface2, #1e2333)', borderRadius: '8px' }}>
+              <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{item.icon}</span>
+              <span style={{ flex: 1, fontSize: '0.85rem', color: item.positive ? 'var(--text, #e8ecf4)' : 'var(--text2, #9099b2)' }}>{item.text}</span>
+              <span style={{ fontSize: '0.72rem', color: 'var(--text3, #5a6380)', flexShrink: 0 }}>{item.time}</span>
+            </div>
+          ))}
         </div>
       </div>
 

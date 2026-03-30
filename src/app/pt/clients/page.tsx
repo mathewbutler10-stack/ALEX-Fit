@@ -34,6 +34,10 @@ interface Client {
   email: string
   last_login: string | null
   login_streak: number | null
+  workout_streak?: number
+  cal_adherence?: number
+  last_workout_days?: number
+  last_login_days?: number
 }
 
 interface Appointment {
@@ -132,24 +136,35 @@ const MEAL_LABELS = ['Breakfast', 'Lunch', 'Dinner', 'Snack']
 // ─── ClientCard ───────────────────────────────────────────────────────────────
 
 function ClientCard({ client, onClick }: { client: Client; onClick: () => void }) {
-  const days = daysSince(client.last_login)
+  const loginStreak = client.login_streak ?? 0
+  const workoutStreak = client.workout_streak ?? 0
+  const calAdherence = client.cal_adherence ?? 0
+  const lastLoginDays = client.last_login_days ?? (client.last_login ? daysSince(client.last_login) ?? 0 : 0)
+  const lastWorkoutDays = client.last_workout_days ?? 0
+
+  const riskFlags: string[] = []
+  if (lastLoginDays > 3) riskFlags.push(`No login ${lastLoginDays}d`)
+  if (lastWorkoutDays > 5) riskFlags.push(`No workout ${lastWorkoutDays}d`)
+  if (calAdherence > 0 && calAdherence < 70) riskFlags.push('Low adherence')
+  const isAtRisk = client.at_risk || riskFlags.length > 0
+
   return (
     <div
       onClick={onClick}
       style={{
         background: '#181c27',
-        border: '1px solid #2a3048',
+        border: `1px solid ${isAtRisk ? '#f43f5e44' : '#2a3048'}`,
         borderRadius: '12px',
         padding: '20px',
         cursor: 'pointer',
         transition: 'border-color 0.2s, background 0.2s',
       }}
       onMouseEnter={e => {
-        (e.currentTarget as HTMLDivElement).style.borderColor = '#4ade80'
+        (e.currentTarget as HTMLDivElement).style.borderColor = isAtRisk ? '#f43f5e88' : '#4ade80'
         ;(e.currentTarget as HTMLDivElement).style.background = '#1e2333'
       }}
       onMouseLeave={e => {
-        (e.currentTarget as HTMLDivElement).style.borderColor = '#2a3048'
+        (e.currentTarget as HTMLDivElement).style.borderColor = isAtRisk ? '#f43f5e44' : '#2a3048'
         ;(e.currentTarget as HTMLDivElement).style.background = '#181c27'
       }}
     >
@@ -166,9 +181,6 @@ function ClientCard({ client, onClick }: { client: Client; onClick: () => void }
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <span style={{ color: '#e8ecf4', fontWeight: 600, fontSize: '0.95rem' }}>{client.full_name}</span>
-            {client.at_risk && (
-              <span style={{ background: '#f43f5e22', color: '#f43f5e', border: '1px solid #f43f5e44', borderRadius: '4px', padding: '1px 7px', fontSize: '0.72rem', fontWeight: 600 }}>AT RISK</span>
-            )}
           </div>
           <div style={{ marginTop: '4px' }}>
             <span style={{
@@ -180,18 +192,35 @@ function ClientCard({ client, onClick }: { client: Client; onClick: () => void }
               {subLabel(client.subscription_type)}
             </span>
           </div>
-          <div style={{ marginTop: '10px', display: 'flex', gap: '16px' }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ color: '#9099b2', fontSize: '0.7rem' }}>Last Login</div>
-              <div style={{ color: '#e8ecf4', fontSize: '0.82rem', fontWeight: 600 }}>
-                {days === null ? '—' : days === 0 ? 'Today' : `${days}d ago`}
-              </div>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ color: '#9099b2', fontSize: '0.7rem' }}>Streak</div>
-              <div style={{ color: '#4ade80', fontSize: '0.82rem', fontWeight: 600 }}>{client.login_streak ?? 0}</div>
-            </div>
+
+          {/* Streak / stat chips */}
+          <div style={{ marginTop: '10px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+            <span style={{ background: '#4ade8015', border: '1px solid #4ade8040', borderRadius: '999px', padding: '3px 9px', fontSize: '0.7rem', fontWeight: 600, color: '#4ade80' }}>
+              🔥 Login {loginStreak}d
+            </span>
+            <span style={{ background: '#22d3ee15', border: '1px solid #22d3ee40', borderRadius: '999px', padding: '3px 9px', fontSize: '0.7rem', fontWeight: 600, color: '#22d3ee' }}>
+              💪 Workout {workoutStreak}d
+            </span>
+            <span style={{
+              background: calAdherence >= 70 ? '#4ade8015' : '#f43f5e15',
+              border: `1px solid ${calAdherence >= 70 ? '#4ade8040' : '#f43f5e40'}`,
+              borderRadius: '999px', padding: '3px 9px', fontSize: '0.7rem', fontWeight: 600,
+              color: calAdherence >= 70 ? '#4ade80' : '#f43f5e',
+            }}>
+              🥗 Cal {calAdherence}%
+            </span>
           </div>
+
+          {/* At-risk flags */}
+          {riskFlags.length > 0 && (
+            <div style={{ marginTop: '8px', display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+              {riskFlags.map(flag => (
+                <span key={flag} style={{ background: '#f43f5e15', border: '1px solid #f43f5e44', borderRadius: '4px', padding: '2px 8px', fontSize: '0.7rem', fontWeight: 600, color: '#f43f5e' }}>
+                  ⚠️ {flag}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -900,6 +929,15 @@ function ClientDrawer({ client, ptUserId, onClose }: { client: Client; ptUserId:
   )
 }
 
+// TODO: replace with Supabase query
+const MOCK_CLIENTS: Client[] = [
+  { id: '1', user_id: '1', assigned_pt_id: '', subscription_type: 'pt_in_person', at_risk: false, at_risk_reasons: null, goals: null, motivation: null, context: null, calorie_goal: 2000, protein_goal: 160, carbs_goal: 240, fat_goal: 65, pt_notes: null, phone: null, mobile: null, address: null, dob: null, preferred_contact: null, contact_notes: null, emergency_name: null, emergency_phone: null, emergency_rel: null, full_name: 'Sarah Chen', email: 'sarah@demo.com', last_login: null, login_streak: 5, workout_streak: 3, cal_adherence: 95, last_login_days: 0, last_workout_days: 1 },
+  { id: '2', user_id: '2', assigned_pt_id: '', subscription_type: 'pt_in_person', at_risk: true, at_risk_reasons: 'No login', goals: null, motivation: null, context: null, calorie_goal: 2200, protein_goal: 180, carbs_goal: 260, fat_goal: 70, pt_notes: null, phone: null, mobile: null, address: null, dob: null, preferred_contact: null, contact_notes: null, emergency_name: null, emergency_phone: null, emergency_rel: null, full_name: 'James Okafor', email: 'james@demo.com', last_login: null, login_streak: 0, workout_streak: 0, cal_adherence: 42, last_login_days: 5, last_workout_days: 8 },
+  { id: '3', user_id: '3', assigned_pt_id: '', subscription_type: 'virtual_pt', at_risk: true, at_risk_reasons: 'No login', goals: null, motivation: null, context: null, calorie_goal: 1800, protein_goal: 140, carbs_goal: 200, fat_goal: 55, pt_notes: null, phone: null, mobile: null, address: null, dob: null, preferred_contact: null, contact_notes: null, emergency_name: null, emergency_phone: null, emergency_rel: null, full_name: 'Amy Zhang', email: 'amy@demo.com', last_login: null, login_streak: 0, workout_streak: 2, cal_adherence: 61, last_login_days: 4, last_workout_days: 3 },
+  { id: '4', user_id: '4', assigned_pt_id: '', subscription_type: 'nutrition_only', at_risk: false, at_risk_reasons: null, goals: null, motivation: null, context: null, calorie_goal: 1700, protein_goal: 130, carbs_goal: 190, fat_goal: 50, pt_notes: null, phone: null, mobile: null, address: null, dob: null, preferred_contact: null, contact_notes: null, emergency_name: null, emergency_phone: null, emergency_rel: null, full_name: 'Priya Sharma', email: 'priya@demo.com', last_login: null, login_streak: 12, workout_streak: 7, cal_adherence: 99, last_login_days: 0, last_workout_days: 1 },
+  { id: '5', user_id: '5', assigned_pt_id: '', subscription_type: 'pt_in_person', at_risk: false, at_risk_reasons: null, goals: null, motivation: null, context: null, calorie_goal: 2400, protein_goal: 200, carbs_goal: 280, fat_goal: 75, pt_notes: null, phone: null, mobile: null, address: null, dob: null, preferred_contact: null, contact_notes: null, emergency_name: null, emergency_phone: null, emergency_rel: null, full_name: 'Tom Whitfield', email: 'tom@demo.com', last_login: null, login_streak: 21, workout_streak: 4, cal_adherence: 88, last_login_days: 0, last_workout_days: 2 },
+]
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function PTClientsPage() {
@@ -929,7 +967,7 @@ export default function PTClientsPage() {
         .select('*, users!clients_user_id_fkey(full_name, email, last_login)')
         .eq('assigned_pt_id', ptData.id)
 
-      setClients((data ?? []).map((c: Record<string, unknown>) => {
+      const mapped = (data ?? []).map((c: Record<string, unknown>) => {
         const u = c.users as Record<string, unknown> | null
         return {
           ...c,
@@ -937,7 +975,9 @@ export default function PTClientsPage() {
           email: (u?.email as string) ?? '',
           last_login: (u?.last_login as string) ?? null,
         } as Client
-      }))
+      })
+      // TODO: replace with Supabase query — use mock data when DB is empty
+      setClients(mapped.length > 0 ? mapped : MOCK_CLIENTS)
       setLoading(false)
     }
     load()
