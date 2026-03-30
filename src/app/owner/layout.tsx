@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 
 const navItems = [
   { href: '/owner/dashboard', icon: '📊', label: 'Dashboard' },
+  { href: '/owner/leads', icon: '🎯', label: 'Leads' },
   { href: '/owner/signups', icon: '✨', label: 'New Sign-ups' },
   { href: '/owner/clients', icon: '👥', label: 'Clients' },
   { href: '/owner/pts', icon: '🧑‍💼', label: 'PT Management' },

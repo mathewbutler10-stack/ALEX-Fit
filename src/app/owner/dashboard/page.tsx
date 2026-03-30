@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
 function KpiCard({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
@@ -48,6 +49,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState({
     totalClients: 0, activePts: 0, mrr: 0, atRiskCount: 0,
   })
+  const [leadStats, setLeadStats] = useState({ newThisWeek: 0, conversionRate: 0 })
   const [atRiskClients, setAtRiskClients] = useState<AtRiskClient[]>([])
   const [newSignups, setNewSignups] = useState<NewSignup[]>([])
   const [loading, setLoading] = useState(true)
@@ -76,6 +78,15 @@ export default function DashboardPage() {
         .from('subscriptions')
         .select('id, plan:subscription_plans(monthly_price)')
         .eq('status', 'active')
+
+      // Leads stats
+      const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString()
+      const { data: allLeads } = await supabase.from('leads').select('status, created_at')
+      const leadsArr = (allLeads || []) as { status: string; created_at: string }[]
+      const newThisWeek = leadsArr.filter(l => l.created_at >= weekAgo).length
+      const total = leadsArr.length
+      const converted = leadsArr.filter(l => l.status === 'converted').length
+      setLeadStats({ newThisWeek, conversionRate: total > 0 ? Math.round((converted / total) * 100) : 0 })
 
       type ClientRow = {
         id: string
@@ -194,6 +205,28 @@ export default function DashboardPage() {
               ))}
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Leads Widget */}
+      <div style={{ background: 'var(--surface, #181c27)', border: '1px solid var(--border, #2a3048)', borderRadius: '12px', padding: '20px', marginTop: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h2 style={{ fontFamily: 'var(--font-syne, Syne, sans-serif)', fontSize: '1rem', fontWeight: 700, color: 'var(--text, #e8ecf4)' }}>Leads Pipeline</h2>
+          <Link href="/owner/leads" style={{ color: 'var(--accent, #4ade80)', fontSize: '0.8rem', textDecoration: 'none' }}>View board →</Link>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div style={{ background: 'var(--surface2, #1e2333)', borderRadius: '8px', padding: '14px' }}>
+            <div style={{ color: 'var(--text2, #9099b2)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>New This Week</div>
+            <div style={{ fontSize: '1.8rem', fontWeight: 800, fontFamily: 'var(--font-syne, Syne, sans-serif)', color: '#4ade80' }}>
+              {loading ? '—' : leadStats.newThisWeek}
+            </div>
+          </div>
+          <div style={{ background: 'var(--surface2, #1e2333)', borderRadius: '8px', padding: '14px' }}>
+            <div style={{ color: 'var(--text2, #9099b2)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>Conversion Rate</div>
+            <div style={{ fontSize: '1.8rem', fontWeight: 800, fontFamily: 'var(--font-syne, Syne, sans-serif)', color: '#22d3ee' }}>
+              {loading ? '—' : `${leadStats.conversionRate}%`}
+            </div>
+          </div>
         </div>
       </div>
 
