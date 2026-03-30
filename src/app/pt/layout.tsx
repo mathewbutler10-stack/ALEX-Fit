@@ -32,7 +32,8 @@ export default async function PTLayout({ children }: { children: React.ReactNode
           { href: '/pt/clients', label: 'My Clients' },
           { href: '/pt/schedule', label: 'My Schedule' },
           { href: '/pt/workouts', label: 'Workout Library' },
-          { href: '/pt/meals', label: 'Meal Library' },
+          { href: '/pt/meal-library', label: 'Meal Library' },
+          { href: '/pt/meal-planner', label: '🥗 Meal Planner' },
           { href: '/pt/messages', label: 'Messages' },
         ].map(item => (
           <Link key={item.href} href={item.href} style={{
