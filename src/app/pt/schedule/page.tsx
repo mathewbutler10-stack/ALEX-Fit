@@ -1,22 +1,35 @@
+/*
+-- sessions table needed:
+-- CREATE TABLE sessions (
+--   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+--   gym_id uuid REFERENCES gyms(id) ON DELETE CASCADE,
+--   pt_id uuid REFERENCES pts(id) ON DELETE SET NULL,
+--   client_id uuid REFERENCES clients(id) ON DELETE CASCADE,
+--   session_type text NOT NULL,
+--   scheduled_at timestamptz NOT NULL,
+--   duration_minutes integer DEFAULT 60,
+--   status text DEFAULT 'scheduled' CHECK (status IN ('scheduled','completed','cancelled','no_show')),
+--   notes text,
+--   created_at timestamptz DEFAULT now(),
+--   updated_at timestamptz DEFAULT now()
+-- );
+*/
+
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface Appointment {
+interface Session {
   id: string
-  client_id: string
-  pt_id: string
-  title: string
-  type: 'virtual' | 'in_person' | string
-  date: string
-  start_time: string
-  end_time: string
-  status: 'confirmed' | 'pending' | 'cancelled' | string
-  location: string | null
-  notes: string | null
+  client_id?: string
   client_name: string
+  session_type: string
+  scheduled_at: string
+  duration_minutes: number
+  status: 'scheduled' | 'completed' | 'cancelled' | 'no_show'
+  notes?: string | null
 }
 
 interface ClientOption {
@@ -24,296 +37,204 @@ interface ClientOption {
   full_name: string
 }
 
+// ─── Mock data ────────────────────────────────────────────────────────────────
+
+const mockSessions: Session[] = [
+  { id: '1', client_name: 'Sarah Johnson', session_type: 'Personal Training', scheduled_at: '2026-03-31T09:00:00', duration_minutes: 60, status: 'scheduled' },
+  { id: '2', client_name: 'Mike Chen', session_type: 'Nutrition Consult', scheduled_at: '2026-03-31T11:00:00', duration_minutes: 45, status: 'scheduled' },
+  { id: '3', client_name: 'Emma Wilson', session_type: 'Personal Training', scheduled_at: '2026-04-01T08:00:00', duration_minutes: 60, status: 'completed' },
+]
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const HOURS = Array.from({ length: 15 }, (_, i) => i + 6) // 6am–8pm
+const SESSION_TYPES = ['Personal Training', 'Nutrition Consult', 'Assessment', 'Group Class']
+const DURATIONS = [30, 45, 60, 90]
+
+const SESSION_COLORS: Record<string, string> = {
+  'Personal Training': '#4ade80',
+  'Nutrition Consult': '#22d3ee',
+  'Assessment': '#a78bfa',
+  'Group Class': '#f97316',
+}
+
+const STATUS_COLORS: Record<string, string> = {
+  scheduled: '#4ade80',
+  completed: '#22d3ee',
+  cancelled: '#f43f5e',
+  no_show: '#f97316',
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function initials(name: string) {
-  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+function getWeekDays(baseDate: Date): Date[] {
+  const days: Date[] = []
+  const monday = new Date(baseDate)
+  const day = monday.getDay()
+  const diff = day === 0 ? -6 : 1 - day
+  monday.setDate(monday.getDate() + diff)
+  monday.setHours(0, 0, 0, 0)
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday)
+    d.setDate(monday.getDate() + i)
+    days.push(d)
+  }
+  return days
 }
 
-function isToday(dateStr: string) {
-  const d = new Date(dateStr)
-  const now = new Date()
-  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate()
+function formatHour(h: number): string {
+  if (h === 0 || h === 24) return '12am'
+  if (h < 12) return `${h}am`
+  if (h === 12) return '12pm'
+  return `${h - 12}pm`
 }
 
-function isThisWeek(dateStr: string) {
-  const d = new Date(dateStr)
-  const now = new Date()
-  const startOfWeek = new Date(now)
-  startOfWeek.setDate(now.getDate() - now.getDay())
-  startOfWeek.setHours(0, 0, 0, 0)
-  const endOfWeek = new Date(startOfWeek)
-  endOfWeek.setDate(startOfWeek.getDate() + 6)
-  endOfWeek.setHours(23, 59, 59, 999)
-  return d >= startOfWeek && d <= endOfWeek && !isToday(dateStr)
+function isSameDay(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
 }
 
-function isNextWeek(dateStr: string) {
-  const d = new Date(dateStr)
-  const now = new Date()
-  const startOfNextWeek = new Date(now)
-  startOfNextWeek.setDate(now.getDate() - now.getDay() + 7)
-  startOfNextWeek.setHours(0, 0, 0, 0)
-  const endOfNextWeek = new Date(startOfNextWeek)
-  endOfNextWeek.setDate(startOfNextWeek.getDate() + 6)
-  endOfNextWeek.setHours(23, 59, 59, 999)
-  return d >= startOfNextWeek && d <= endOfNextWeek
+function getSessionsForSlot(sessions: Session[], day: Date, hour: number): Session[] {
+  return sessions.filter(s => {
+    const d = new Date(s.scheduled_at)
+    return isSameDay(d, day) && d.getHours() === hour
+  })
 }
 
-function isPast(dateStr: string) {
-  const d = new Date(dateStr)
-  const now = new Date()
-  now.setHours(0, 0, 0, 0)
-  return d < now && !isToday(dateStr)
+// ─── Book Session Modal ───────────────────────────────────────────────────────
+
+interface BookModalProps {
+  clients: ClientOption[]
+  initialDate?: string
+  initialHour?: number
+  ptId: string
+  gymId: string
+  onClose: () => void
+  onSaved: (session: Session) => void
+  tableAvailable: boolean
 }
 
-function Badge({ text, color }: { text: string; color: string }) {
-  return (
-    <span style={{
-      background: color + '22', color, border: `1px solid ${color}44`,
-      borderRadius: '4px', padding: '2px 8px', fontSize: '0.72rem', fontWeight: 600,
-    }}>{text}</span>
-  )
-}
-
-function statusColor(s: string) {
-  if (s === 'confirmed') return '#4ade80'
-  if (s === 'cancelled') return '#f43f5e'
-  return '#fbbf24'
-}
-
-function typeColor(t: string) {
-  return t === 'virtual' ? '#22d3ee' : '#f97316'
-}
-
-// ─── KPI Card ─────────────────────────────────────────────────────────────────
-
-function KpiCard({ label, value, color }: { label: string; value: number; color: string }) {
-  return (
-    <div style={{ background: '#181c27', border: '1px solid #2a3048', borderRadius: '12px', padding: '20px 24px', flex: 1, minWidth: '120px' }}>
-      <div style={{ color, fontSize: '1.8rem', fontWeight: 700 }}>{value}</div>
-      <div style={{ color: '#9099b2', fontSize: '0.8rem', marginTop: '4px' }}>{label}</div>
-    </div>
-  )
-}
-
-// ─── Session Card ─────────────────────────────────────────────────────────────
-
-function SessionCard({ appt, highlight, onEdit, onCancel }: {
-  appt: Appointment; highlight?: boolean; onEdit: () => void; onCancel: () => void
-}) {
-  const d = new Date(appt.date)
-  return (
-    <div style={{
-      background: '#181c27',
-      border: `1px solid ${highlight ? '#4ade80' : '#2a3048'}`,
-      borderLeft: `4px solid ${highlight ? '#4ade80' : '#2a3048'}`,
-      borderRadius: '10px',
-      padding: '16px 18px',
-      display: 'flex',
-      gap: '16px',
-      alignItems: 'flex-start',
-    }}>
-      {/* Date block */}
-      <div style={{
-        width: '52px', flexShrink: 0, background: highlight ? '#4ade8022' : '#252b3b',
-        borderRadius: '8px', padding: '8px 4px', textAlign: 'center',
-      }}>
-        <div style={{ color: highlight ? '#4ade80' : '#e8ecf4', fontSize: '1.3rem', fontWeight: 700, lineHeight: 1 }}>{d.getDate()}</div>
-        <div style={{ color: '#9099b2', fontSize: '0.65rem', marginTop: '2px' }}>{d.toLocaleString('default', { month: 'short' }).toUpperCase()}</div>
-      </div>
-
-      {/* Info */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '6px' }}>
-          <span style={{ color: '#e8ecf4', fontWeight: 600, fontSize: '0.95rem' }}>{appt.title}</span>
-          <Badge text={appt.status} color={statusColor(appt.status)} />
-          <Badge text={appt.type === 'virtual' ? 'Virtual' : 'In-Person'} color={typeColor(appt.type)} />
-        </div>
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
-          {/* Client chip */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#252b3b', borderRadius: '20px', padding: '3px 10px 3px 6px' }}>
-            <div style={{
-              width: '20px', height: '20px', borderRadius: '50%',
-              background: 'linear-gradient(135deg, #4ade80, #22d3ee)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '0.6rem', fontWeight: 700, color: '#0f1117',
-            }}>{initials(appt.client_name)}</div>
-            <span style={{ color: '#9099b2', fontSize: '0.78rem' }}>{appt.client_name}</span>
-          </div>
-          <span style={{ color: '#9099b2', fontSize: '0.8rem' }}>{appt.start_time} – {appt.end_time}</span>
-          {appt.location && <span style={{ color: '#5a6380', fontSize: '0.78rem' }}>{appt.location}</span>}
-        </div>
-        {appt.notes && <div style={{ color: '#5a6380', fontSize: '0.78rem', marginTop: '6px' }}>{appt.notes}</div>}
-      </div>
-
-      {/* Actions */}
-      {appt.status !== 'cancelled' && (
-        <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-          <button onClick={onEdit} style={{
-            background: '#22d3ee22', color: '#22d3ee', border: '1px solid #22d3ee44',
-            borderRadius: '6px', padding: '5px 12px', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600,
-          }}>Edit</button>
-          <button onClick={onCancel} style={{
-            background: '#f43f5e22', color: '#f43f5e', border: '1px solid #f43f5e44',
-            borderRadius: '6px', padding: '5px 12px', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600,
-          }}>Cancel</button>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ─── Group Section ────────────────────────────────────────────────────────────
-
-function GroupSection({ title, items, highlight, collapsible, onEdit, onCancel }: {
-  title: string; items: Appointment[]; highlight?: boolean; collapsible?: boolean;
-  onEdit: (a: Appointment) => void; onCancel: (id: string) => void
-}) {
-  const [open, setOpen] = useState(!collapsible)
-  if (items.length === 0) return null
-  return (
-    <div style={{ marginBottom: '24px' }}>
-      <div
-        style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', cursor: collapsible ? 'pointer' : 'default' }}
-        onClick={() => collapsible && setOpen(o => !o)}
-      >
-        <span style={{ color: highlight ? '#4ade80' : '#9099b2', fontWeight: 700, fontSize: '0.85rem' }}>{title}</span>
-        <span style={{ background: '#252b3b', color: '#5a6380', borderRadius: '20px', padding: '1px 8px', fontSize: '0.72rem' }}>{items.length}</span>
-        {collapsible && <span style={{ color: '#5a6380', fontSize: '0.8rem', marginLeft: 'auto' }}>{open ? '▲' : '▼'}</span>}
-      </div>
-      {open && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {items.map(a => (
-            <SessionCard key={a.id} appt={a} highlight={highlight} onEdit={() => onEdit(a)} onCancel={() => onCancel(a.id)} />
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ─── Schedule Modal ───────────────────────────────────────────────────────────
-
-const EMPTY_FORM = {
-  client_id: '', title: '', type: 'virtual' as 'virtual' | 'in_person',
-  date: '', start_time: '', end_time: '', location: '', notes: '',
-}
-
-function ScheduleModal({ ptId, clients, onClose, onSaved, initial }: {
-  ptId: string; clients: ClientOption[]; onClose: () => void;
-  onSaved: (appt: Appointment) => void; initial?: Appointment | null
-}) {
-  const supabase = createClient()
-  const [form, setForm] = useState(initial ? {
-    client_id: initial.client_id, title: initial.title, type: initial.type as 'virtual' | 'in_person',
-    date: initial.date, start_time: initial.start_time, end_time: initial.end_time,
-    location: initial.location ?? '', notes: initial.notes ?? '',
-  } : EMPTY_FORM)
+function BookModal({ clients, initialDate, initialHour, ptId, gymId, onClose, onSaved, tableAvailable }: BookModalProps) {
+  const [form, setForm] = useState({
+    client_id: '',
+    session_type: 'Personal Training',
+    date: initialDate || '',
+    time: initialHour !== undefined ? `${String(initialHour).padStart(2, '0')}:00` : '',
+    duration_minutes: 60,
+    notes: '',
+  })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
   async function handleSubmit() {
-    if (!form.client_id || !form.title || !form.date || !form.start_time || !form.end_time) {
+    if (!form.client_id || !form.date || !form.time) {
       setError('Please fill all required fields.')
       return
     }
     setSaving(true)
+    const supabase = createClient()
+    const scheduled_at = `${form.date}T${form.time}:00`
     const client = clients.find(c => c.id === form.client_id)
-    if (initial) {
-      const { data } = await supabase.from('appointments').update({
-        title: form.title, type: form.type, date: form.date,
-        start_time: form.start_time, end_time: form.end_time,
-        location: form.location || null, notes: form.notes || null,
-      }).eq('id', initial.id).select().single()
-      if (data) onSaved({ ...data, client_name: client?.full_name ?? '' } as Appointment)
-    } else {
-      const { data } = await supabase.from('appointments').insert({
-        pt_id: ptId, client_id: form.client_id, title: form.title, type: form.type,
-        date: form.date, start_time: form.start_time, end_time: form.end_time,
-        location: form.location || null, notes: form.notes || null, status: 'pending',
-      }).select().single()
-      if (data) onSaved({ ...data, client_name: client?.full_name ?? '' } as Appointment)
+
+    const { data, error: dbErr } = await supabase.from('sessions').insert({
+      pt_id: ptId,
+      gym_id: gymId,
+      client_id: form.client_id,
+      session_type: form.session_type,
+      scheduled_at,
+      duration_minutes: form.duration_minutes,
+      notes: form.notes || null,
+    }).select().single()
+
+    if (dbErr) {
+      setError(dbErr.message)
+      setSaving(false)
+      return
     }
-    setSaving(false)
+
+    onSaved({
+      ...(data as Session),
+      client_name: client?.full_name ?? 'Unknown',
+    })
     onClose()
   }
 
   const inputStyle = {
     width: '100%', boxSizing: 'border-box' as const,
-    background: '#252b3b', border: '1px solid #2a3048', borderRadius: '6px',
-    padding: '9px 12px', color: '#e8ecf4', fontSize: '0.88rem', outline: 'none',
+    background: 'var(--surface2)', border: '1px solid var(--border)',
+    borderRadius: '6px', padding: '9px 12px',
+    color: 'var(--text)', fontSize: '0.88rem', outline: 'none',
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-      onClick={onClose}>
-      <div style={{ background: '#181c27', border: '1px solid #2a3048', borderRadius: '14px', padding: '28px', width: '480px', maxHeight: '90vh', overflowY: 'auto' }}
-        onClick={e => e.stopPropagation()}>
-        <div style={{ color: '#e8ecf4', fontWeight: 700, fontSize: '1.1rem', marginBottom: '20px' }}>
-          {initial ? 'Edit Session' : 'Schedule New Session'}
+    <div
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      onClick={onClose}
+    >
+      <div
+        style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '14px', padding: '28px', width: '460px', maxHeight: '90vh', overflowY: 'auto' }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div style={{ color: 'var(--text)', fontWeight: 700, fontSize: '1.1rem', marginBottom: '20px', fontFamily: 'var(--font-syne, Syne, sans-serif)' }}>
+          Book Session
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div>
-            <label style={{ color: '#9099b2', fontSize: '0.75rem', display: 'block', marginBottom: '4px' }}>Client *</label>
+            <label style={{ color: 'var(--text2)', fontSize: '0.75rem', display: 'block', marginBottom: '4px' }}>Client *</label>
             <select value={form.client_id} onChange={e => setForm(f => ({ ...f, client_id: e.target.value }))} style={inputStyle}>
-              <option value="">Select client...</option>
+              <option value="">Select client…</option>
               {clients.map(c => <option key={c.id} value={c.id}>{c.full_name}</option>)}
             </select>
           </div>
 
           <div>
-            <label style={{ color: '#9099b2', fontSize: '0.75rem', display: 'block', marginBottom: '4px' }}>Title *</label>
-            <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} style={inputStyle} placeholder="e.g. Weekly Check-in" />
-          </div>
-
-          <div>
-            <label style={{ color: '#9099b2', fontSize: '0.75rem', display: 'block', marginBottom: '8px' }}>Type *</label>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              {(['virtual', 'in_person'] as const).map(t => (
-                <label key={t} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', color: '#9099b2', fontSize: '0.85rem' }}>
-                  <input type="radio" checked={form.type === t} onChange={() => setForm(f => ({ ...f, type: t }))} />
-                  {t === 'virtual' ? 'Virtual' : 'In Person'}
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label style={{ color: '#9099b2', fontSize: '0.75rem', display: 'block', marginBottom: '4px' }}>Date *</label>
-            <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} style={inputStyle} />
+            <label style={{ color: 'var(--text2)', fontSize: '0.75rem', display: 'block', marginBottom: '4px' }}>Session Type</label>
+            <select value={form.session_type} onChange={e => setForm(f => ({ ...f, session_type: e.target.value }))} style={inputStyle}>
+              {SESSION_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <div>
-              <label style={{ color: '#9099b2', fontSize: '0.75rem', display: 'block', marginBottom: '4px' }}>Start Time *</label>
-              <input type="time" value={form.start_time} onChange={e => setForm(f => ({ ...f, start_time: e.target.value }))} style={inputStyle} />
+              <label style={{ color: 'var(--text2)', fontSize: '0.75rem', display: 'block', marginBottom: '4px' }}>Date *</label>
+              <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} style={inputStyle} />
             </div>
             <div>
-              <label style={{ color: '#9099b2', fontSize: '0.75rem', display: 'block', marginBottom: '4px' }}>End Time *</label>
-              <input type="time" value={form.end_time} onChange={e => setForm(f => ({ ...f, end_time: e.target.value }))} style={inputStyle} />
+              <label style={{ color: 'var(--text2)', fontSize: '0.75rem', display: 'block', marginBottom: '4px' }}>Time *</label>
+              <input type="time" value={form.time} onChange={e => setForm(f => ({ ...f, time: e.target.value }))} style={inputStyle} />
             </div>
           </div>
 
-          {form.type === 'in_person' && (
-            <div>
-              <label style={{ color: '#9099b2', fontSize: '0.75rem', display: 'block', marginBottom: '4px' }}>Location</label>
-              <input value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} style={inputStyle} placeholder="e.g. Studio A" />
-            </div>
-          )}
+          <div>
+            <label style={{ color: 'var(--text2)', fontSize: '0.75rem', display: 'block', marginBottom: '4px' }}>Duration</label>
+            <select value={form.duration_minutes} onChange={e => setForm(f => ({ ...f, duration_minutes: Number(e.target.value) }))} style={inputStyle}>
+              {DURATIONS.map(d => <option key={d} value={d}>{d} min</option>)}
+            </select>
+          </div>
 
           <div>
-            <label style={{ color: '#9099b2', fontSize: '0.75rem', display: 'block', marginBottom: '4px' }}>Notes</label>
+            <label style={{ color: 'var(--text2)', fontSize: '0.75rem', display: 'block', marginBottom: '4px' }}>Notes</label>
             <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={3} style={{ ...inputStyle, resize: 'vertical' }} />
           </div>
 
           {error && <div style={{ color: '#f43f5e', fontSize: '0.82rem' }}>{error}</div>}
 
-          <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
-            <button onClick={onClose} style={{ flex: 1, padding: '10px', background: '#252b3b', border: '1px solid #2a3048', borderRadius: '8px', color: '#9099b2', cursor: 'pointer', fontSize: '0.9rem' }}>Cancel</button>
-            <button onClick={handleSubmit} disabled={saving} style={{ flex: 2, padding: '10px', background: '#4ade80', color: '#0f1117', fontWeight: 700, border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem' }}>
-              {saving ? 'Saving...' : initial ? 'Update Session' : 'Schedule Session'}
+          {!tableAvailable && (
+            <div style={{ background: '#f9731618', border: '1px solid #f9731644', borderRadius: '8px', padding: '10px 14px', color: '#f97316', fontSize: '0.82rem' }}>
+              Sessions table not yet migrated — contact support.
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button onClick={onClose} style={{ flex: 1, padding: '10px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text2)', cursor: 'pointer' }}>
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={saving || !tableAvailable}
+              style={{ flex: 2, padding: '10px', background: tableAvailable ? 'var(--accent)' : 'var(--surface2)', color: tableAvailable ? '#000' : 'var(--text3)', fontWeight: 700, border: 'none', borderRadius: '8px', cursor: tableAvailable ? 'pointer' : 'not-allowed' }}
+            >
+              {saving ? 'Booking…' : 'Book Session'}
             </button>
           </div>
         </div>
@@ -322,126 +243,313 @@ function ScheduleModal({ ptId, clients, onClose, onSaved, initial }: {
   )
 }
 
+// ─── Session Detail Panel ─────────────────────────────────────────────────────
+
+function SessionDetail({ session, onClose }: { session: Session; onClose: () => void }) {
+  const d = new Date(session.scheduled_at)
+  const color = SESSION_COLORS[session.session_type] || '#4ade80'
+  const statusColor = STATUS_COLORS[session.status] || '#9099b2'
+
+  return (
+    <>
+      <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99 }} onClick={onClose} />
+      <div style={{
+        position: 'fixed', top: 0, right: 0, bottom: 0, zIndex: 100,
+        width: '320px', maxWidth: '100vw',
+        background: 'var(--surface)', borderLeft: '1px solid var(--border)',
+        padding: '24px 20px', overflowY: 'auto',
+        display: 'flex', flexDirection: 'column', gap: '16px',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ fontFamily: 'var(--font-syne, Syne, sans-serif)', fontWeight: 800, fontSize: '1.1rem', color: 'var(--text)' }}>
+            Session Detail
+          </h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', fontSize: '1.2rem' }}>✕</button>
+        </div>
+
+        <div style={{ background: 'var(--surface2)', borderRadius: '10px', padding: '16px', borderLeft: `3px solid ${color}` }}>
+          <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text)', marginBottom: '8px' }}>{session.client_name}</div>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
+            <span style={{ background: `${color}22`, color, padding: '2px 10px', borderRadius: '999px', fontSize: '0.72rem', fontWeight: 700 }}>
+              {session.session_type}
+            </span>
+            <span style={{ background: `${statusColor}22`, color: statusColor, padding: '2px 10px', borderRadius: '999px', fontSize: '0.72rem', fontWeight: 700, textTransform: 'capitalize' }}>
+              {session.status}
+            </span>
+          </div>
+          <div style={{ color: 'var(--text2)', fontSize: '0.85rem', marginBottom: '4px' }}>
+            📅 {d.toLocaleDateString('en-AU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </div>
+          <div style={{ color: 'var(--text2)', fontSize: '0.85rem', marginBottom: '4px' }}>
+            🕐 {d.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })} · {session.duration_minutes} min
+          </div>
+          {session.notes && (
+            <div style={{ color: 'var(--text3)', fontSize: '0.82rem', marginTop: '10px', borderTop: '1px solid var(--border)', paddingTop: '10px' }}>
+              {session.notes}
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  )
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function PTSchedulePage() {
-  const supabase = createClient()
-  const [appointments, setAppointments] = useState<Appointment[]>([])
+  const [sessions, setSessions] = useState<Session[]>([])
   const [clients, setClients] = useState<ClientOption[]>([])
   const [loading, setLoading] = useState(true)
+  const [tableAvailable, setTableAvailable] = useState(true)
   const [ptId, setPtId] = useState('')
-  const [showModal, setShowModal] = useState(false)
-  const [editAppt, setEditAppt] = useState<Appointment | null>(null)
+  const [gymId, setGymId] = useState('')
+  const [weekBase, setWeekBase] = useState(new Date())
+  const [showBookModal, setShowBookModal] = useState(false)
+  const [bookSlot, setBookSlot] = useState<{ date: string; hour: number } | undefined>()
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null)
 
-  useEffect(() => {
-    async function load() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+  const weekDays = getWeekDays(weekBase)
 
-      const { data: ptData } = await supabase.from('pts').select('id').eq('user_id', user.id).single()
-      if (!ptData) { setLoading(false); return }
-      setPtId(ptData.id)
+  const load = useCallback(async () => {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setLoading(false); return }
 
-      const { data: apptData } = await supabase
-        .from('appointments')
-        .select('*, clients(users(full_name))')
-        .eq('pt_id', ptData.id)
-        .order('date', { ascending: true })
+    const { data: ptData } = await supabase.from('pts').select('id, gym_id').eq('user_id', user.id).single()
+    if (ptData) {
+      const pt = ptData as { id: string; gym_id: string }
+      setPtId(pt.id)
+      setGymId(pt.gym_id)
 
-      setAppointments((apptData ?? []).map((a: Record<string, unknown>) => {
-        const clientRec = a.clients as Record<string, unknown> | null
-        const userRec = clientRec?.users as Record<string, unknown> | null
-        return { ...a, client_name: (userRec?.full_name as string) ?? 'Unknown' } as Appointment
-      }))
+      // Try to fetch sessions
+      const { data: sessData, error: sessErr } = await supabase
+        .from('sessions')
+        .select('*')
+        .eq('pt_id', pt.id)
+        .order('scheduled_at', { ascending: true })
+
+      if (sessErr?.message?.includes('does not exist') || sessErr?.code === '42P01') {
+        setTableAvailable(false)
+        setSessions(mockSessions)
+      } else {
+        setTableAvailable(true)
+        // map client names — sessions table may not have client_name directly
+        const rawSessions = (sessData || []) as Record<string, unknown>[]
+        const sessionsWithNames: Session[] = rawSessions.map(s => ({
+          ...(s as unknown as Session),
+          client_name: (s.client_name as string) || 'Client',
+        }))
+        setSessions(sessionsWithNames.length > 0 ? sessionsWithNames : mockSessions)
+      }
 
       const { data: clientsData } = await supabase
         .from('clients')
         .select('id, users(full_name)')
-        .eq('assigned_pt_id', ptData.id)
-      setClients((clientsData ?? []).map((c: Record<string, unknown>) => {
+        .eq('assigned_pt_id', pt.id)
+      setClients(((clientsData || []) as Record<string, unknown>[]).map(c => {
         const u = c.users as Record<string, unknown> | null
         return { id: c.id as string, full_name: (u?.full_name as string) ?? 'Unknown' }
       }))
-
-      setLoading(false)
     }
-    load()
+
+    setLoading(false)
   }, [])
 
-  async function cancelAppt(id: string) {
-    await supabase.from('appointments').update({ status: 'cancelled' }).eq('id', id)
-    setAppointments(as => as.map(a => a.id === id ? { ...a, status: 'cancelled' } : a))
+  useEffect(() => { load() }, [load])
+
+  function prevWeek() {
+    const d = new Date(weekBase)
+    d.setDate(d.getDate() - 7)
+    setWeekBase(d)
   }
 
-  function handleSaved(appt: Appointment) {
-    setAppointments(as => {
-      const idx = as.findIndex(a => a.id === appt.id)
-      if (idx >= 0) { const copy = [...as]; copy[idx] = appt; return copy }
-      return [...as, appt]
-    })
+  function nextWeek() {
+    const d = new Date(weekBase)
+    d.setDate(d.getDate() + 7)
+    setWeekBase(d)
   }
 
-  const active = appointments.filter(a => a.status !== 'cancelled')
-  const cancelled = appointments.filter(a => a.status === 'cancelled')
-  const todayAppts = active.filter(a => isToday(a.date))
-  const thisWeek = active.filter(a => isThisWeek(a.date))
-  const nextWeek = active.filter(a => isNextWeek(a.date))
-  const past = active.filter(a => isPast(a.date))
-  const upcoming = active.filter(a => !isToday(a.date) && !isPast(a.date))
-  const confirmed = active.filter(a => a.status === 'confirmed')
-  const virtual = active.filter(a => a.type === 'virtual')
-  const inPerson = active.filter(a => a.type === 'in_person')
+  function todayWeek() { setWeekBase(new Date()) }
+
+  function openSlot(day: Date, hour: number) {
+    const dateStr = day.toISOString().slice(0, 10)
+    setBookSlot({ date: dateStr, hour })
+    setShowBookModal(true)
+  }
+
+  function handleSaved(session: Session) {
+    setSessions(prev => [...prev, session])
+  }
+
+  const today = new Date()
+  const SLOT_HEIGHT = 56 // px per hour slot
 
   return (
-    <div>
+    <div style={{ animation: 'fadeUp 0.4s ease' }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h1 style={{ color: '#e8ecf4', fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>My Schedule</h1>
-          <p style={{ color: '#9099b2', fontSize: '0.88rem', margin: '4px 0 0' }}>Manage your sessions</p>
+          <h1 style={{ fontFamily: 'var(--font-syne, Syne, sans-serif)', fontSize: '1.5rem', fontWeight: 800, color: 'var(--text)', margin: 0 }}>My Schedule</h1>
+          <p style={{ color: 'var(--text2)', fontSize: '0.85rem', marginTop: '4px' }}>Week view · click any slot to book</p>
         </div>
-        <button onClick={() => { setEditAppt(null); setShowModal(true) }} style={{
-          padding: '10px 22px', background: '#4ade80', color: '#0f1117',
-          fontWeight: 700, border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem',
-        }}>+ Schedule Session</button>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <button onClick={prevWeek} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--text2)', padding: '8px 14px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>←</button>
+          <button onClick={todayWeek} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--text)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>Today</button>
+          <button onClick={nextWeek} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--text2)', padding: '8px 14px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>→</button>
+          <button
+            onClick={() => { setBookSlot(undefined); setShowBookModal(true) }}
+            style={{ background: 'var(--accent)', color: '#000', border: 'none', padding: '9px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 700, fontSize: '0.88rem' }}
+          >
+            + Book Session
+          </button>
+        </div>
       </div>
 
-      {/* KPI Strip */}
-      {!loading && (
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '28px' }}>
-          <KpiCard label="Upcoming Sessions" value={upcoming.length} color="#e8ecf4" />
-          <KpiCard label="Confirmed" value={confirmed.length} color="#4ade80" />
-          <KpiCard label="Virtual" value={virtual.length} color="#22d3ee" />
-          <KpiCard label="In-Person" value={inPerson.length} color="#f97316" />
+      {!tableAvailable && (
+        <div style={{ background: '#f9731618', border: '1px solid #f9731644', borderRadius: '8px', padding: '10px 16px', color: '#f97316', fontSize: '0.85rem', marginBottom: '16px' }}>
+          Sessions table not yet migrated — contact support. Showing demo data.
         </div>
       )}
 
-      {loading ? (
-        <div style={{ color: '#5a6380', textAlign: 'center', padding: '40px' }}>Loading schedule...</div>
-      ) : (
-        <>
-          <GroupSection title="Today" items={todayAppts} highlight onEdit={a => { setEditAppt(a); setShowModal(true) }} onCancel={cancelAppt} />
-          <GroupSection title="This Week" items={thisWeek} onEdit={a => { setEditAppt(a); setShowModal(true) }} onCancel={cancelAppt} />
-          <GroupSection title="Next Week" items={nextWeek} onEdit={a => { setEditAppt(a); setShowModal(true) }} onCancel={cancelAppt} />
-          <GroupSection title="Past" items={past} collapsible onEdit={a => { setEditAppt(a); setShowModal(true) }} onCancel={cancelAppt} />
-          <GroupSection title="Cancelled" items={cancelled} collapsible onEdit={a => { setEditAppt(a); setShowModal(true) }} onCancel={cancelAppt} />
+      {/* Week range label */}
+      <div style={{ color: 'var(--text2)', fontSize: '0.85rem', marginBottom: '12px', fontWeight: 600 }}>
+        {weekDays[0].toLocaleDateString('en-AU', { month: 'short', day: 'numeric' })} – {weekDays[6].toLocaleDateString('en-AU', { month: 'short', day: 'numeric', year: 'numeric' })}
+      </div>
 
-          {appointments.length === 0 && (
-            <div style={{ color: '#5a6380', textAlign: 'center', padding: '60px' }}>
-              No sessions scheduled yet. Click &quot;Schedule Session&quot; to get started.
-            </div>
-          )}
-        </>
+      {/* Calendar grid */}
+      {loading ? (
+        <div style={{ color: 'var(--text3)', textAlign: 'center', padding: '60px 0' }}>Loading schedule…</div>
+      ) : (
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
+          {/* Day headers */}
+          <div style={{ display: 'grid', gridTemplateColumns: '56px repeat(7, 1fr)', borderBottom: '1px solid var(--border)' }}>
+            <div style={{ background: 'var(--surface2)' }} />
+            {weekDays.map((day, i) => {
+              const isToday = isSameDay(day, today)
+              return (
+                <div
+                  key={i}
+                  style={{
+                    padding: '10px 4px', textAlign: 'center',
+                    borderLeft: '1px solid var(--border)',
+                    background: isToday ? '#4ade8010' : 'var(--surface2)',
+                  }}
+                >
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    {day.toLocaleDateString('en-AU', { weekday: 'short' })}
+                  </div>
+                  <div style={{
+                    fontSize: '1rem', fontWeight: 700,
+                    color: isToday ? '#4ade80' : 'var(--text)',
+                    fontFamily: 'var(--font-syne, Syne, sans-serif)',
+                  }}>
+                    {day.getDate()}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Time grid */}
+          <div style={{ overflowY: 'auto', maxHeight: '600px' }}>
+            {HOURS.map(hour => (
+              <div key={hour} style={{ display: 'grid', gridTemplateColumns: '56px repeat(7, 1fr)', height: `${SLOT_HEIGHT}px`, borderBottom: '1px solid var(--border)' }}>
+                {/* Hour label */}
+                <div style={{
+                  padding: '6px 8px', fontSize: '0.65rem', color: 'var(--text3)',
+                  background: 'var(--surface2)', display: 'flex', alignItems: 'flex-start',
+                  justifyContent: 'flex-end', borderRight: '1px solid var(--border)',
+                }}>
+                  {formatHour(hour)}
+                </div>
+
+                {/* Day cells */}
+                {weekDays.map((day, di) => {
+                  const slotSessions = getSessionsForSlot(sessions, day, hour)
+                  const isToday = isSameDay(day, today)
+
+                  return (
+                    <div
+                      key={di}
+                      onClick={() => slotSessions.length === 0 && openSlot(day, hour)}
+                      style={{
+                        borderLeft: '1px solid var(--border)',
+                        background: isToday ? '#4ade8006' : 'transparent',
+                        padding: '2px',
+                        cursor: slotSessions.length === 0 ? 'pointer' : 'default',
+                        position: 'relative',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {slotSessions.length === 0 && (
+                        <div style={{
+                          position: 'absolute', inset: 0,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          opacity: 0,
+                          transition: 'opacity 0.15s',
+                          fontSize: '0.7rem', color: 'var(--text3)',
+                        }}
+                          onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+                          onMouseLeave={e => (e.currentTarget.style.opacity = '0')}
+                        >
+                          + Book
+                        </div>
+                      )}
+                      {slotSessions.map(s => {
+                        const color = SESSION_COLORS[s.session_type] || '#4ade80'
+                        return (
+                          <div
+                            key={s.id}
+                            onClick={e => { e.stopPropagation(); setSelectedSession(s) }}
+                            style={{
+                              background: `${color}22`, border: `1px solid ${color}55`,
+                              borderLeft: `3px solid ${color}`,
+                              borderRadius: '4px', padding: '3px 6px',
+                              cursor: 'pointer', height: `${Math.max(24, (s.duration_minutes / 60) * SLOT_HEIGHT - 6)}px`,
+                              overflow: 'hidden',
+                            }}
+                          >
+                            <div style={{ fontSize: '0.65rem', fontWeight: 700, color, lineHeight: 1.2 }}>{s.client_name}</div>
+                            <div style={{ fontSize: '0.58rem', color: 'var(--text3)', marginTop: '1px' }}>{s.session_type}</div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
-      {showModal && (
-        <ScheduleModal
-          ptId={ptId}
+      {/* Session type legend */}
+      <div style={{ display: 'flex', gap: '16px', marginTop: '16px', flexWrap: 'wrap' }}>
+        {SESSION_TYPES.map(t => (
+          <div key={t} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--text2)' }}>
+            <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: SESSION_COLORS[t] }} />
+            {t}
+          </div>
+        ))}
+      </div>
+
+      {/* Book Modal */}
+      {showBookModal && (
+        <BookModal
           clients={clients}
-          onClose={() => { setShowModal(false); setEditAppt(null) }}
+          initialDate={bookSlot?.date}
+          initialHour={bookSlot?.hour}
+          ptId={ptId}
+          gymId={gymId}
+          onClose={() => { setShowBookModal(false); setBookSlot(undefined) }}
           onSaved={handleSaved}
-          initial={editAppt}
+          tableAvailable={tableAvailable}
         />
+      )}
+
+      {/* Session Detail Panel */}
+      {selectedSession && (
+        <SessionDetail session={selectedSession} onClose={() => setSelectedSession(null)} />
       )}
     </div>
   )

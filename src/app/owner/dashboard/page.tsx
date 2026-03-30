@@ -50,6 +50,9 @@ export default function DashboardPage() {
     totalClients: 0, activePts: 0, mrr: 0, atRiskCount: 0,
   })
   const [leadStats, setLeadStats] = useState({ newThisWeek: 0, conversionRate: 0 })
+  const [leadFunnel, setLeadFunnel] = useState({ new: 0, contacted: 0, trial: 0, converted: 0 })
+  const [topPts, setTopPts] = useState<{ name: string; clientCount: number }[]>([])
+  const [retentionPct, setRetentionPct] = useState<number | null>(null)
   const [atRiskClients, setAtRiskClients] = useState<AtRiskClient[]>([])
   const [newSignups, setNewSignups] = useState<NewSignup[]>([])
   const [loading, setLoading] = useState(true)
@@ -60,11 +63,11 @@ export default function DashboardPage() {
 
       const { data: clients } = await supabase
         .from('clients')
-        .select('id, at_risk, last_login_at, user:users(full_name)')
+        .select('id, at_risk, last_login_at, assigned_pt_id, user:users(full_name)')
 
       const { data: pts } = await supabase
         .from('pts')
-        .select('id, status')
+        .select('id, user_id, status, user:users(full_name)')
         .eq('status', 'active')
 
       const { data: signups } = await supabase
@@ -88,10 +91,19 @@ export default function DashboardPage() {
       const converted = leadsArr.filter(l => l.status === 'converted').length
       setLeadStats({ newThisWeek, conversionRate: total > 0 ? Math.round((converted / total) * 100) : 0 })
 
+      // Lead funnel counts
+      setLeadFunnel({
+        new: leadsArr.filter(l => l.status === 'new').length,
+        contacted: leadsArr.filter(l => l.status === 'contacted').length,
+        trial: leadsArr.filter(l => l.status === 'trial_booked').length,
+        converted,
+      })
+
       type ClientRow = {
         id: string
         at_risk?: boolean
         last_login_at?: string | null
+        assigned_pt_id?: string | null
         user?: { full_name?: string | null } | null
       }
       type SubRow = {
@@ -108,6 +120,23 @@ export default function DashboardPage() {
 
       const clientList: ClientRow[] = (clients || []) as ClientRow[]
       const atRisk = clientList.filter(c => c.at_risk)
+
+      // Top PTs by client count
+      type PtWithName = { id: string; user_id: string; name: string }
+      const ptList: PtWithName[] = ((pts || []) as { id: string; user_id: string; user?: { full_name?: string | null } | null }[]).map(p => ({
+        id: p.id,
+        user_id: p.user_id,
+        name: p.user?.full_name || 'PT',
+      }))
+      const ptClientCounts = ptList.map(pt => ({
+        name: pt.name,
+        clientCount: clientList.filter(c => c.assigned_pt_id === pt.id).length,
+      })).sort((a, b) => b.clientCount - a.clientCount).slice(0, 3)
+      setTopPts(ptClientCounts)
+
+      // Retention: clients with at_risk = false (proxy for active)
+      const activeClients = clientList.filter(c => !c.at_risk).length
+      setRetentionPct(clientList.length > 0 ? Math.round((activeClients / clientList.length) * 100) : null)
 
       setStats({
         totalClients: clientList.length,
@@ -244,6 +273,95 @@ export default function DashboardPage() {
           <div>
             <div style={{ color: 'var(--text2, #9099b2)', fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Messages Sent</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 800, fontFamily: 'var(--font-syne, Syne, sans-serif)', color: 'var(--text, #e8ecf4)' }}>{loading ? '—' : '—'}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Analytics Widgets ── */}
+      <div style={{ marginTop: '32px', marginBottom: '8px' }}>
+        <h2 style={{ fontFamily: 'var(--font-syne, Syne, sans-serif)', fontSize: '1.1rem', fontWeight: 700, color: 'var(--text, #e8ecf4)' }}>Analytics</h2>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+        {/* Leads Funnel */}
+        <div style={{ background: 'var(--surface, #181c27)', border: '1px solid var(--border, #2a3048)', borderRadius: '12px', padding: '20px' }}>
+          <div style={{ fontFamily: 'var(--font-syne, Syne, sans-serif)', fontSize: '0.95rem', fontWeight: 700, color: 'var(--text, #e8ecf4)', marginBottom: '16px' }}>Leads Funnel</div>
+          {loading ? (
+            <div style={{ color: 'var(--text3, #5a6380)', fontSize: '0.85rem', textAlign: 'center', padding: '20px 0' }}>Loading…</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {[
+                { label: 'New', count: leadFunnel.new, color: '#4ade80' },
+                { label: 'Contacted', count: leadFunnel.contacted, color: '#22d3ee' },
+                { label: 'Trial Booked', count: leadFunnel.trial, color: '#a78bfa' },
+                { label: 'Converted', count: leadFunnel.converted, color: '#f97316' },
+              ].map(({ label, count, color }) => {
+                const funnelTotal = leadFunnel.new + leadFunnel.contacted + leadFunnel.trial + leadFunnel.converted
+                const pct = funnelTotal > 0 ? (count / funnelTotal) * 100 : 0
+                return (
+                  <div key={label}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text2, #9099b2)' }}>{label}</span>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text, #e8ecf4)' }}>{count}</span>
+                    </div>
+                    <div style={{ height: '6px', borderRadius: '999px', background: 'var(--surface2, #1e2333)', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: '999px', transition: 'width 0.4s ease' }} />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Right column: Top PTs + Revenue + Retention */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Top PTs */}
+          <div style={{ background: 'var(--surface, #181c27)', border: '1px solid var(--border, #2a3048)', borderRadius: '12px', padding: '20px' }}>
+            <div style={{ fontFamily: 'var(--font-syne, Syne, sans-serif)', fontSize: '0.95rem', fontWeight: 700, color: 'var(--text, #e8ecf4)', marginBottom: '14px' }}>Top PTs by Clients</div>
+            {loading ? (
+              <div style={{ color: 'var(--text3, #5a6380)', fontSize: '0.85rem', textAlign: 'center', padding: '8px 0' }}>Loading…</div>
+            ) : topPts.length === 0 ? (
+              <div style={{ color: 'var(--text3, #5a6380)', fontSize: '0.85rem' }}>No PTs assigned yet</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {topPts.map((pt, i) => (
+                  <div key={pt.name} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{
+                      width: '22px', height: '22px', borderRadius: '50%',
+                      background: ['#4ade80', '#22d3ee', '#a78bfa'][i] + '30',
+                      color: ['#4ade80', '#22d3ee', '#a78bfa'][i],
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '0.7rem', fontWeight: 700, flexShrink: 0,
+                    }}>{i + 1}</span>
+                    <span style={{ flex: 1, fontSize: '0.88rem', color: 'var(--text, #e8ecf4)', fontWeight: 500 }}>{pt.name}</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text2, #9099b2)' }}>{pt.clientCount} clients</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Revenue this month */}
+          <div style={{ background: 'var(--surface, #181c27)', border: '1px solid var(--border, #2a3048)', borderRadius: '12px', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div style={{ color: 'var(--text2, #9099b2)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>Revenue This Month</div>
+              <div style={{ fontFamily: 'var(--font-syne, Syne, sans-serif)', fontSize: '1.6rem', fontWeight: 800, color: 'var(--text, #e8ecf4)' }}>$0</div>
+              <div style={{ color: 'var(--text3, #5a6380)', fontSize: '0.75rem', marginTop: '2px' }}>Connect Stripe to see revenue</div>
+            </div>
+            <div style={{ fontSize: '1.8rem' }}>💳</div>
+          </div>
+
+          {/* Client retention */}
+          <div style={{ background: 'var(--surface, #181c27)', border: '1px solid var(--border, #2a3048)', borderRadius: '12px', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div style={{ color: 'var(--text2, #9099b2)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>Client Retention</div>
+              <div style={{ fontFamily: 'var(--font-syne, Syne, sans-serif)', fontSize: '1.6rem', fontWeight: 800, color: '#4ade80' }}>
+                {loading ? '—' : retentionPct !== null ? `${retentionPct}%` : 'N/A'}
+              </div>
+              <div style={{ color: 'var(--text3, #5a6380)', fontSize: '0.75rem', marginTop: '2px' }}>Active clients this month</div>
+            </div>
+            <div style={{ fontSize: '1.8rem' }}>📈</div>
           </div>
         </div>
       </div>

@@ -53,6 +53,36 @@ function daysSince(iso: string) {
   return Math.floor(diff / 86400000)
 }
 
+function scoreLead(lead: Lead): number {
+  let score = 0
+  if (lead.source === 'referral') score += 3
+  else if (lead.source === 'walk_in') score += 2
+  else if (lead.source === 'instagram' || lead.source === 'facebook') score += 1
+  if (lead.phone) score += 2
+  if (daysSince(lead.created_at) <= 3) score += 2
+  if (lead.notes && lead.notes.trim().length > 0) score += 1
+  if (lead.status === 'contacted') score += 1
+  return score
+}
+
+function ScoreBadge({ score }: { score: number }) {
+  if (score >= 6) return (
+    <span style={{ fontSize: '0.65rem', fontWeight: 700, background: '#4ade8022', color: '#4ade80', padding: '2px 7px', borderRadius: '999px' }}>
+      🔥 Hot
+    </span>
+  )
+  if (score >= 3) return (
+    <span style={{ fontSize: '0.65rem', fontWeight: 700, background: '#f9731622', color: '#f97316', padding: '2px 7px', borderRadius: '999px' }}>
+      ⚡ Warm
+    </span>
+  )
+  return (
+    <span style={{ fontSize: '0.65rem', fontWeight: 700, background: '#9099b222', color: '#9099b2', padding: '2px 7px', borderRadius: '999px' }}>
+      ❄️ Cold
+    </span>
+  )
+}
+
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([])
   const [pts, setPts] = useState<PT[]>([])
@@ -203,7 +233,10 @@ export default function LeadsPage() {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', overflowX: 'auto' }}>
           {COLUMNS.map(col => {
-            const colLeads = filtered.filter(l => l.status === col.key)
+            const colLeads = filtered
+              .filter(l => l.status === col.key)
+              .map(l => ({ ...l, _score: scoreLead(l) }))
+              .sort((a, b) => b._score - a._score)
             return (
               <div key={col.key}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
@@ -225,7 +258,10 @@ export default function LeadsPage() {
                         borderTop: `3px solid ${col.color}`,
                       }}
                     >
-                      <div style={{ fontWeight: 600, fontSize: '0.88rem', color: 'var(--text)', marginBottom: '6px' }}>{lead.name}</div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                        <span style={{ fontWeight: 600, fontSize: '0.88rem', color: 'var(--text)' }}>{lead.name}</span>
+                        <ScoreBadge score={lead._score} />
+                      </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                         <span style={{
                           padding: '2px 7px', borderRadius: '999px',

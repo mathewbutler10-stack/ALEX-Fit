@@ -9,6 +9,7 @@ const navItems = [
   { href: '/owner/clients', icon: '👥', label: 'Clients' },
   { href: '/owner/pts', icon: '🧑‍💼', label: 'PT Management' },
   { href: '/owner/subscriptions', icon: '💳', label: 'Subscriptions' },
+  { href: '/owner/billing', icon: '💰', label: 'Billing' },
   { href: '/owner/perks', icon: '🎁', label: 'Perks' },
   { href: '/owner/broadcast', icon: '📣', label: 'Broadcast' },
 ]
