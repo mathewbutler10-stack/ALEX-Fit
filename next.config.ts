@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactCompiler: true,
   // output: 'standalone', // Removed - causing Vercel 404 issues
-  // trailingSlash: true, // Causing 308 redirects but still 404
+  trailingSlash: false, // Explicitly set to false to fix 404 issues
 };
 
 export default nextConfig;
