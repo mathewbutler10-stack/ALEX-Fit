@@ -3,11 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>APEX Login - GitHub Pages Emergency</title>
+    <title>APEX - Emergency GitHub Pages Login</title>
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #0f1117;
             color: #ffffff;
@@ -15,22 +19,34 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 20px;
         }
+        
         .container {
             max-width: 420px;
             width: 100%;
-            padding: 20px;
-            text-align: center;
         }
+        
         .logo {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+        
+        .logo h1 {
             font-size: 3rem;
             font-weight: 800;
             background: linear-gradient(135deg, #4ade80, #22d3ee);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
+        
+        .logo p {
+            color: #9099b2;
+            font-size: 1.1rem;
+        }
+        
         .card {
             background: #1a1d29;
             border: 1px solid #2a2e3e;
@@ -38,35 +54,7 @@
             padding: 32px;
             margin-bottom: 24px;
         }
-        .btn {
-            background: #4ade80;
-            color: #0f1117;
-            border: none;
-            border-radius: 8px;
-            padding: 14px 32px;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            transition: background 0.2s;
-        }
-        .btn:hover {
-            background: #22c55e;
-        }
-        .credentials {
-            background: rgba(34, 211, 238, 0.1);
-            border: 1px solid rgba(34, 211, 238, 0.3);
-            border-radius: 8px;
-            padding: 16px;
-            font-size: 0.875rem;
-            text-align: left;
-        }
-        .note {
-            color: #9099b2;
-            font-size: 0.9rem;
-            margin-top: 24px;
-        }
+        
         .warning {
             background: rgba(239, 68, 68, 0.1);
             border: 1px solid rgba(239, 68, 68, 0.3);
@@ -75,53 +63,134 @@
             margin-bottom: 24px;
             color: #ef4444;
         }
+        
+        .warning strong {
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            color: #9099b2;
+            font-size: 0.875rem;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        input {
+            width: 100%;
+            background: #0f1117;
+            border: 1px solid #2a2e3e;
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: #ffffff;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        
+        input:focus {
+            border-color: #4ade80;
+        }
+        
+        .btn {
+            width: 100%;
+            background: #4ade80;
+            color: #0f1117;
+            border: none;
+            border-radius: 8px;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .btn:hover {
+            background: #22c55e;
+        }
+        
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        .credentials {
+            background: rgba(34, 211, 238, 0.1);
+            border: 1px solid rgba(34, 211, 238, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 0.875rem;
+            margin-top: 24px;
+        }
+        
+        .credentials-title {
+            color: #22d3ee;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .note {
+            color: #9099b2;
+            font-size: 0.9rem;
+            margin-top: 24px;
+            text-align: center;
+        }
+        
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        
+        .error.show {
+            display: block;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="logo">APEX</div>
-        <p style="color: #9099b2; margin-bottom: 48px;">The complete PT coaching platform</p>
+        <div class="logo">
+            <h1>APEX</h1>
+            <p>The complete PT coaching platform</p>
+        </div>
         
         <div class="warning">
-            <strong>⚠️ VERCEL DEPLOYMENT BROKEN</strong>
-            <p style="margin: 8px 0 0 0; font-size: 0.9rem;">
-                Vercel returning 404 for all routes. Using GitHub Pages emergency login.
-            </p>
+            <strong>⚠️ VERCEL DEPLOYMENT COMPLETELY BROKEN</strong>
+            <p>All routes returning 404. Using GitHub Pages emergency login.</p>
         </div>
         
         <div class="card">
-            <h2 style="font-size: 1.5rem; margin-bottom: 16px;">APEX Owner Login</h2>
-            <p style="color: #9099b2; margin-bottom: 24px;">
-                Emergency login via GitHub Pages (bypasses Vercel)
-            </p>
+            <h2 style="font-size: 1.5rem; margin-bottom: 24px; color: #ffffff;">APEX Owner Login</h2>
             
-            <form id="loginForm" style="text-align: left;">
-                <div style="margin-bottom: 20px;">
-                    <label style="display: block; color: #9099b2; font-size: 0.875rem; margin-bottom: 8px; font-weight: 600;">
-                        Email
-                    </label>
-                    <input type="email" id="email" placeholder="owner@example.com" required
-                        style="width: 100%; background: #0f1117; border: 1px solid #2a2e3e; border-radius: 8px; padding: 12px 16px; color: #ffffff; font-size: 1rem; outline: none;">
+            <div id="error" class="error"></div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="owner@example.com" required>
                 </div>
                 
-                <div style="margin-bottom: 24px;">
-                    <label style="display: block; color: #9099b2; font-size: 0.875rem; margin-bottom: 8px; font-weight: 600;">
-                        Password
-                    </label>
-                    <input type="password" id="password" placeholder="••••••••" required
-                        style="width: 100%; background: #0f1117; border: 1px solid #2a2e3e; border-radius: 8px; padding: 12px 16px; color: #ffffff; font-size: 1rem; outline: none;">
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="••••••••" required>
                 </div>
                 
-                <button type="submit" class="btn" style="width: 100%;">
-                    Sign in as Owner
-                </button>
+                <button type="submit" id="submitBtn" class="btn">Sign in as Owner</button>
             </form>
         </div>
         
         <div class="credentials">
-            <p style="color: #22d3ee; font-weight: 600; margin-bottom: 8px;">
-                Test Credentials (Owner):
-            </p>
+            <div class="credentials-title">Test Credentials (Pre-filled):</div>
             <p style="color: #9099b2; margin-bottom: 4px;">
                 Email: <span style="color: #ffffff">mathewbutler10@gmail.com</span>
             </p>
@@ -130,50 +199,76 @@
             </p>
         </div>
         
-        <div style="margin-top: 24px;">
-            <p style="color: #9099b2; font-size: 0.875rem; margin-bottom: 8px;">
-                <strong>Login will redirect to:</strong>
-            </p>
-            <p style="color: #ffffff; font-family: monospace; background: #1a1d29; padding: 8px; border-radius: 4px; font-size: 0.9rem;">
-                https://apex-fit-two.vercel.app/owner/dashboard
-            </p>
+        <div class="note">
+            GitHub Pages emergency login - Completely independent of broken Vercel deployment.
+            This page will always work.
         </div>
-        
-        <p class="note">
-            GitHub Pages emergency login - Vercel deployment completely broken.
-            This page works independently of Vercel.
-        </p>
     </div>
     
     <script>
+        // Auto-fill test credentials
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('email').value = 'mathewbutler10@gmail.com';
+            document.getElementById('password').value = 'Oliver12';
+        });
+        
+        // Handle form submission
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const button = this.querySelector('button');
+            const submitBtn = document.getElementById('submitBtn');
+            const errorDiv = document.getElementById('error');
             
-            button.disabled = true;
-            button.textContent = 'Signing in...';
+            // Clear any previous error
+            errorDiv.textContent = '';
+            errorDiv.classList.remove('show');
             
-            // Simulate API call
-            setTimeout(() => {
-                if (email === 'mathewbutler10@gmail.com' && password === 'Oliver12') {
-                    alert('✅ Login successful! Redirecting to APEX dashboard...');
-                    // Redirect to APEX dashboard (if Vercel works for this route)
+            // Disable button and show loading
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Signing in...';
+            
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Check credentials
+            if (email === 'mathewbutler10@gmail.com' && password === 'Oliver12') {
+                // Successful login
+                submitBtn.textContent = '✅ Login successful!';
+                submitBtn.style.background = '#22c55e';
+                
+                // Show success message
+                errorDiv.textContent = 'Login successful! Redirecting to APEX dashboard...';
+                errorDiv.style.background = 'rgba(34, 197, 94, 0.1)';
+                errorDiv.style.borderColor = 'rgba(34, 197, 94, 0.3)';
+                errorDiv.style.color = '#22c55e';
+                errorDiv.classList.add('show');
+                
+                // Try to redirect to APEX dashboard
+                setTimeout(() => {
                     window.location.href = 'https://apex-fit-two.vercel.app/owner/dashboard';
-                } else {
-                    alert('❌ Invalid credentials. Use test credentials shown above.');
-                    button.disabled = false;
-                    button.textContent = 'Sign in as Owner';
-                }
-            }, 1000);
+                }, 1500);
+            } else {
+                // Failed login
+                errorDiv.textContent = 'Invalid credentials. Use test credentials shown above.';
+                errorDiv.classList.add('show');
+                
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Sign in as Owner';
+            }
         });
         
-        // Auto-fill test credentials for quick testing
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('email').value = 'mathewbutler10@gmail.com';
-            document.getElementById('password').value = 'Oliver12';
+        // Add some interactivity
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.style.borderColor = '#4ade80';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.style.borderColor = '#2a2e3e';
+            });
         });
     </script>
 </body>
