@@ -1,0 +1,41 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--legacy-peer-deps"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Next.js specific settings
+[functions]
+  node_bundler = "esbuild"
+
+# Environment variables (to be set in Netlify UI)
+# NEXT_PUBLIC_SUPABASE_URL = "https://nsvcznuvgdibscblixqd.supabase.co"
+# NEXT_PUBLIC_SUPABASE_ANON_KEY = "sb_publishable_SykQYawz3iufQ41e6HSqDw_tpmHmp1h"
+# NODE_ENV = "production"
+
+# Headers for security and caching
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# Cache headers for static assets
+[[headers]]
+  for = "/_next/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/_next/image/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
