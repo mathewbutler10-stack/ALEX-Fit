@@ -91,8 +91,16 @@ export interface Meal {
   protein: number
   carbs: number
   fat: number
-  tags: string[]
-  ingredients: string[]
+  prep_time_minutes: number | null
+  difficulty: 'easy' | 'medium' | 'hard' | null
+  dietary_flags: string[] | null
+  cuisine: string | null
+  ingredients: any[] | null // jsonb array (can be string[] or structured objects)
+  instructions: string | null
+  ease_rating: number | null
+  allergens: string[] | null
+  equipment_required: string[] | null
+  tags: string[] | null
   created_by: string | null
   is_global: boolean
   gym_id: string | null
