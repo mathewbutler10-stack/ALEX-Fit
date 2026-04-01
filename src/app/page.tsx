@@ -1,13 +1,33 @@
 'use client'
-
-import { useEffect } from 'react'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 
 export default function Home() {
-  useEffect(() => {
-    // EMERGENCY: Vercel deployment broken, auth routes 404
-    // Redirect to static emergency login page
-    window.location.href = '/emergency-login-redirect.html'
-  }, [])
+  const router = useRouter()
+  const [email, setEmail] = useState('mathewbutler10@gmail.com')
+  const [password, setPassword] = useState('Oliver12')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [showLogin, setShowLogin] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    const supabase = createClient()
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+
+    if (error) {
+      setError(error.message)
+      setLoading(false)
+      return
+    }
+
+    // Try to redirect to dashboard
+    router.push('/owner/dashboard')
+  }
 
   return (
     <main style={{
@@ -19,6 +39,7 @@ export default function Home() {
       padding: '40px 20px',
     }}>
       <div style={{ maxWidth: '720px', width: '100%', textAlign: 'center' }}>
+        {/* Logo */}
         <div style={{ marginBottom: '12px' }}>
           <span style={{
             fontFamily: 'var(--font-syne), Syne, sans-serif',
@@ -33,36 +54,190 @@ export default function Home() {
         <p style={{ color: 'var(--text2)', marginBottom: '48px', fontSize: '1.1rem' }}>
           The complete PT coaching platform
         </p>
-        
-        <div style={{
-          background: 'var(--surface1)',
-          padding: '32px',
-          borderRadius: '16px',
-          border: '1px solid var(--border)',
-        }}>
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '16px', color: 'var(--text)' }}>
-            Emergency Redirect Active
-          </h2>
-          <p style={{ color: 'var(--text2)', marginBottom: '24px' }}>
-            Vercel deployment issue detected. Redirecting to emergency login page...
-          </p>
-          <a href="/emergency-login-redirect.html" style={{
-            background: '#4ade80',
-            color: '#0f1117',
-            padding: '12px 32px',
-            borderRadius: '12px',
-            textDecoration: 'none',
-            fontWeight: 700,
-            display: 'inline-block',
-            fontSize: '1.1rem'
+
+        {!showLogin ? (
+          /* Portal Selection */
+          <div>
+            <div style={{
+              background: 'var(--surface1)',
+              padding: '32px',
+              borderRadius: '16px',
+              border: '1px solid var(--border)',
+              marginBottom: '32px'
+            }}>
+              <h2 style={{ fontSize: '1.5rem', marginBottom: '16px', color: 'var(--text)' }}>
+                Vercel Deployment Issue
+              </h2>
+              <p style={{ color: 'var(--text2)', marginBottom: '24px' }}>
+                Auth routes returning 404. Login directly from home page.
+              </p>
+              
+              <button
+                onClick={() => setShowLogin(true)}
+                style={{
+                  background: '#4ade80',
+                  color: '#0f1117',
+                  border: 'none',
+                  borderRadius: '12px',
+                  padding: '14px 32px',
+                  fontSize: '1.1rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  width: '100%'
+                }}
+              >
+                Owner Login (Emergency)
+              </button>
+            </div>
+            
+            <p style={{ color: 'var(--text3)', fontSize: '0.9rem' }}>
+              Note: Vercel auth routes (/auth/*) returning 404. Using home page login workaround.
+            </p>
+          </div>
+        ) : (
+          /* Login Form */
+          <div style={{
+            background: 'var(--surface1)',
+            borderRadius: '16px',
+            padding: '32px',
+            border: '1px solid var(--border)',
+            maxWidth: '420px',
+            margin: '0 auto'
           }}>
-            Click here for emergency login
-          </a>
-        </div>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '24px', color: 'var(--text)' }}>
+              Owner Login
+            </h2>
+            
+            {error && (
+              <div style={{
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                color: '#ef4444',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                marginBottom: '20px',
+                fontSize: '0.9rem',
+              }}>
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} style={{ textAlign: 'left' }}>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{
+                  display: 'block',
+                  color: 'var(--text2)',
+                  fontSize: '0.875rem',
+                  marginBottom: '8px',
+                  fontWeight: 600,
+                }}>
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  style={{
+                    width: '100%',
+                    background: 'var(--bg)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '8px',
+                    padding: '12px 16px',
+                    color: 'var(--text)',
+                    fontSize: '1rem',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{
+                  display: 'block',
+                  color: 'var(--text2)',
+                  fontSize: '0.875rem',
+                  marginBottom: '8px',
+                  fontWeight: 600,
+                }}>
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  style={{
+                    width: '100%',
+                    background: 'var(--bg)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '8px',
+                    padding: '12px 16px',
+                    color: 'var(--text)',
+                    fontSize: '1rem',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  width: '100%',
+                  background: '#4ade80',
+                  color: '#0f1117',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '14px',
+                  fontSize: '1rem',
+                  fontWeight: 700,
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.7 : 1,
+                }}
+              >
+                {loading ? 'Signing in...' : 'Sign in as Owner'}
+              </button>
+            </form>
+            
+            <div style={{ marginTop: '24px', textAlign: 'center' }}>
+              <button
+                onClick={() => setShowLogin(false)}
+                style={{
+                  background: 'transparent',
+                  color: 'var(--text2)',
+                  border: 'none',
+                  fontSize: '0.875rem',
+                  cursor: 'pointer',
+                  textDecoration: 'underline'
+                }}
+              >
+                ← Back to portal selection
+              </button>
+            </div>
+          </div>
+        )}
         
-        <p style={{ color: 'var(--text3)', fontSize: '0.9rem', marginTop: '32px' }}>
-          Issue: Vercel returning 404 for /auth/* routes. Static emergency page bypasses this.
-        </p>
+        {/* Test credentials note */}
+        <div style={{
+          marginTop: '24px',
+          background: 'rgba(34, 211, 238, 0.1)',
+          border: '1px solid rgba(34, 211, 238, 0.3)',
+          borderRadius: '8px',
+          padding: '16px',
+          fontSize: '0.875rem',
+          maxWidth: '420px',
+          margin: '24px auto 0'
+        }}>
+          <p style={{ color: '#22d3ee', fontWeight: 600, marginBottom: '8px' }}>
+            Test Credentials (Pre-filled):
+          </p>
+          <p style={{ color: 'var(--text2)', marginBottom: '4px' }}>
+            Email: <span style={{ color: 'var(--text)' }}>mathewbutler10@gmail.com</span>
+          </p>
+          <p style={{ color: 'var(--text2)' }}>
+            Password: <span style={{ color: 'var(--text)' }}>Oliver12</span>
+          </p>
+        </div>
       </div>
     </main>
   )
