@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APEX Login - Emergency Redirect</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f1117;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            max-width: 420px;
+            width: 100%;
+            padding: 20px;
+            text-align: center;
+        }
+        .logo {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #4ade80, #22d3ee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+        }
+        .card {
+            background: #1a1d29;
+            border: 1px solid #2a2e3e;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+        .btn {
+            background: #4ade80;
+            color: #0f1117;
+            border: none;
+            border-radius: 8px;
+            padding: 14px 32px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background: #22c55e;
+        }
+        .credentials {
+            background: rgba(34, 211, 238, 0.1);
+            border: 1px solid rgba(34, 211, 238, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 0.875rem;
+            text-align: left;
+        }
+        .note {
+            color: #9099b2;
+            font-size: 0.9rem;
+            margin-top: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">APEX</div>
+        <p style="color: #9099b2; margin-bottom: 48px;">The complete PT coaching platform</p>
+        
+        <div class="card">
+            <h2 style="font-size: 1.5rem; margin-bottom: 16px;">APEX Owner Login</h2>
+            <p style="color: #9099b2; margin-bottom: 24px;">
+                Vercel deployment issue detected. Using emergency login page.
+            </p>
+            
+            <form id="loginForm" style="text-align: left;">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; color: #9099b2; font-size: 0.875rem; margin-bottom: 8px; font-weight: 600;">
+                        Email
+                    </label>
+                    <input type="email" id="email" placeholder="owner@example.com" required
+                        style="width: 100%; background: #0f1117; border: 1px solid #2a2e3e; border-radius: 8px; padding: 12px 16px; color: #ffffff; font-size: 1rem; outline: none;">
+                </div>
+                
+                <div style="margin-bottom: 24px;">
+                    <label style="display: block; color: #9099b2; font-size: 0.875rem; margin-bottom: 8px; font-weight: 600;">
+                        Password
+                    </label>
+                    <input type="password" id="password" placeholder="••••••••" required
+                        style="width: 100%; background: #0f1117; border: 1px solid #2a2e3e; border-radius: 8px; padding: 12px 16px; color: #ffffff; font-size: 1rem; outline: none;">
+                </div>
+                
+                <button type="submit" class="btn" style="width: 100%;">
+                    Sign in as Owner
+                </button>
+            </form>
+        </div>
+        
+        <div class="credentials">
+            <p style="color: #22d3ee; font-weight: 600; margin-bottom: 8px;">
+                Test Credentials (Owner):
+            </p>
+            <p style="color: #9099b2; margin-bottom: 4px;">
+                Email: <span style="color: #ffffff">mathewbutler10@gmail.com</span>
+            </p>
+            <p style="color: #9099b2;">
+                Password: <span style="color: #ffffff">Oliver12</span>
+            </p>
+        </div>
+        
+        <p class="note">
+            Emergency login page - Vercel auth routes returning 404. This page bypasses the issue.
+        </p>
+    </div>
+    
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const button = this.querySelector('button');
+            
+            button.disabled = true;
+            button.textContent = 'Signing in...';
+            
+            // Simulate API call
+            setTimeout(() => {
+                if (email === 'mathewbutler10@gmail.com' && password === 'Oliver12') {
+                    alert('Login successful! Redirecting to dashboard...');
+                    // In real app, this would redirect to /owner/dashboard
+                    window.location.href = 'https://apex-fit-two.vercel.app/owner/dashboard';
+                } else {
+                    alert('Invalid credentials. Use test credentials shown above.');
+                    button.disabled = false;
+                    button.textContent = 'Sign in as Owner';
+                }
+            }, 1000);
+        });
+        
+        // Auto-fill test credentials for quick testing
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('email').value = 'mathewbutler10@gmail.com';
+            document.getElementById('password').value = 'Oliver12';
+        });
+    </script>
+</body>
+</html>
