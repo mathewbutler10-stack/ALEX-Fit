@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: NextRequest, context: any) {
   try {
-    const { id: mealId } = await params;
+    // context.params may be a Promise<{ id: string }>
+    const params = await context.params;
+    const mealId = params?.id;
+
+    if (!mealId) {
+      return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+    }
     const supabase = await createClient();
     
     // Get current user
