@@ -6,11 +6,6 @@
   NODE_VERSION = "20"
   NPM_FLAGS = "--legacy-peer-deps"
 
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-
 # Next.js specific settings
 [functions]
   node_bundler = "esbuild"
