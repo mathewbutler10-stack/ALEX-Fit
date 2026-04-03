@@ -6,11 +6,11 @@ const supabaseAnonKey = 'sb_publishable_SykQYawz3iufQ41e6HSqDw_tpmHmp1h'
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 async function testLogin() {
-  console.log('Testing APEX login for mathewbutler10@gmail.com...')
+  console.log('Testing APEX login for test owner...')
   
   const { data, error } = await supabase.auth.signInWithPassword({
-    email: 'mathewbutler10@gmail.com',
-    password: 'Oliver12'
+    email: 'owner@fitlife.com',
+    password: 'password123'
   })
 
   if (error) {
@@ -19,8 +19,8 @@ async function testLogin() {
     // Try to sign up if user doesn't exist
     console.log('\nTrying to sign up user...')
     const { data: signupData, error: signupError } = await supabase.auth.signUp({
-      email: 'mathewbutler10@gmail.com',
-      password: 'Oliver12',
+      email: 'owner@fitlife.com',
+      password: 'password123',
       options: {
         data: {
           role: 'owner'
@@ -38,8 +38,8 @@ async function testLogin() {
       // Try login again
       console.log('\nTrying login again...')
       const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-        email: 'mathewbutler10@gmail.com',
-        password: 'Oliver12'
+        email: 'owner@fitlife.com',
+        password: 'password123'
       })
       
       if (loginError) {

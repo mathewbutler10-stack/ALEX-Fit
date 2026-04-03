@@ -192,10 +192,10 @@
         <div class="credentials">
             <div class="credentials-title">Test Credentials (Pre-filled):</div>
             <p style="color: #9099b2; margin-bottom: 4px;">
-                Email: <span style="color: #ffffff">mathewbutler10@gmail.com</span>
+                Email: <span style="color: #ffffff">owner@fitlife.com</span>
             </p>
             <p style="color: #9099b2;">
-                Password: <span style="color: #ffffff">Oliver12</span>
+                Password: <span style="color: #ffffff">password123</span>
             </p>
         </div>
         
@@ -208,8 +208,8 @@
     <script>
         // Auto-fill test credentials
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('email').value = 'mathewbutler10@gmail.com';
-            document.getElementById('password').value = 'Oliver12';
+            document.getElementById('email').value = 'owner@fitlife.com';
+            document.getElementById('password').value = 'password123';
         });
         
         // Handle form submission
@@ -233,7 +233,7 @@
             await new Promise(resolve => setTimeout(resolve, 1000));
             
             // Check credentials
-            if (email === 'mathewbutler10@gmail.com' && password === 'Oliver12') {
+            if (email === 'owner@fitlife.com' && password === 'password123') {
                 // Successful login
                 submitBtn.textContent = '✅ Login successful!';
                 submitBtn.style.background = '#22c55e';

@@ -5,8 +5,8 @@ import { createClient } from '@/lib/supabase/client'
 
 export default function Home() {
   const router = useRouter()
-  const [email, setEmail] = useState('mathewbutler10@gmail.com')
-  const [password, setPassword] = useState('Oliver12')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showLogin, setShowLogin] = useState(false)
@@ -229,13 +229,13 @@ export default function Home() {
           margin: '24px auto 0'
         }}>
           <p style={{ color: '#22d3ee', fontWeight: 600, marginBottom: '8px' }}>
-            Test Credentials (Pre-filled):
+            Test Credentials:
           </p>
           <p style={{ color: 'var(--text2)', marginBottom: '4px' }}>
-            Email: <span style={{ color: 'var(--text)' }}>mathewbutler10@gmail.com</span>
+            Email: <span style={{ color: 'var(--text)' }}>owner@fitlife.com</span>
           </p>
           <p style={{ color: 'var(--text2)' }}>
-            Password: <span style={{ color: 'var(--text)' }}>Oliver12</span>
+            Password: <span style={{ color: 'var(--text)' }}>password123</span>
           </p>
         </div>
       </div>

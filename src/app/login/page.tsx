@@ -188,10 +188,10 @@ export default function LoginPage() {
             Test Credentials (Owner):
           </p>
           <p style={{ color: 'var(--text2, #9099b2)', marginBottom: '4px' }}>
-            Email: <span style={{ color: 'var(--text, #ffffff)' }}>mathewbutler10@gmail.com</span>
+            Email: <span style={{ color: 'var(--text, #ffffff)' }}>owner@fitlife.com</span>
           </p>
           <p style={{ color: 'var(--text2, #9099b2)' }}>
-            Password: <span style={{ color: 'var(--text, #ffffff)' }}>Oliver12</span>
+            Password: <span style={{ color: 'var(--text, #ffffff)' }}>password123</span>
           </p>
         </div>
       </div>

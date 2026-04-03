@@ -16,8 +16,8 @@ async function debugApex404() {
   try {
     // Try to login with your credentials (simulating APEX app)
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email: 'mathewbutler10@gmail.com',
-      password: 'Oliver12'
+      email: 'owner@fitlife.com',
+      password: 'password123'
     })
     
     if (authError) {

@@ -53,7 +53,7 @@ async function debugUsersTable() {
     console.log(');')
     console.log('')
     console.log('-- Step 2: Add your user')
-    console.log("INSERT INTO users (id, email, role, full_name) VALUES ('a8eb4abf-196b-4482-a956-2c2bb790a8fa', 'mathewbutler10@gmail.com', 'owner', 'Mat Butler');")
+    console.log("INSERT INTO users (id, email, role, full_name) VALUES ('a8eb4abf-196b-4482-a956-2c2bb790a8fa', 'owner@fitlife.com', 'owner', 'Mat Butler');")
     console.log('')
     console.log('-- Step 3: Add foreign key constraint later (optional)')
     console.log('ALTER TABLE users ADD CONSTRAINT users_auth_fk FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE;')

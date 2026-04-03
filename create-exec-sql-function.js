@@ -122,7 +122,7 @@ async function createTablesDirectly() {
     console.log('')
     console.log('5. Then run this to add your user:')
     console.log('')
-    console.log("INSERT INTO users (id, email, role, full_name) VALUES ('a8eb4abf-196b-4482-a956-2c2bb790a8fa', 'mathewbutler10@gmail.com', 'owner', 'Mat Butler');")
+    console.log("INSERT INTO users (id, email, role, full_name) VALUES ('a8eb4abf-196b-4482-a956-2c2bb790a8fa', 'owner@fitlife.com', 'owner', 'Mat Butler');")
     console.log('')
     console.log('⏱️  This will take 2 minutes on your phone.')
     console.log('🎯 Then APEX login should work immediately.')

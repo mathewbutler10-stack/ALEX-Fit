@@ -8,12 +8,12 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey)
 const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey)
 
 async function testUserRole() {
-  console.log('Testing APEX user role for mathewbutler10@gmail.com...')
+  console.log('Testing APEX user role for test owner...')
   
   // First, login to get user ID
   const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-    email: 'mathewbutler10@gmail.com',
-    password: 'Oliver12'
+    email: 'owner@fitlife.com',
+    password: 'password123'
   })
 
   if (authError) {
@@ -41,9 +41,9 @@ async function testUserRole() {
       .from('users')
       .insert({
         id: userId,
-        email: 'mathewbutler10@gmail.com',
+        email: 'owner@fitlife.com',
         role: 'owner',  // Default to owner role
-        full_name: 'Mat Butler',
+        full_name: 'Test Owner',
         status: 'active'
       })
       .select()
@@ -112,7 +112,7 @@ async function testUserRole() {
   const { data: roles, error: rolesError } = await supabaseAdmin
     .from('users')
     .select('role')
-    .eq('email', 'mathewbutler10@gmail.com')
+    .eq('email', 'owner@fitlife.com')
 
   if (rolesError) {
     console.error('Error checking roles:', rolesError.message)

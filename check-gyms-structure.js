@@ -85,7 +85,7 @@ async function checkGymsStructure() {
     console.log(');')
     console.log('')
     console.log('-- Add your user')
-    console.log("INSERT INTO users (id, email, role, full_name) VALUES ('a8eb4abf-196b-4482-a956-2c2bb790a8fa', 'mathewbutler10@gmail.com', 'owner', 'Mat Butler');")
+    console.log("INSERT INTO users (id, email, role, full_name) VALUES ('a8eb4abf-196b-4482-a956-2c2bb790a8fa', 'owner@fitlife.com', 'owner', 'Mat Butler');")
     console.log('')
     console.log('⏱️  Run these 3 SQL statements separately in Supabase SQL Editor')
     

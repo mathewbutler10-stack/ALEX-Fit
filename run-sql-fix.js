@@ -45,12 +45,12 @@ CREATE POLICY "users: users can view their own record"
   ON users FOR SELECT
   USING (id = auth.uid());
 
--- Create test owner user (mathewbutler10@gmail.com)
+-- Create test owner user (owner@fitlife.com)
 -- First check if auth user exists, then create users record
 INSERT INTO users (id, email, role, full_name, status)
 SELECT 
   'a8eb4abf-196b-4482-a956-2c2bb790a8fa', -- Your user ID from auth.users
-  'mathewbutler10@gmail.com',
+  'owner@fitlife.com',
   'owner',
   'Mat Butler',
   'active'
@@ -133,7 +133,7 @@ async function verifyFix() {
     const { data: users, error: usersError } = await supabaseAdmin
       .from('users')
       .select('id, email, role, gym_id')
-      .eq('email', 'mathewbutler10@gmail.com')
+      .eq('email', 'owner@fitlife.com')
       .single()
     
     if (usersError) {
