@@ -96,9 +96,7 @@ export async function POST(
         console.error('Error generating grocery list:', generateError);
         
         // Fallback: manual generation
-        const { data: manualList, error: manualError } = await generateGroceryListManually(supabase, planId);
-        
-        if (manualError) throw manualError;
+        const manualList = await generateGroceryListManually(supabase, planId);
         groceryListId = manualList.id;
       } else {
         groceryListId = result;

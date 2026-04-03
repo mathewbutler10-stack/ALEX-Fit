@@ -32,7 +32,7 @@ export async function POST(
     // Verify meal plan exists and user has access
     const { data: mealPlan, error: planError } = await supabase
       .from('meal_plans')
-      .select('id, pt_id, status')
+      .select('id, pt_id, status, client_id')
       .eq('id', planId)
       .single();
 
