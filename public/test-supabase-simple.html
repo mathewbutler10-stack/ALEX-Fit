@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Simple Supabase Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .success { color: green; font-weight: bold; }
+    .error { color: red; font-weight: bold; }
+    .loading { color: blue; }
+  </style>
+</head>
+<body>
+  <h1>Simple Supabase Connection Test</h1>
+  
+  <div id="test1">
+    <h3>Test 1: Can we reach Supabase domain?</h3>
+    <div id="test1-result" class="loading">Testing...</div>
+  </div>
+  
+  <div id="test2">
+    <h3>Test 2: Simple fetch to Supabase (no auth)</h3>
+    <div id="test2-result" class="loading">Waiting for Test 1...</div>
+  </div>
+  
+  <div id="test3">
+    <h3>Test 3: Try auth endpoint directly</h3>
+    <div id="test3-result" class="loading">Waiting for Test 2...</div>
+  </div>
+  
+  <script>
+    const SUPABASE_URL = 'https://nsvcznuvgdibscblixqd.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_SykQYawz3iufQ41e6HSqDw_tpmHmp1h';
+    
+    async function test1() {
+      const resultEl = document.getElementById('test1-result');
+      try {
+        // Just try to fetch the root domain
+        const start = Date.now();
+        const response = await fetch(SUPABASE_URL, { method: 'HEAD', mode: 'no-cors' });
+        const end = Date.now();
+        resultEl.innerHTML = `✓ Can reach Supabase domain (${end - start}ms)`;
+        resultEl.className = 'success';
+        test2();
+      } catch (err) {
+        resultEl.innerHTML = `✗ Cannot reach Supabase: ${err.message}`;
+        resultEl.className = 'error';
+      }
+    }
+    
+    async function test2() {
+      const resultEl = document.getElementById('test2-result');
+      try {
+        // Try a simple GET to health endpoint
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/`, {
+          headers: { 'apikey': SUPABASE_ANON_KEY }
+        });
+        
+        if (response.status === 200) {
+          resultEl.innerHTML = '✓ Supabase REST API responding';
+          resultEl.className = 'success';
+        } else {
+          const text = await response.text();
+          resultEl.innerHTML = `✗ Supabase returned ${response.status}: ${text.substring(0, 100)}`;
+          resultEl.className = 'error';
+        }
+        test3();
+      } catch (err) {
+        resultEl.innerHTML = `✗ Fetch error: ${err.message}`;
+        resultEl.className = 'error';
+      }
+    }
+    
+    async function test3() {
+      const resultEl = document.getElementById('test3-result');
+      try {
+        // Try auth endpoint
+        const response = await fetch(`${SUPABASE_URL}/auth/v1/settings`, {
+          headers: { 'apikey': SUPABASE_ANON_KEY }
+        });
+        
+        if (response.status === 200) {
+          resultEl.innerHTML = '✓ Supabase Auth available';
+          resultEl.className = 'success';
+        } else {
+          const text = await response.text();
+          resultEl.innerHTML = `✗ Auth endpoint ${response.status}: ${text.substring(0, 100)}`;
+          resultEl.className = 'error';
+        }
+      } catch (err) {
+        resultEl.innerHTML = `✗ Auth test error: ${err.message}`;
+        resultEl.className = 'error';
+      }
+    }
+    
+    // Start tests
+    test1();
+  </script>
+</body>
+</html>
