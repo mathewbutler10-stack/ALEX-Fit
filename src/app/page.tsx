@@ -66,10 +66,10 @@ export default function Home() {
               marginBottom: '32px'
             }}>
               <h2 style={{ fontSize: '1.5rem', marginBottom: '16px', color: 'var(--text)' }}>
-                Vercel Deployment Issue
+                Welcome to APEX
               </h2>
               <p style={{ color: 'var(--text2)', marginBottom: '24px' }}>
-                Auth routes returning 404. Login directly from home page.
+                The complete PT coaching platform. Login to access your dashboard.
               </p>
               
               <button
@@ -86,12 +86,12 @@ export default function Home() {
                   width: '100%'
                 }}
               >
-                Owner Login (Emergency)
+                Owner Login
               </button>
             </div>
             
             <p style={{ color: 'var(--text3)', fontSize: '0.9rem' }}>
-              Note: Vercel auth routes (/auth/*) returning 404. Using home page login workaround.
+              Note: This is the production deployment on Netlify.
             </p>
           </div>
         ) : (
