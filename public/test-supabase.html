@@ -19,9 +19,19 @@
       const statusEl = document.getElementById('status');
       
       try {
-        // Test 1: Check if we can connect
-        statusEl.innerHTML = 'Testing connection...';
-        const { data, error } = await supabase.auth.getSession();
+        // Test 1: Check if we can connect (with timeout)
+        statusEl.innerHTML = 'Testing connection... (10s timeout)';
+        
+        // Create a timeout promise
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Connection timeout after 10 seconds')), 10000);
+        });
+        
+        // Race the Supabase call against the timeout
+        const { data, error } = await Promise.race([
+          supabase.auth.getSession(),
+          timeoutPromise
+        ]);
         
         if (error) {
           statusEl.innerHTML = `Connection error: ${error.message}`;
@@ -47,6 +57,19 @@
           if (loginError) {
             loginStatus.innerHTML = `Login failed: ${loginError.message}`;
             loginStatus.style.color = 'red';
+            
+            // Suggest fixes based on error
+            if (loginError.message.includes('Invalid login credentials')) {
+              const fixMsg = document.createElement('div');
+              fixMsg.innerHTML = '<br><strong>Fix:</strong> User does not exist. Create user in Supabase Auth.';
+              fixMsg.style.color = 'orange';
+              loginStatus.appendChild(fixMsg);
+            } else if (loginError.message.includes('Email not confirmed')) {
+              const fixMsg = document.createElement('div');
+              fixMsg.innerHTML = '<br><strong>Fix:</strong> User needs to confirm email. Check Supabase Auth users.';
+              fixMsg.style.color = 'orange';
+              loginStatus.appendChild(fixMsg);
+            }
           } else {
             loginStatus.innerHTML = `✓ Login successful! User ID: ${loginData.user.id}`;
             loginStatus.style.color = 'green';
@@ -55,6 +78,14 @@
       } catch (err) {
         statusEl.innerHTML = `Error: ${err.message}`;
         statusEl.style.color = 'red';
+        
+        // Suggest fixes based on error type
+        if (err.message.includes('timeout')) {
+          const fixMsg = document.createElement('div');
+          fixMsg.innerHTML = '<br><strong>Likely issues:</strong><br>1. Supabase URL wrong<br>2. CORS blocking<br>3. Network issue<br>4. API key wrong';
+          fixMsg.style.color = 'orange';
+          statusEl.appendChild(fixMsg);
+        }
       }
     }
     
