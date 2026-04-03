@@ -77,7 +77,7 @@ export async function POST(
     // Verify new meal exists and is from the same gym
     const { data: newMeal, error: mealError } = await supabase
       .from('meal_library')
-      .select('id, gym_id, meal_type')
+      .select('id, gym_id, meal_type, is_global')
       .eq('id', new_meal_id)
       .single();
 
