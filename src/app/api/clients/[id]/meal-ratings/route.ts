@@ -3,9 +3,10 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: clientId } = await params;
     const supabase = await createClient();
     
     // Get current user
@@ -16,8 +17,6 @@ export async function GET(
         { status: 401 }
       );
     }
-
-    const clientId = params.id;
 
     // Verify client exists
     const { data: client, error: clientError } = await supabase

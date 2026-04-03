@@ -3,9 +3,10 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: planId } = await params;
     const supabase = await createClient();
     
     // Get current user
@@ -27,8 +28,6 @@ export async function POST(
         { status: 400 }
       );
     }
-
-    const planId = params.id;
 
     // Verify meal plan exists and user has access
     const { data: mealPlan, error: planError } = await supabase
