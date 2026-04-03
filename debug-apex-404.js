@@ -57,7 +57,7 @@ async function debugApex404() {
   
   console.log('\n4. Possible causes of 404:')
   console.log('   a) APEX app not deployed with updated .env.local')
-  console.log('   b) Vercel needs environment variable update')
+  console.log('   b) Netlify needs environment variable update')
   console.log('   c) APEX app routing issue (not Supabase)')
   console.log('   d) Wrong APEX URL')
   
