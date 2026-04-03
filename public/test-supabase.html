@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Supabase Connection</title>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <h1>Test Supabase Connection</h1>
+  
+  <div id="status">Testing...</div>
+  
+  <script>
+    const SUPABASE_URL = 'https://nsvcznuvgdibscblixqd.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_SykQYawz3iufQ41e6HSqDw_tpmHmp1h';
+    
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    async function testConnection() {
+      const statusEl = document.getElementById('status');
+      
+      try {
+        // Test 1: Check if we can connect
+        statusEl.innerHTML = 'Testing connection...';
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          statusEl.innerHTML = `Connection error: ${error.message}`;
+          statusEl.style.color = 'red';
+        } else {
+          statusEl.innerHTML = '✓ Connected to Supabase!';
+          statusEl.style.color = 'green';
+          
+          // Test 2: Try to login
+          const testEmail = 'owner@fitlife.com';
+          const testPassword = 'password123';
+          
+          const loginStatus = document.createElement('div');
+          loginStatus.id = 'login-status';
+          loginStatus.innerHTML = `Trying to login as ${testEmail}...`;
+          document.body.appendChild(loginStatus);
+          
+          const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+            email: testEmail,
+            password: testPassword
+          });
+          
+          if (loginError) {
+            loginStatus.innerHTML = `Login failed: ${loginError.message}`;
+            loginStatus.style.color = 'red';
+          } else {
+            loginStatus.innerHTML = `✓ Login successful! User ID: ${loginData.user.id}`;
+            loginStatus.style.color = 'green';
+          }
+        }
+      } catch (err) {
+        statusEl.innerHTML = `Error: ${err.message}`;
+        statusEl.style.color = 'red';
+      }
+    }
+    
+    testConnection();
+  </script>
+</body>
+</html>
