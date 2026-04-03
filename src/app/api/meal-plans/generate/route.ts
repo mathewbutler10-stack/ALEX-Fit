@@ -90,7 +90,26 @@ export async function POST(request: NextRequest) {
     }));
 
     // Generate meal plan using algorithm
-    const plan = generateWeeklyMealPlan(formattedMeals, preferences);
+    // Convert preferences to algorithm-compatible format
+    const algorithmPreferences = {
+      client_id: preferences.client_id,
+      allergies: preferences.allergies || [],
+      dislikes: preferences.dislikes || [],
+      dietary_preferences: preferences.dietary_preferences || [],
+      daily_calorie_target: preferences.daily_calorie_target || undefined,
+      protein_preference_percent: preferences.protein_preference_percent || undefined,
+      carb_preference_percent: preferences.carb_preference_percent || undefined,
+      fat_preference_percent: preferences.fat_preference_percent || undefined,
+      meals_per_day: preferences.meals_per_day,
+      cooking_skill: preferences.cooking_skill,
+      available_time_minutes: preferences.available_time_minutes,
+      has_oven: preferences.has_oven,
+      has_stovetop: preferences.has_stovetop,
+      has_microwave: preferences.has_microwave,
+      has_blender: preferences.has_blender,
+      budget_per_week: preferences.budget_per_week || undefined,
+    };
+    const plan = generateWeeklyMealPlan(formattedMeals, algorithmPreferences);
 
     // Start a transaction to create the meal plan
     const { data: mealPlan, error: planError } = await supabase
