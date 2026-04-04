@@ -235,7 +235,7 @@ export function MealPlanReview({ planId, onPlanPublished, onPlanEdited }: MealPl
         <TabsContent value="nutrition" className="space-y-6">
           <NutritionSummary
             slots={slots}
-            dailyCalorieTarget={plan.client?.calorie_goal}
+            dailyCalorieTarget={plan.client?.calorie_goal ?? undefined}
             proteinTarget={30}
             carbTarget={40}
             fatTarget={30}

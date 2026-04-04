@@ -185,18 +185,23 @@ export async function GET(request: NextRequest) {
     }
 
     if (topPerformers.length > 0) {
-      const topCuisine = Object.entries(
+      const cuisineEntries: [string, number][] = Object.entries(
         topPerformers.reduce((acc, meal) => {
-          acc[meal.cuisine] = (acc[meal.cuisine] || 0) + 1;
+          if (meal.cuisine) {
+            acc[meal.cuisine] = (acc[meal.cuisine] || 0) + 1;
+          }
           return acc;
         }, {} as Record<string, number>)
-      ).sort((a, b) => b[1] - a[1])[0];
+      );
+      
+      const topCuisine = cuisineEntries.sort((a, b) => b[1] - a[1])[0];
 
       if (topCuisine) {
+        const [cuisineName, count] = topCuisine;
         recommendations.push({
           type: 'success',
-          title: `Focus on ${topCuisine[0]} cuisine`,
-          description: `${topCuisine[1]} of your top ${topPerformers.length} meals are ${topCuisine[0]} cuisine. Clients seem to prefer this style.`,
+          title: `Focus on ${cuisineName} cuisine`,
+          description: `${count} of your top ${topPerformers.length} meals are ${cuisineName} cuisine. Clients seem to prefer this style.`,
           priority: 'low',
         });
       }

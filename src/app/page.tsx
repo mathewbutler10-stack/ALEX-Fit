@@ -1,53 +1,8 @@
-'use client'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import BrandChoice from './components/BrandChoice';
 
 export default function Home() {
-  const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [showLogin, setShowLogin] = useState(false)
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-
-    const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-      return
-    }
-
-    // Try to redirect to dashboard
-    router.push('/owner/dashboard')
-  }
-
-  return (
-    <main style={{
-      minHeight: '100vh',
-      background: 'var(--bg)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '40px 20px',
-    }}>
-      <div style={{ maxWidth: '720px', width: '100%', textAlign: 'center' }}>
-        {/* Logo */}
-        <div style={{ marginBottom: '12px' }}>
-          <span style={{
-            fontFamily: 'var(--font-syne), Syne, sans-serif',
-            fontSize: '3rem',
-            fontWeight: 800,
-            background: 'linear-gradient(135deg, #4ade80, #22d3ee)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
+  return <BrandChoice />;
+}
             backgroundClip: 'text',
           }}>APEX</span>
         </div>
@@ -229,13 +184,16 @@ export default function Home() {
           margin: '24px auto 0'
         }}>
           <p style={{ color: '#22d3ee', fontWeight: 600, marginBottom: '8px' }}>
-            Test Credentials:
+            Test Credentials (Owner Account):
           </p>
           <p style={{ color: 'var(--text2)', marginBottom: '4px' }}>
-            Email: <span style={{ color: 'var(--text)' }}>owner@fitlife.com</span>
+            Email: <span style={{ color: 'var(--text)' }}>sarah.mitchell@fitlifestudio.com.au</span>
           </p>
-          <p style={{ color: 'var(--text2)' }}>
-            Password: <span style={{ color: 'var(--text)' }}>password123</span>
+          <p style={{ color: 'var(--text2)', marginBottom: '4px' }}>
+            Password: <span style={{ color: 'var(--text)' }}>TestPassword123!</span>
+          </p>
+          <p style={{ color: 'var(--text2)', fontSize: '0.75rem', opacity: 0.8, marginTop: '8px' }}>
+            Also available: PT (jake.thompson@fitlifestudio.com.au) and Client (james.anderson@email.com)
           </p>
         </div>
       </div>

@@ -53,7 +53,11 @@ export function MealSwapDialog({
   const [selectedMealId, setSelectedMealId] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoadingMeals, setIsLoadingMeals] = useState(false);
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<{
+    difficulty: string;
+    cuisine: string;
+    dietaryFlag: string;
+  }>({
     difficulty: '',
     cuisine: '',
     dietaryFlag: '',
@@ -147,8 +151,8 @@ export function MealSwapDialog({
   };
 
   // Get unique values for filters
-  const difficulties = Array.from(new Set(meals.map(m => m.difficulty).filter(Boolean)));
-  const cuisines = Array.from(new Set(meals.map(m => m.cuisine).filter(Boolean)));
+  const difficulties = Array.from(new Set(meals.map(m => m.difficulty).filter((d): d is NonNullable<typeof d> => d !== null)));
+  const cuisines = Array.from(new Set(meals.map(m => m.cuisine).filter((c): c is NonNullable<typeof c> => c !== null)));
   const dietaryFlags = Array.from(
     new Set(meals.flatMap(m => m.dietary_flags || []).filter(Boolean))
   );
@@ -241,7 +245,7 @@ export function MealSwapDialog({
                 <Label htmlFor="difficulty-filter" className="text-xs">Difficulty:</Label>
                 <select
                   id="difficulty-filter"
-                  value={filters.difficulty}
+                  value={String(filters.difficulty || '')}
                   onChange={(e) => setFilters(prev => ({ ...prev, difficulty: e.target.value }))}
                   className="rounded-md border border-input bg-background px-2 py-1 text-xs"
                 >
@@ -255,7 +259,7 @@ export function MealSwapDialog({
                 <Label htmlFor="cuisine-filter" className="text-xs">Cuisine:</Label>
                 <select
                   id="cuisine-filter"
-                  value={filters.cuisine}
+                  value={String(filters.cuisine || '')}
                   onChange={(e) => setFilters(prev => ({ ...prev, cuisine: e.target.value }))}
                   className="rounded-md border border-input bg-background px-2 py-1 text-xs"
                 >

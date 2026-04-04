@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Calendar, Utensils, Clock, ChefHat, SwapHorizontal } from 'lucide-react';
+import { Loader2, Calendar, Utensils, Clock, ChefHat, RefreshCw } from 'lucide-react';
 import { MealPlanSlot } from '@/types/meal-plan';
 import { supabase } from '@/lib/supabase/client';
 import { toast } from 'sonner';
@@ -120,7 +120,7 @@ export function MealPlanPreview({ planId, slots, onSlotsUpdated, readOnly = fals
             </div>
             {!readOnly && (
               <Badge variant="outline" className="flex items-center gap-1">
-                <SwapHorizontal className="h-3 w-3" />
+                <RefreshCw className="h-3 w-3" />
                 Editable
               </Badge>
             )}
@@ -205,7 +205,7 @@ export function MealPlanPreview({ planId, slots, onSlotsUpdated, readOnly = fals
                                             <span
                                               key={i}
                                               className={`text-sm ${
-                                                i < Math.floor(slot.meal.average_rating!)
+                                                slot.meal?.average_rating && i < Math.floor(slot.meal.average_rating)
                                                   ? 'text-yellow-500'
                                                   : 'text-gray-300'
                                               }`}
@@ -225,12 +225,12 @@ export function MealPlanPreview({ planId, slots, onSlotsUpdated, readOnly = fals
                                       variant="ghost"
                                       size="sm"
                                       className="ml-2"
-                                      onClick={(e) => {
+                                      onClick={(e: React.MouseEvent) => {
                                         e.stopPropagation();
                                         handleMealClick(slot);
                                       }}
                                     >
-                                      <SwapHorizontal className="h-4 w-4" />
+                                      <RefreshCw className="h-4 w-4" />
                                     </Button>
                                   )}
                                 </div>

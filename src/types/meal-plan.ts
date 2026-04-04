@@ -1,5 +1,28 @@
 // Meal Plan TypeScript Types
 
+export interface Client {
+  id: string;
+  user_id: string;
+  assigned_pt_id: string | null;
+  gym_id: string;
+  calorie_goal: number | null;
+  protein_goal: number | null;
+  carb_goal: number | null;
+  fat_goal: number | null;
+  dietary_restrictions: string[] | null;
+  allergies: string[] | null;
+  preferred_cuisines: string[] | null;
+  cooking_skill_level: 'beginner' | 'intermediate' | 'advanced' | null;
+  equipment_available: string[] | null;
+  time_constraints: string | null;
+  created_at: string;
+  updated_at: string;
+  user?: {
+    full_name: string;
+    email: string;
+  };
+}
+
 export interface MealPlan {
   id: string;
   client_id: string;
@@ -7,13 +30,7 @@ export interface MealPlan {
   status: 'active' | 'archived' | 'draft';
   created_at: string;
   updated_at: string;
-  client?: {
-    id: string;
-    user?: {
-      full_name: string;
-      email: string;
-    };
-  };
+  client?: Client;
 }
 
 export interface MealPlanSlot {
@@ -41,6 +58,8 @@ export interface MealPlanSlot {
     allergens: string[] | null;
     equipment_required: string[] | null;
     tags: string[] | null;
+    meal_type?: string | null;
+    gym_id?: string | null;
     average_rating?: number;
     rating_count?: number;
   };

@@ -48,10 +48,10 @@ export function GroceryListGenerator({ planId, clientId, onListGenerated }: Groc
       if (data) {
         setGroceryList(data);
         // Initialize purchased items set
-        const purchased = new Set(
+        const purchased = new Set<string>(
           data.items
             .filter((item: GroceryListItem) => item.purchased)
-            .map((item: GroceryListItem) => item.id)
+            .map((item: GroceryListItem) => item.id as string)
         );
         setPurchasedItems(purchased);
       }

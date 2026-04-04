@@ -185,13 +185,16 @@ export default function LoginPage() {
           fontSize: '0.875rem',
         }}>
           <p style={{ color: '#22d3ee', fontWeight: 600, marginBottom: '8px' }}>
-            Test Credentials (Owner):
+            Test Credentials (Owner Account):
           </p>
           <p style={{ color: 'var(--text2, #9099b2)', marginBottom: '4px' }}>
-            Email: <span style={{ color: 'var(--text, #ffffff)' }}>owner@fitlife.com</span>
+            Email: <span style={{ color: 'var(--text, #ffffff)' }}>sarah.mitchell@fitlifestudio.com.au</span>
           </p>
-          <p style={{ color: 'var(--text2, #9099b2)' }}>
-            Password: <span style={{ color: 'var(--text, #ffffff)' }}>password123</span>
+          <p style={{ color: 'var(--text2, #9099b2)', marginBottom: '4px' }}>
+            Password: <span style={{ color: 'var(--text, #ffffff)' }}>TestPassword123!</span>
+          </p>
+          <p style={{ color: 'var(--text2, #9099b2)', fontSize: '0.75rem', opacity: 0.8, marginTop: '8px' }}>
+            Also available: PT (jake.thompson@fitlifestudio.com.au) and Client (james.anderson@email.com)
           </p>
         </div>
       </div>

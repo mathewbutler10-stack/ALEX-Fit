@@ -70,21 +70,31 @@ export async function GET(request: NextRequest, context: any) {
       query = query.eq('client_id', user.id);
     } else if (userProfile.role === 'pt') {
       // PTs can see ratings from their clients
-      query = query.in('client_id', 
-        supabase
-          .from('clients')
-          .select('id')
-          .eq('assigned_pt_id', user.id)
-          .eq('gym_id', userProfile.gym_id)
-      );
+      const { data: clientIds } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('assigned_pt_id', user.id)
+        .eq('gym_id', userProfile.gym_id);
+      
+      if (clientIds && clientIds.length > 0) {
+        query = query.in('client_id', clientIds.map(c => c.id));
+      } else {
+        // No clients, return empty
+        return NextResponse.json({ ratings: [], average: 0, count: 0 });
+      }
     } else if (userProfile.role === 'owner') {
       // Owners can see all ratings in their gym
-      query = query.in('client_id',
-        supabase
-          .from('clients')
-          .select('id')
-          .eq('gym_id', userProfile.gym_id)
-      );
+      const { data: clientIds } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('gym_id', userProfile.gym_id);
+      
+      if (clientIds && clientIds.length > 0) {
+        query = query.in('client_id', clientIds.map(c => c.id));
+      } else {
+        // No clients, return empty
+        return NextResponse.json({ ratings: [], average: 0, count: 0 });
+      }
     }
 
     // Apply pagination

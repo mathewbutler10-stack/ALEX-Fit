@@ -1,0 +1,579 @@
+-- =============================================================================
+-- APEX Fit Gym Management System Migration
+-- Adds gym subscription management, capacity tracking, and multi-tier user roles
+-- Migration: 20250404_gym_management_system.sql
+-- =============================================================================
+
+BEGIN;
+
+-- ---------------------------------------------------------------------------
+-- 1. ENHANCE EXISTING TABLES
+-- ---------------------------------------------------------------------------
+
+-- Add subscription fields to gyms table
+ALTER TABLE gyms 
+ADD COLUMN IF NOT EXISTS subscription_tier TEXT NOT NULL DEFAULT 'starter',
+ADD COLUMN IF NOT EXISTS max_clients INTEGER NOT NULL DEFAULT 20,
+ADD COLUMN IF NOT EXISTS current_clients INTEGER DEFAULT 0,
+ADD COLUMN IF NOT EXISTS max_trainers INTEGER NOT NULL DEFAULT 2,
+ADD COLUMN IF NOT EXISTS current_trainers INTEGER DEFAULT 0,
+ADD COLUMN IF NOT EXISTS monthly_fee DECIMAL(10,2) DEFAULT 0.00,
+ADD COLUMN IF NOT EXISTS billing_cycle TEXT DEFAULT 'monthly',
+ADD COLUMN IF NOT EXISTS next_billing_date DATE,
+ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT,
+ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT,
+ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE,
+ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMPTZ;
+
+-- Add role expansion to users table
+ALTER TABLE users 
+ADD COLUMN IF NOT EXISTS phone TEXT,
+ADD COLUMN IF NOT EXISTS timezone TEXT DEFAULT 'Australia/Sydney';
+
+-- Update role check constraint to include new roles
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE users ADD CONSTRAINT users_role_check 
+CHECK (role IN ('owner', 'gym_manager', 'personal_trainer', 'client'));
+
+-- ---------------------------------------------------------------------------
+-- 2. NEW TABLES FOR GYM MANAGEMENT
+-- ---------------------------------------------------------------------------
+
+-- Subscription plans/tiers
+CREATE TABLE IF NOT EXISTS subscription_plans (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  description TEXT,
+  
+  -- Capacity limits
+  max_clients INTEGER NOT NULL,
+  max_trainers INTEGER NOT NULL,
+  client_overage_fee DECIMAL(10,2) DEFAULT 0.00,
+  
+  -- Features included
+  features JSONB DEFAULT '[]',
+  
+  -- Pricing
+  monthly_price DECIMAL(10,2) NOT NULL,
+  annual_price DECIMAL(10,2),
+  setup_fee DECIMAL(10,2) DEFAULT 0.00,
+  
+  -- Display
+  is_active BOOLEAN DEFAULT TRUE,
+  display_order INTEGER DEFAULT 0,
+  highlight_features TEXT[] DEFAULT '{}',
+  
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Gym subscription history
+CREATE TABLE IF NOT EXISTS gym_subscriptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  gym_id UUID NOT NULL REFERENCES gyms(id) ON DELETE CASCADE,
+  plan_id UUID NOT NULL REFERENCES subscription_plans(id),
+  
+  -- Subscription details
+  status TEXT NOT NULL DEFAULT 'active',
+  stripe_subscription_id TEXT,
+  stripe_customer_id TEXT,
+  
+  -- Pricing
+  monthly_amount DECIMAL(10,2) NOT NULL,
+  billing_cycle TEXT NOT NULL,
+  currency TEXT DEFAULT 'AUD',
+  
+  -- Period
+  current_period_start TIMESTAMPTZ NOT NULL,
+  current_period_end TIMESTAMPTZ NOT NULL,
+  cancel_at_period_end BOOLEAN DEFAULT FALSE,
+  
+  -- Usage tracking
+  client_count INTEGER DEFAULT 0,
+  trainer_count INTEGER DEFAULT 0,
+  
+  -- Metadata
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  UNIQUE(gym_id, stripe_subscription_id)
+);
+
+-- Gym features (what features this gym has access to)
+CREATE TABLE IF NOT EXISTS gym_features (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  gym_id UUID NOT NULL REFERENCES gyms(id) ON DELETE CASCADE,
+  feature_key TEXT NOT NULL,
+  is_enabled BOOLEAN DEFAULT TRUE,
+  limits JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  UNIQUE(gym_id, feature_key)
+);
+
+-- Client groups (for organization)
+CREATE TABLE IF NOT EXISTS client_groups (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  gym_id UUID NOT NULL REFERENCES gyms(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  description TEXT,
+  color_code TEXT DEFAULT '#3B82F6',
+  created_by UUID REFERENCES users(id),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  UNIQUE(gym_id, name)
+);
+
+-- Update clients table to include group association
+ALTER TABLE clients 
+ADD COLUMN IF NOT EXISTS client_group_id UUID REFERENCES client_groups(id);
+
+-- Gym-trainer relationships with permissions
+CREATE TABLE IF NOT EXISTS gym_trainers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  gym_id UUID NOT NULL REFERENCES gyms(id) ON DELETE CASCADE,
+  trainer_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  
+  -- Trainer role in gym
+  role TEXT NOT NULL DEFAULT 'trainer',
+  permissions JSONB DEFAULT '{
+    "can_add_clients": true,
+    "can_remove_clients": false,
+    "can_assign_workouts": true,
+    "can_assign_meals": true,
+    "can_view_all_clients": false,
+    "can_manage_billing": false
+  }',
+  
+  -- Status
+  is_active BOOLEAN DEFAULT TRUE,
+  joined_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  
+  -- Client assignment limits
+  max_clients INTEGER,
+  current_clients INTEGER DEFAULT 0,
+  
+  -- Billing (if gym pays trainers)
+  monthly_salary DECIMAL(10,2) DEFAULT 0.00,
+  commission_rate DECIMAL(5,2) DEFAULT 0.00,
+  
+  -- Metadata
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  UNIQUE(gym_id, trainer_user_id)
+);
+
+-- Monthly usage tracking for billing
+CREATE TABLE IF NOT EXISTS gym_monthly_usage (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  gym_id UUID NOT NULL REFERENCES gyms(id) ON DELETE CASCADE,
+  
+  -- Period
+  year INTEGER NOT NULL,
+  month INTEGER NOT NULL,
+  
+  -- Usage counts
+  client_count INTEGER NOT NULL DEFAULT 0,
+  trainer_count INTEGER NOT NULL DEFAULT 0,
+  active_client_days INTEGER DEFAULT 0,
+  
+  -- Feature usage
+  meals_assigned INTEGER DEFAULT 0,
+  workouts_assigned INTEGER DEFAULT 0,
+  messages_sent INTEGER DEFAULT 0,
+  
+  -- Billing calculation
+  base_fee DECIMAL(10,2) DEFAULT 0.00,
+  overage_fee DECIMAL(10,2) DEFAULT 0.00,
+  total_fee DECIMAL(10,2) DEFAULT 0.00,
+  
+  -- Status
+  is_billed BOOLEAN DEFAULT FALSE,
+  billed_date DATE,
+  stripe_invoice_id TEXT,
+  
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  UNIQUE(gym_id, year, month)
+);
+
+-- Overage charges (when gym exceeds limits)
+CREATE TABLE IF NOT EXISTS overage_charges (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  gym_id UUID NOT NULL REFERENCES gyms(id) ON DELETE CASCADE,
+  
+  -- Overage details
+  overage_type TEXT NOT NULL,
+  base_limit INTEGER NOT NULL,
+  actual_usage INTEGER NOT NULL,
+  overage_amount INTEGER NOT NULL,
+  
+  -- Pricing
+  unit_price DECIMAL(10,2) NOT NULL,
+  total_charge DECIMAL(10,2) NOT NULL,
+  
+  -- Period
+  charge_month DATE NOT NULL,
+  
+  -- Status
+  is_invoiced BOOLEAN DEFAULT FALSE,
+  stripe_invoice_item_id TEXT,
+  
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  UNIQUE(gym_id, overage_type, charge_month)
+);
+
+-- Platform-wide metrics (for owner dashboard)
+CREATE TABLE IF NOT EXISTS platform_metrics (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  
+  -- Date
+  metric_date DATE NOT NULL UNIQUE,
+  
+  -- Counts
+  total_gyms INTEGER DEFAULT 0,
+  active_gyms INTEGER DEFAULT 0,
+  total_clients INTEGER DEFAULT 0,
+  active_clients INTEGER DEFAULT 0,
+  total_trainers INTEGER DEFAULT 0,
+  
+  -- Revenue
+  mrr DECIMAL(15,2) DEFAULT 0.00,
+  arr DECIMAL(15,2) DEFAULT 0.00,
+  total_revenue DECIMAL(15,2) DEFAULT 0.00,
+  
+  -- Usage
+  meals_assigned_today INTEGER DEFAULT 0,
+  workouts_assigned_today INTEGER DEFAULT 0,
+  
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Owner alerts/notifications
+CREATE TABLE IF NOT EXISTS owner_alerts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  
+  -- Alert details
+  alert_type TEXT NOT NULL,
+  severity TEXT NOT NULL DEFAULT 'info',
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+  data JSONB DEFAULT '{}',
+  
+  -- Related entities
+  gym_id UUID REFERENCES gyms(id),
+  user_id UUID REFERENCES users(id),
+  
+  -- Status
+  is_read BOOLEAN DEFAULT FALSE,
+  is_resolved BOOLEAN DEFAULT FALSE,
+  resolved_at TIMESTAMPTZ,
+  resolved_by UUID REFERENCES users(id),
+  
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ---------------------------------------------------------------------------
+-- 3. FUNCTIONS & TRIGGERS
+-- ---------------------------------------------------------------------------
+
+-- Function to update gym client count
+CREATE OR REPLACE FUNCTION update_gym_client_count()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    UPDATE gyms 
+    SET current_clients = current_clients + 1
+    WHERE id = NEW.gym_id;
+  ELSIF TG_OP = 'DELETE' THEN
+    UPDATE gyms 
+    SET current_clients = current_clients - 1
+    WHERE id = OLD.gym_id;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger for gym client count
+DROP TRIGGER IF EXISTS gym_client_count_trigger ON clients;
+CREATE TRIGGER gym_client_count_trigger
+AFTER INSERT OR DELETE ON clients
+FOR EACH ROW
+EXECUTE FUNCTION update_gym_client_count();
+
+-- Function to check capacity before adding client
+CREATE OR REPLACE FUNCTION check_gym_capacity()
+RETURNS TRIGGER AS $$
+DECLARE
+  gym_record gyms%ROWTYPE;
+BEGIN
+  SELECT * INTO gym_record FROM gyms WHERE id = NEW.gym_id;
+  
+  IF gym_record.current_clients >= gym_record.max_clients THEN
+    RAISE EXCEPTION 'Gym has reached maximum client capacity (%)', gym_record.max_clients;
+  END IF;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger for capacity checking
+DROP TRIGGER IF EXISTS check_gym_capacity_trigger ON clients;
+CREATE TRIGGER check_gym_capacity_trigger
+BEFORE INSERT ON clients
+FOR EACH ROW
+EXECUTE FUNCTION check_gym_capacity();
+
+-- Function to update monthly usage
+CREATE OR REPLACE FUNCTION update_monthly_usage()
+RETURNS TRIGGER AS $$
+DECLARE
+  current_year INTEGER;
+  current_month INTEGER;
+BEGIN
+  current_year := EXTRACT(YEAR FROM CURRENT_DATE);
+  current_month := EXTRACT(MONTH FROM CURRENT_DATE);
+  
+  -- Insert or update monthly usage
+  INSERT INTO gym_monthly_usage (gym_id, year, month, client_count)
+  VALUES (NEW.gym_id, current_year, current_month, 1)
+  ON CONFLICT (gym_id, year, month) 
+  DO UPDATE SET 
+    client_count = gym_monthly_usage.client_count + 1,
+    updated_at = NOW();
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger for monthly usage tracking
+DROP TRIGGER IF EXISTS update_monthly_usage_trigger ON clients;
+CREATE TRIGGER update_monthly_usage_trigger
+AFTER INSERT ON clients
+FOR EACH ROW
+EXECUTE FUNCTION update_monthly_usage();
+
+-- Function to update gym trainer count
+CREATE OR REPLACE FUNCTION update_gym_trainer_count()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    UPDATE gyms 
+    SET current_trainers = current_trainers + 1
+    WHERE id = NEW.gym_id;
+  ELSIF TG_OP = 'DELETE' THEN
+    UPDATE gyms 
+    SET current_trainers = current_trainers - 1
+    WHERE id = OLD.gym_id;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger for gym trainer count
+DROP TRIGGER IF EXISTS gym_trainer_count_trigger ON gym_trainers;
+CREATE TRIGGER gym_trainer_count_trigger
+AFTER INSERT OR DELETE ON gym_trainers
+FOR EACH ROW
+EXECUTE FUNCTION update_gym_trainer_count();
+
+-- ---------------------------------------------------------------------------
+-- 4. DEFAULT DATA
+-- ---------------------------------------------------------------------------
+
+-- Insert default subscription plans
+INSERT INTO subscription_plans (name, slug, description, max_clients, max_trainers, monthly_price, annual_price, features) VALUES
+('Starter', 'starter', 'Perfect for solo trainers or small studios', 20, 2, 299.00, 2990.00, '["meal_tracking", "basic_analytics", "client_messaging"]'),
+('Growth', 'growth', 'For growing studios with multiple trainers', 50, 5, 599.00, 5990.00, '["meal_tracking", "workout_plans", "advanced_analytics", "client_groups", "api_access"]'),
+('Pro', 'pro', 'Enterprise features for large gym chains', 200, 20, 1199.00, 11990.00, '["meal_tracking", "workout_plans", "white_label", "custom_branding", "priority_support", "dedicated_account"]')
+ON CONFLICT (slug) DO NOTHING;
+
+-- Update existing gyms with default subscription tier
+UPDATE gyms 
+SET subscription_tier = 'starter',
+    max_clients = 20,
+    max_trainers = 2,
+    monthly_fee = 299.00
+WHERE subscription_tier IS NULL;
+
+-- ---------------------------------------------------------------------------
+-- 5. INDEXES FOR PERFORMANCE
+-- ---------------------------------------------------------------------------
+
+-- Gym indexes
+CREATE INDEX IF NOT EXISTS idx_gyms_subscription_tier ON gyms(subscription_tier);
+CREATE INDEX IF NOT EXISTS idx_gyms_is_verified ON gyms(is_verified);
+CREATE INDEX IF NOT EXISTS idx_gyms_stripe_customer_id ON gyms(stripe_customer_id);
+
+-- Subscription indexes
+CREATE INDEX IF NOT EXISTS idx_gym_subscriptions_gym_id ON gym_subscriptions(gym_id);
+CREATE INDEX IF NOT EXISTS idx_gym_subscriptions_status ON gym_subscriptions(status);
+CREATE INDEX IF NOT EXISTS idx_gym_subscriptions_stripe_subscription_id ON gym_subscriptions(stripe_subscription_id);
+
+-- Client management indexes
+CREATE INDEX IF NOT EXISTS idx_clients_gym_id ON clients(gym_id);
+CREATE INDEX IF NOT EXISTS idx_clients_client_group_id ON clients(client_group_id);
+
+-- Trainer management indexes
+CREATE INDEX IF NOT EXISTS idx_gym_trainers_gym_id ON gym_trainers(gym_id);
+CREATE INDEX IF NOT EXISTS idx_gym_trainers_trainer_user_id ON gym_trainers(trainer_user_id);
+CREATE INDEX IF NOT EXISTS idx_gym_trainers_is_active ON gym_trainers(is_active);
+
+-- Billing indexes
+CREATE INDEX IF NOT EXISTS idx_gym_monthly_usage_gym_id ON gym_monthly_usage(gym_id);
+CREATE INDEX IF NOT EXISTS idx_gym_monthly_usage_year_month ON gym_monthly_usage(year, month);
+CREATE INDEX IF NOT EXISTS idx_gym_monthly_usage_is_billed ON gym_monthly_usage(is_billed);
+
+-- ---------------------------------------------------------------------------
+-- 6. ROW LEVEL SECURITY POLICIES
+-- ---------------------------------------------------------------------------
+
+-- Enable RLS on new tables
+ALTER TABLE subscription_plans ENABLE ROW LEVEL SECURITY;
+ALTER TABLE gym_subscriptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE gym_features ENABLE ROW LEVEL SECURITY;
+ALTER TABLE client_groups ENABLE ROW LEVEL SECURITY;
+ALTER TABLE gym_trainers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE gym_monthly_usage ENABLE ROW LEVEL SECURITY;
+ALTER TABLE overage_charges ENABLE ROW LEVEL SECURITY;
+ALTER TABLE platform_metrics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE owner_alerts ENABLE ROW LEVEL SECURITY;
+
+-- Subscription plans - public read
+CREATE POLICY "Anyone can view subscription plans" 
+ON subscription_plans FOR SELECT 
+USING (is_active = true);
+
+-- Gym subscriptions - gym managers and owners
+CREATE POLICY "Gym managers can view their gym subscriptions" 
+ON gym_subscriptions FOR SELECT 
+USING (
+  gym_id IN (
+    SELECT id FROM gyms WHERE owner_id = auth.uid()
+    UNION
+    SELECT gym_id FROM users WHERE id = auth.uid() AND role = 'gym_manager'
+  )
+);
+
+-- Gym features - gym managers and owners
+CREATE POLICY "Gym managers can view their gym features" 
+ON gym_features FOR SELECT 
+USING (
+  gym_id IN (
+    SELECT id FROM gyms WHERE owner_id = auth.uid()
+    UNION
+    SELECT gym_id FROM users WHERE id = auth.uid() AND role = 'gym_manager'
+  )
+);
+
+-- Client groups - gym managers and trainers
+CREATE POLICY "Gym staff can manage client groups" 
+ON client_groups FOR ALL 
+USING (
+  gym_id IN (
+    SELECT id FROM gyms WHERE owner_id = auth.uid()
+    UNION
+    SELECT gym_id FROM users WHERE id = auth.uid() AND role IN ('gym_manager', 'personal_trainer')
+  )
+);
+
+-- Gym trainers - gym managers and owners
+CREATE POLICY "Gym managers can manage trainers" 
+ON gym_trainers FOR ALL 
+USING (
+  gym_id IN (
+    SELECT id FROM gyms WHERE owner_id = auth.uid()
+    UNION
+    SELECT gym_id FROM users WHERE id = auth.uid() AND role = 'gym_manager'
+  )
+);
+
+-- Gym monthly usage - gym managers and owners
+CREATE POLICY "Gym managers can view their usage" 
+ON gym_monthly_usage FOR SELECT 
+USING (
+  gym_id IN (
+    SELECT id FROM gyms WHERE owner_id = auth.uid()
+    UNION
+    SELECT gym_id FROM users WHERE id = auth.uid() AND role = 'gym_manager'
+  )
+);
+
+-- Overage charges - gym managers and owners
+CREATE POLICY "Gym managers can view their overage charges" 
+ON overage_charges FOR SELECT 
+USING (
+  gym_id IN (
+    SELECT id FROM gyms WHERE owner_id = auth.uid()
+    UNION
+    SELECT gym_id FROM users WHERE id = auth.uid() AND role = 'gym_manager'
+  )
+);
+
+-- Platform metrics - owners only
+CREATE POLICY "Only owners can view platform metrics" 
+ON platform_metrics FOR ALL 
+USING (
+  EXISTS (
+    SELECT 1 FROM users 
+    WHERE id = auth.uid() 
+    AND role = 'owner'
+  )
+);
+
+-- Owner alerts - owners only
+CREATE POLICY "Only owners can manage alerts" 
+ON owner_alerts FOR ALL 
+USING (
+  EXISTS (
+    SELECT 1 FROM users 
+    WHERE id = auth.uid() 
+    AND role = 'owner'
+  )
+);
+
+-- ---------------------------------------------------------------------------
+-- 7. COMMENTS
+-- ---------------------------------------------------------------------------
+
+COMMENT ON TABLE subscription_plans IS 'Available subscription tiers with pricing and limits for gym management';
+COMMENT ON TABLE gym_subscriptions IS 'Active subscriptions for gyms with Stripe integration';
+COMMENT ON TABLE gym_features IS 'Feature flags and limits for each gym';
+COMMENT ON TABLE client_groups IS 'Client organization groups within gyms';
+COMMENT ON TABLE gym_trainers IS 'Trainer assignments to gyms with permission management';
+COMMENT ON TABLE gym_monthly_usage IS 'Monthly usage tracking for billing and capacity management';
+COMMENT ON TABLE overage_charges IS 'Overage charges when gyms exceed subscription limits';
+COMMENT ON TABLE platform_metrics IS 'Platform-wide analytics for owner dashboard';
+COMMENT ON TABLE owner_alerts IS 'System alerts and notifications for platform owners';
+
+COMMENT ON COLUMN gyms.subscription_tier IS 'Current subscription plan (starter, growth, pro)';
+COMMENT ON COLUMN gyms.max_clients IS 'Maximum clients allowed based on subscription';
+COMMENT ON COLUMN gyms.current_clients IS 'Current number of active clients';
+COMMENT ON COLUMN gyms.max_trainers IS 'Maximum trainers allowed based on subscription';
+COMMENT ON COLUMN gyms.current_trainers IS 'Current number of active trainers';
+COMMENT ON COLUMN gyms.monthly_fee IS 'Monthly subscription fee';
+COMMENT ON COLUMN gyms.stripe_customer_id IS 'Stripe customer ID for billing';
+COMMENT ON COLUMN gyms.stripe_subscription_id IS 'Stripe subscription ID';
+
+COMMENT ON COLUMN users.phone IS 'User phone number for contact';
+COMMENT ON COLUMN users.timezone IS 'User timezone for scheduling and notifications';
+
+-- ---------------------------------------------------------------------------
+-- 8. MIGRATION COMPLETE
+-- ---------------------------------------------------------------------------
+
+COMMIT;
+
+-- =============================================================================
+-- Migration Notes:
+-- 1. This migration enhances the existing APEX Fit schema with gym management
+-- 2. Adds subscription-based capacity tracking
+-- 3. Implements multi-tier user roles (owner, gym_manager, personal_trainer, client)
+-- 4. Adds Stripe integration for billing
+-- 5. Includes usage tracking and overage management
+-- 6. Provides owner dashboard with platform metrics
+-- =============================================================================
